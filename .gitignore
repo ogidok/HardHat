@@ -1,0 +1,7 @@
+# Logs and local artifacts
+*.log
+tmp/
+
+# Common editor/OS noise
+.DS_Store
+*.swp
