@@ -14,3 +14,23 @@ hardhat_trim() {
   value="${value%"${value##*[![:space:]]}"}"
   printf '%s' "${value}"
 }
+
+hardhat_join_by() {
+  local delimiter="$1"
+  shift || true
+  local first=1
+  local item
+  for item in "$@"; do
+    if [[ "${first}" -eq 1 ]]; then
+      printf '%s' "${item}"
+      first=0
+    else
+      printf '%s%s' "${delimiter}" "${item}"
+    fi
+  done
+}
+
+hardhat_not_implemented() {
+  local feature="$1"
+  hardhat_log_warn "${feature} is not implemented yet."
+}

@@ -16,3 +16,8 @@ hardhat_validate_choice() {
   done
   return 1
 }
+
+hardhat_validate_boolean_like() {
+  local value="$1"
+  hardhat_validate_choice "${value}" 0 1 true false yes no
+}

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
 hardhat_module_updates_check() {
-  hardhat_log_info "Updates check not implemented yet (stub)."
+  hardhat_not_implemented "updates check"
   return 0
 }

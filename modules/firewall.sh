@@ -9,11 +9,15 @@ EOF
 }
 
 hardhat_module_firewall_audit() {
-  hardhat_log_info "Firewall audit (UFW) not implemented yet (stub)."
+  hardhat_not_implemented "firewall audit (UFW)"
 }
 
 hardhat_module_firewall_apply() {
-  hardhat_log_warn "Firewall apply is scaffolded but not implemented yet."
+  hardhat_not_implemented "firewall apply (UFW)"
+
+  if ! hardhat_require_elevated_or_sudo; then
+    return 1
+  fi
 
   if ! hardhat_confirm_global "Proceed with firewall baseline apply?"; then
     return 1
