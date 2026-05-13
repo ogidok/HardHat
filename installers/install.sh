@@ -9,6 +9,9 @@ BIN_DIR="/usr/local/bin"
 TARGET_BIN="${BIN_DIR}/hardhat"
 ASSUME_YES=0
 DRY_RUN=0
+APP_LANG=""
+GLOBAL_CONFIG_DIR="/etc/hardhat"
+GLOBAL_CONFIG_FILE="/etc/hardhat/config"
 
 install_usage() {
   cat <<'EOF'
@@ -22,6 +25,7 @@ Options:
   --dry-run            Show actions without changing files
   --install-root PATH  Target runtime root (default: /opt/hardhat)
   --bin-dir PATH       Directory for hardhat command (default: /usr/local/bin)
+  --lang <en|es>       App language to persist in global config
   --help               Show this help
 
 This installer copies runtime files (bin/lib/modules) and creates a system
@@ -63,6 +67,10 @@ parse_args() {
         shift
         BIN_DIR="${1:-}"
         ;;
+      --lang)
+        shift
+        APP_LANG="${1:-}"
+        ;;
       --help)
         install_usage
         exit 0
@@ -81,7 +89,37 @@ parse_args() {
     exit 1
   fi
 
+  if [[ -n "${APP_LANG}" ]] && [[ "${APP_LANG}" != "en" ]] && [[ "${APP_LANG}" != "es" ]]; then
+    printf 'Unsupported language: %s (use en or es).\n' "${APP_LANG}" >&2
+    exit 1
+  fi
+
   TARGET_BIN="${BIN_DIR}/hardhat"
+}
+
+select_language_if_needed() {
+  if [[ -n "${APP_LANG}" ]]; then
+    return 0
+  fi
+
+  if [[ "${ASSUME_YES}" -eq 1 ]]; then
+    APP_LANG="en"
+    printf 'Language not provided. Defaulting to en due to --yes.\n'
+    return 0
+  fi
+
+  printf 'Select app language:\n'
+  printf '  1) English (en)\n'
+  printf '  2) Espanol (es)\n'
+  read -r -p 'Choice [1/2] (default 1): ' lang_choice
+  case "${lang_choice}" in
+    2)
+      APP_LANG="es"
+      ;;
+    *)
+      APP_LANG="en"
+      ;;
+  esac
 }
 
 validate_source_tree() {
@@ -106,6 +144,7 @@ Actions:
   1) Create ${INSTALL_ROOT}
   2) Copy bin/, lib/ and modules/ into ${INSTALL_ROOT}
   3) Create symlink ${TARGET_BIN} -> ${INSTALL_ROOT}/bin/hardhat
+  4) Persist global app language in ${GLOBAL_CONFIG_FILE} (${APP_LANG})
 EOF
 }
 
@@ -137,11 +176,23 @@ perform_install() {
 
   run_as_root chmod +x "${INSTALL_ROOT}/bin/hardhat"
   run_as_root ln -sfn "${INSTALL_ROOT}/bin/hardhat" "${TARGET_BIN}"
+
+  run_as_root mkdir -p "${GLOBAL_CONFIG_DIR}"
+  if [[ "${DRY_RUN}" -eq 1 ]]; then
+    printf '[dry-run] write %s with HARDHAT_LANG=%s\n' "${GLOBAL_CONFIG_FILE}" "${APP_LANG}"
+  else
+    local tmp_file
+    tmp_file="$(mktemp)"
+    printf 'HARDHAT_LANG=%s\n' "${APP_LANG}" >"${tmp_file}"
+    run_as_root install -m 0644 "${tmp_file}" "${GLOBAL_CONFIG_FILE}"
+    rm -f "${tmp_file}"
+  fi
 }
 
 main() {
   parse_args "$@"
   validate_source_tree
+  select_language_if_needed
   show_plan
 
   if ! confirm_plan; then
@@ -164,6 +215,7 @@ main() {
   printf 'Run: hardhat --help\n'
   printf 'Installed runtime root: %s\n' "${INSTALL_ROOT}"
   printf 'Installed command path: %s\n' "${TARGET_BIN}"
+  printf 'Configured language: %s\n' "${APP_LANG}"
 }
 
 main "$@"

@@ -110,6 +110,9 @@ cd HardHat
 ./installers/install.sh
 ```
 
+Durante la instalacion se solicita idioma preferido de la app.
+Idiomas disponibles en esta fase: `en` y `es`.
+
 Simulacion de instalacion:
 
 ```bash
@@ -122,12 +125,36 @@ Instalacion no interactiva:
 ./installers/install.sh --yes
 ```
 
+Instalacion no interactiva con idioma explicito:
+
+```bash
+./installers/install.sh --yes --lang es
+```
+
 El instalador:
 - valida estructura runtime (`bin/`, `lib/`, `modules/`);
 - muestra plan de instalacion;
 - pide confirmacion (salvo `--yes`);
 - copia runtime a `/opt/hardhat`;
 - crea enlace en `/usr/local/bin/hardhat`.
+- guarda idioma global en `/etc/hardhat/config`.
+
+## Configurar idioma despues de instalar
+
+Ver idioma actual:
+
+```bash
+hardhat language show
+```
+
+Cambiar idioma para tu usuario:
+
+```bash
+hardhat language set es
+hardhat language set en
+```
+
+La preferencia de usuario se guarda en `~/.config/hardhat/config` y tiene prioridad sobre la configuracion global.
 
 ## Desinstalacion manual
 
