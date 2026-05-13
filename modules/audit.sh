@@ -7,6 +7,17 @@ HARDHAT_AUDIT_SEVERITY="none"
 HARDHAT_AUDIT_SUMMARY="baseline security audit completed"
 HARDHAT_AUDIT_RECOMMENDATIONS=()
 
+hardhat_module_audit_usage() {
+  cat <<'EOF'
+Usage:
+  hardhat audit [--json]
+
+Description:
+  Runs baseline checks for firewall, ports, services, SSH and updates,
+  then reports score, severity, findings and recommendations.
+EOF
+}
+
 hardhat_audit_reset_state() {
   HARDHAT_AUDIT_FINDINGS=()
   HARDHAT_AUDIT_NOTES=()
@@ -202,6 +213,12 @@ hardhat_audit_render_json() {
 }
 
 hardhat_module_audit_run() {
+  local arg="${1:-}"
+  if [[ "${arg}" == "help" ]]; then
+    hardhat_module_audit_usage
+    return 0
+  fi
+
   hardhat_audit_reset_state
   hardhat_audit_collect
   hardhat_audit_calculate_score

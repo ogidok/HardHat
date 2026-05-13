@@ -1,275 +1,40 @@
 # HardHat
 
-```text
-           )                      )              
-        ( /(              (    ( /(           )  
-        )\())    )  (     )\ ) )\())    )  ( /(  
-        ((_)\  ( /(  )(   (()/(((_)\  ( /(  )\()) 
-        _((_) )(_))(()\   ((_))_((_) )(_))(_))/  
-        | || |((_)_  ((_)  _| || || |((_)_ | |_   
-        | __ |/ _` || '_|/ _` || __ |/ _` ||  _|  
-        |_||_|\__,_||_|  \__,_||_||_|\__,_| \__|  
-                                          
-```
+HardHat es una herramienta CLI para Arch Linux, escrita en Bash, enfocada en auditoria basica de seguridad y aplicacion guiada de cambios seguros de firewall.
 
-> HardHat — Linux Security Bootstrapper for Arch Linux
+## Estado del proyecto
 
-HardHat es una herramienta CLI enfocada en **Arch Linux** para auditar el estado básico de seguridad del sistema, detectar configuraciones inseguras, sugerir mejoras y aplicar cambios de forma guiada y segura.
+MVP funcional en progreso. Lo implementado ya se puede usar desde linea de comandos.
 
-El objetivo del proyecto es ayudar a usuarios que quieren asegurar una instalación reciente de Linux sin tener que conocer desde el primer momento todos los detalles técnicos de hardening.
+Importante:
+- no hay rollback automatico;
+- si se aplican cambios, la restauracion es manual con backups;
+- si no se pueden crear backups, no se aplican cambios.
 
----
+## Compatibilidad oficial del MVP
 
-# Estado del proyecto
+- Arch Linux
+- Backend de firewall: UFW
 
-**HardHat está en fase temprana de diseño y construcción.**
-
-La primera versión estará enfocada en:
-
-- auditoría básica de seguridad;
-- revisión de firewall;
-- revisión de puertos abiertos;
-- revisión de servicios relevantes;
-- detección de configuraciones inseguras;
-- sugerencias claras de remediación;
-- aplicación guiada de reglas básicas de firewall;
-- logs;
-- soporte para `--dry-run`;
-- backups automáticos antes de modificar.
-
-> **Importante:** en la primera versión **no habrá rollback automático**.  
-> Si se aplica un cambio, la restauración deberá hacerse manualmente usando los backups generados.
-
----
-
-# Objetivo
-
-HardHat busca ser una herramienta que:
-
-- audite;
-- explique;
-- recomiende;
-- y automatice con control.
-
-No quiere ser solamente:
-
-- un escáner,
-- ni solo un hardener,
-- ni solo un script de instalación.
-
-La idea es ofrecer una base de seguridad razonable para Arch Linux con una experiencia clara, entendible y segura.
-
----
-
-# Filosofía del proyecto
-
-HardHat **no debe**:
-
-- cambiar configuraciones silenciosamente;
-- romper setups existentes de forma innecesaria;
-- asumir configuraciones sin validación;
-- ocultar qué comandos ejecuta.
-
-HardHat **sí debe**:
-
-- mostrar qué detectó;
-- explicar por qué algo es riesgoso;
-- sugerir cambios concretos;
-- pedir confirmación antes de aplicar;
-- crear backups antes de modificar;
-- bloquear cambios si no puede respaldar;
-- permitir simulación con `--dry-run`;
-- priorizar seguridad sobre comodidad.
-
----
-
-# Alcance del MVP
-
-La primera versión estará enfocada en **Arch Linux** y en un conjunto de funcionalidades pequeño, claro y estable.
-
-## Incluye
-
-- soporte inicial para **Arch Linux**;
-- implementación en **Bash modular**;
-- comando principal de auditoría;
-- score o resumen general de riesgo;
-- clasificación de hallazgos por severidad;
-- revisión de firewall;
-- revisión de puertos abiertos;
-- revisión de servicios activos relevantes;
-- detección de configuraciones inseguras;
-- revisión básica de configuración SSH como parte de la auditoría;
-- detección de actualizaciones pendientes como señal de riesgo;
-- salida humana y JSON;
-- colores, símbolos y logs claros;
-- backups automáticos antes de cambios;
-- soporte de `--dry-run`;
-- aplicación guiada de reglas básicas de firewall.
-
-## No incluye todavía
-
-- multi-distro;
-- nftables;
-- iptables;
-- rollback automático;
-- TUI avanzada;
-- plugins;
-- reportes HTML;
-- escaneo profundo de CVEs;
-- integración con herramientas pesadas como OpenVAS/OpenSCAP;
-- hardening avanzado completo de SSH;
-- tests desde el primer día.
-
----
-
-# Qué entiende HardHat por “vulnerabilidades” en la v0.1
-
-En el MVP, HardHat tratará “vulnerabilidades” como:
-
-1. **configuraciones inseguras**
-   - firewall desactivado;
-   - puertos expuestos;
-   - servicios sensibles activos;
-   - opciones SSH inseguras;
-   - políticas débiles.
-
-2. **señales de riesgo del estado del sistema**
-   - actualizaciones pendientes;
-   - exposición innecesaria;
-   - configuraciones no recomendadas.
-
-> HardHat no realizará en esta etapa un escaneo profundo de CVEs ni reemplazará herramientas especializadas de auditoría avanzada.
-
----
-
-# Funcionalidades planeadas
-
-## 1. Auditoría general
-
-El comando principal será:
+## Comandos disponibles
 
 ```bash
+hardhat help
+hardhat version
 hardhat audit
-```
-
-Debe mostrar:
-
-- resumen general;
-- score;
-- hallazgos;
-- severidad;
-- recomendaciones;
-- estado del firewall;
-- puertos en escucha;
-- servicios relevantes;
-- señales de configuración insegura;
-- salida opcional en JSON.
-
-## 2. Firewall
-
-Backend inicial soportado:
-
-- **UFW**
-
-Comandos previstos:
-
-```bash
+hardhat audit --json
 hardhat firewall audit
+hardhat firewall audit --json
 hardhat firewall apply
 hardhat firewall apply --dry-run
-```
-
-Capacidades esperadas:
-
-- detectar si UFW está instalado;
-- revisar si está activo;
-- revisar políticas por defecto;
-- revisar reglas existentes;
-- sugerir configuración básica segura;
-- aplicar cambios tras confirmación.
-
-### Política base recomendada
-
-- `deny incoming`
-- `allow outgoing`
-
-## 3. Revisión básica de SSH
-
-SSH no será todavía un módulo autónomo complejo, pero sí se revisará dentro de la auditoría general.
-
-Checks previstos:
-
-- si `sshd` está activo;
-- si hay configuración riesgosa;
-- estado de `PasswordAuthentication`;
-- estado de `PermitRootLogin`;
-- puerto configurado, cuando sea posible detectarlo.
-
-## 4. Servicios, puertos y estado general
-
-La auditoría inicial también revisará:
-
-- puertos en escucha;
-- servicios activos relevantes;
-- servicios habilitados relevantes;
-- exposición básica del sistema;
-- actualizaciones pendientes como indicador de riesgo.
-
----
-
-# Seguridad operacional
-
-## Confirmación antes de aplicar cambios
-
-HardHat mostrará primero un plan de cambios y luego pedirá una **confirmación global** antes de aplicar.
-
-## Backups automáticos
-
-Antes de modificar configuraciones, HardHat deberá:
-
-- generar backup;
-- validar que el backup existe;
-- bloquear cambios si no pudo respaldar.
-
-## Rollback
-
-Por ahora:
-
-- **no habrá rollback automático**;
-- la recuperación será **manual**;
-- esto debe quedar siempre claro para el usuario.
-
----
-
-# Experiencia de uso
-
-HardHat tendrá dos formas de uso:
-
-## 1. CLI por subcomandos
-
-Pensada para usuarios más cómodos con terminal:
-
-```bash
-hardhat audit
-hardhat firewall audit
-hardhat firewall apply
-```
-
-## 2. Menú interactivo
-
-Pensado para usuarios menos experimentados:
-
-```bash
 hardhat menu
 ```
 
-El modo interactivo **no será el modo por defecto**.
+Notas:
+- `hardhat menu` existe como stub limpio (aun no implementado).
+- Las flags globales pueden ir antes o despues del comando.
 
----
-
-# Flags previstas
-
-Las flags iniciales recomendadas son:
+## Flags globales disponibles
 
 ```bash
 --dry-run
@@ -281,231 +46,108 @@ Las flags iniciales recomendadas son:
 --version
 ```
 
-### Descripción rápida
+## Que hace hoy el MVP
 
-- `--dry-run`: muestra qué haría sin modificar nada.
-- `--yes`: acepta la confirmación global.
-- `--json`: salida estructurada para scripts o integración.
-- `--verbose`: logs detallados.
-- `--no-color`: desactiva colores.
-- `--help`: ayuda.
-- `--version`: versión actual.
+### `hardhat audit`
 
----
+Ejecuta auditoria baseline y devuelve:
+- resumen;
+- score;
+- severidad general;
+- hallazgos estructurados;
+- recomendaciones deduplicadas.
 
-# Salida JSON
+Checks actuales:
+- estado de UFW (instalado/activo/politica por defecto cuando es posible);
+- puertos en escucha (con deteccion basica de exposicion);
+- servicios activos relevantes;
+- senales basicas de SSH inseguro;
+- actualizaciones pendientes.
 
-HardHat ofrecerá salida en formato humano por defecto, pero también salida estructurada para automatización.
+Salida:
+- humana por defecto;
+- JSON estable con metadata, sistema, summary, notes, findings y recommendations.
 
-Ejemplos previstos:
+### `hardhat firewall audit`
 
-```bash
-hardhat audit --json
-hardhat firewall audit --json
-```
+Audita especificamente UFW:
+- instalado o no;
+- activo/inactivo/unknown;
+- politica por defecto cuando se puede;
+- reglas parseadas cuando se puede;
+- deteccion de configuraciones debiles;
+- recomendaciones.
 
----
+Salida:
+- humana por defecto;
+- JSON con metadata, seccion firewall, summary, notes, findings y recommendations.
 
-# Compatibilidad
+### `hardhat firewall apply`
 
-## Compatibilidad inicial oficial
+Aplica baseline segura de UFW con flujo controlado:
+1. valida entorno y compatibilidad;
+2. audita estado actual;
+3. construye y muestra plan;
+4. en `--dry-run` no modifica nada;
+5. crea backups obligatorios;
+6. pide confirmacion global (o usa `--yes`);
+7. aplica politicas baseline;
+8. valida estado final;
+9. registra evento de apply en log.
 
-- **Arch Linux**
+Politica baseline:
+- `deny incoming`
+- `allow outgoing`
 
-El proyecto se diseñará primero para ser estable y consistente en Arch antes de considerar soporte para otras distribuciones.
+Si `sshd` esta activo, intenta detectar puerto SSH y agrega regla allow cuando hace falta para reducir riesgo de lockout.
 
----
+## Instalacion
 
-# Instalación
-
-La forma recomendada de instalación en esta fase es usar el instalador:
+Instalacion recomendada:
 
 ```bash
 cd HardHat
 ./installers/install.sh
 ```
 
-También puedes simular la instalación sin modificar nada:
+Simulacion de instalacion:
 
 ```bash
-./installers/install.sh --dry-run
+./installers/install.sh --dry-run --yes
 ```
 
-El instalador realiza estas acciones:
-
-1. valida que exista la estructura runtime (`bin/`, `lib/`, `modules/`);
-2. muestra un plan de instalación;
-3. pide confirmación (salvo `--yes`);
-4. copia runtime a `/opt/hardhat`;
-5. crea enlace del comando del sistema en `/usr/local/bin/hardhat`.
-
-Después de instalar, deberías poder ejecutar:
+Instalacion no interactiva:
 
 ```bash
-hardhat
+./installers/install.sh --yes
 ```
 
-y específicamente:
+El instalador:
+- valida estructura runtime (`bin/`, `lib/`, `modules/`);
+- muestra plan de instalacion;
+- pide confirmacion (salvo `--yes`);
+- copia runtime a `/opt/hardhat`;
+- crea enlace en `/usr/local/bin/hardhat`.
 
-```bash
-hardhat --help
-```
-
-## Desinstalación manual
-
-Para desinstalar manualmente:
+## Desinstalacion manual
 
 ```bash
 sudo rm -f /usr/local/bin/hardhat
 sudo rm -rf /opt/hardhat
 ```
 
-## Decisiones pendientes
-
-- empaquetado nativo para Arch (`PKGBUILD`) en fases futuras;
-- posible comando dedicado de uninstall.
-
-> La instalación puede evolucionar cuando se integre empaquetado oficial.
-
----
-
-# Estructura sugerida del proyecto
-
-```text
-HardHat/
-├── bin/
-│   └── hardhat
-├── lib/
-│   ├── common.sh
-│   ├── log.sh
-│   ├── colors.sh
-│   ├── sudo.sh
-│   ├── json.sh
-│   ├── backup.sh
-│   ├── confirm.sh
-│   ├── detect.sh
-│   └── validate.sh
-├── modules/
-│   ├── audit.sh
-│   ├── firewall.sh
-│   ├── ssh_audit.sh
-│   ├── services.sh
-│   ├── ports.sh
-│   └── updates.sh
-├── installers/
-│   └── install.sh
-├── docs/
-│   ├── MVP.md
-│   └── ARCHITECTURE.md
-├── examples/
-│   └── hardhat-output.json
-├── README.md
-├── LICENSE
-├── .gitignore
-├── .editorconfig
-├── shellcheckrc
-└── shfmt.conf
-```
-
----
-
-# Calidad del proyecto
-
-Desde el inicio, HardHat buscará mantener:
-
-- código Bash modular y mantenible;
-- baja dependencia de herramientas externas;
-- facilidad de instalación;
-- claridad operativa;
-- compatibilidad fuerte con Arch Linux;
-- validación y backups antes de cambiar el sistema.
-
-Herramientas de calidad previstas:
-
-- `shellcheck`
-- `shfmt`
-
----
-
-# Roadmap inicial
-
-## Fase 1
-- estructura base del proyecto;
-- comando principal;
-- detección de entorno;
-- logs;
-- auditoría básica;
-- revisión de firewall;
-- revisión de puertos;
-- score y severidades.
-
-## Fase 2
-- aplicación guiada de reglas básicas de UFW;
-- backups automáticos;
-- dry-run;
-- JSON output;
-- mejoras de UX.
-
-## Fase 3
-- mejoras de auditoría;
-- menú interactivo;
-- ampliación de checks;
-- futura evaluación de soporte a otros backends.
-
----
-
-# Ejemplos de comandos planeados
-
-```bash
-hardhat audit
-hardhat audit --json
-hardhat firewall audit
-hardhat firewall apply
-hardhat firewall apply --dry-run
-hardhat menu
-hardhat help
-hardhat version
-```
-
----
-
-# Público objetivo
-
-HardHat está pensado especialmente para:
-
-- usuarios nuevos de Arch Linux;
-- usuarios intermedios;
-- desarrolladores;
-- estudiantes de ciberseguridad;
-- personas que quieren asegurar rápido una instalación nueva sin hacerlo todo manualmente.
-
----
-
-# Estado actual de la visión
-
-La idea central del proyecto es:
-
-> HardHat busca convertirse en una herramienta que prepara y asegura una instalación reciente de Arch Linux sin obligar al usuario a dominar todos los detalles técnicos desde el primer día.
-
----
-
-# Contribución
-
-Mientras el proyecto madura, la prioridad será:
-
-- definir bien el MVP;
-- mantener el alcance controlado;
-- construir una base estable y entendible;
-- evitar complejidad innecesaria.
-
----
-
-# Estructura inicial del repositorio (Fase 1)
+## Estructura actual del proyecto
 
 ```text
 .
 ├── bin/
 │   └── hardhat
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── MVP.md
+│   └── TODO.md
+├── installers/
+│   └── install.sh
 ├── lib/
 │   ├── backup.sh
 │   ├── colors.sh
@@ -514,10 +156,41 @@ Mientras el proyecto madura, la prioridad será:
 │   ├── detect.sh
 │   ├── json.sh
 │   ├── log.sh
+│   ├── privileges.sh
 │   ├── sudo.sh
 │   └── validate.sh
 ├── modules/
 │   ├── audit.sh
+│   ├── firewall.sh
+│   ├── ports.sh
+│   ├── services.sh
+│   ├── ssh_audit.sh
+│   └── updates.sh
+├── .editorconfig
+├── .gitignore
+├── README.md
+├── shellcheckrc
+└── shfmt.conf
+```
+
+## Calidad y estilo
+
+Checks recomendados:
+
+```bash
+bash -n bin/hardhat installers/install.sh lib/*.sh modules/*.sh
+shellcheck -x bin/hardhat installers/install.sh lib/*.sh modules/*.sh
+shfmt -i 2 -ci -sr -bn -d bin/hardhat installers/install.sh lib/*.sh modules/*.sh
+```
+
+Nota:
+- `shellcheck` y `shfmt` no son dependencias runtime de HardHat.
+
+## Documentacion complementaria
+
+- `docs/MVP.md`: alcance y estado del MVP.
+- `docs/ARCHITECTURE.md`: arquitectura y flujo tecnico.
+- `docs/TODO.md`: pendientes priorizados de implementacion.
 │   ├── firewall.sh
 │   ├── ports.sh
 │   ├── services.sh

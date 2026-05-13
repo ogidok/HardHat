@@ -51,7 +51,7 @@ Commands:
   audit               Run baseline security audit
   firewall audit      Audit UFW status and baseline policy
   firewall apply      Apply baseline UFW policy (guided)
-  menu                Open interactive menu (stub)
+  menu                Open interactive menu (not implemented yet)
   help                Show this help
   version             Show version
 
@@ -151,13 +151,14 @@ hardhat_command_requires_arch() {
 hardhat_run_command() {
   case "${HARDHAT_COMMAND}" in
     audit)
-      hardhat_module_audit_run
+      hardhat_module_audit_run "${HARDHAT_ARGS[@]:1}"
       ;;
     firewall)
       hardhat_module_firewall_run "${HARDHAT_ARGS[@]:1}"
       ;;
     menu)
-      hardhat_not_implemented "menu command"
+      hardhat_log_warn "menu command is not implemented yet."
+      hardhat_log_info "Use 'hardhat help' to see available commands."
       ;;
     help)
       hardhat_usage
