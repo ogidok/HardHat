@@ -21,3 +21,8 @@ hardhat_validate_boolean_like() {
   local value="$1"
   hardhat_validate_choice "${value}" 0 1 true false yes no
 }
+
+hardhat_validate_language_code() {
+  local value="$1"
+  hardhat_validate_choice "${value}" en es
+}

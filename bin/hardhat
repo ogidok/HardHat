@@ -24,6 +24,7 @@ source "${ROOT_DIR}/lib/common.sh"
 source "${ROOT_DIR}/lib/detect.sh"
 source "${ROOT_DIR}/lib/validate.sh"
 source "${ROOT_DIR}/lib/json.sh"
+source "${ROOT_DIR}/lib/i18n.sh"
 source "${ROOT_DIR}/lib/confirm.sh"
 source "${ROOT_DIR}/lib/backup.sh"
 source "${ROOT_DIR}/lib/sudo.sh"
@@ -37,6 +38,46 @@ source "${ROOT_DIR}/modules/firewall.sh"
 source "${ROOT_DIR}/modules/audit.sh"
 
 hardhat_usage() {
+  if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+    cat <<'EOF'
+HardHat - Bootstrapper de seguridad Linux para Arch Linux
+
+Uso:
+  hardhat [opciones globales] <comando> [subcomando]
+
+Nota:
+  Las opciones globales pueden ir antes o despues del comando.
+  Ejemplos: hardhat --json audit | hardhat audit --json
+
+Comandos:
+  audit               Ejecuta auditoria de seguridad baseline
+  firewall audit      Audita estado de UFW y politica baseline
+  firewall apply      Aplica baseline de UFW (guiado)
+  language show       Muestra idioma actual
+  language set <id>   Configura idioma (en|es)
+  menu                Abre menu interactivo (no implementado)
+  help                Muestra esta ayuda
+  version             Muestra version
+
+Opciones globales:
+  --dry-run           Muestra plan sin modificar el sistema
+  --yes               Omite confirmacion global interactiva
+  --json              Emite salida JSON para automatizacion
+  --verbose           Habilita logs detallados
+  --no-color          Desactiva colores ANSI
+  --help              Muestra esta ayuda
+  --version           Muestra version
+
+Ejemplos:
+  hardhat audit
+  hardhat audit --json
+  hardhat firewall audit
+  hardhat firewall apply --dry-run
+  hardhat language set es
+EOF
+    return
+  fi
+
   cat <<'EOF'
 HardHat - Linux Security Bootstrapper for Arch Linux
 
@@ -50,7 +91,9 @@ Note:
 Commands:
   audit               Run baseline security audit
   firewall audit      Audit UFW status and baseline policy
-  firewall apply      Apply baseline UFW policy (guided)
+  firewall apply      Apply UFW baseline policy (guided)
+  language show       Show current language
+  language set <id>   Set language (en|es)
   menu                Open interactive menu (not implemented yet)
   help                Show this help
   version             Show version
@@ -69,7 +112,72 @@ Examples:
   hardhat audit --json
   hardhat firewall audit
   hardhat firewall apply --dry-run
+  hardhat language set en
 EOF
+}
+
+hardhat_language_usage() {
+  if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+    cat <<'EOF'
+Uso:
+  hardhat language show
+  hardhat language set <en|es>
+EOF
+    return
+  fi
+
+  cat <<'EOF'
+Usage:
+  hardhat language show
+  hardhat language set <en|es>
+EOF
+}
+
+hardhat_run_language_command() {
+  local subcommand="${HARDHAT_ARGS[1]:-show}"
+  local lang_value="${HARDHAT_ARGS[2]:-}"
+
+  case "${subcommand}" in
+    show)
+      if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+        printf 'Idioma actual: %s\n' "${HARDHAT_LANG}"
+      else
+        printf 'Current language: %s\n' "${HARDHAT_LANG}"
+      fi
+      ;;
+    set)
+      if [[ -z "${lang_value}" ]]; then
+        hardhat_log_error "Missing language value (en|es)."
+        hardhat_language_usage
+        return 1
+      fi
+
+      if ! hardhat_validate_language_code "${lang_value}"; then
+        hardhat_log_error "Unsupported language: ${lang_value}. Use en or es."
+        return 1
+      fi
+
+      if ! hardhat_language_set_user "${lang_value}"; then
+        hardhat_log_error "Unable to write user language config."
+        return 1
+      fi
+
+      HARDHAT_LANG="${lang_value}"
+      if [[ "${HARDHAT_LANG}" == "es" ]]; then
+        hardhat_log_success "Idioma configurado a es."
+      else
+        hardhat_log_success "Language set to en."
+      fi
+      ;;
+    help)
+      hardhat_language_usage
+      ;;
+    *)
+      hardhat_log_error "Unknown language subcommand: ${subcommand}"
+      hardhat_language_usage
+      return 1
+      ;;
+  esac
 }
 
 hardhat_parse_global_flags() {
@@ -156,6 +264,9 @@ hardhat_run_command() {
     firewall)
       hardhat_module_firewall_run "${HARDHAT_ARGS[@]:1}"
       ;;
+    language)
+      hardhat_run_language_command
+      ;;
     menu)
       hardhat_log_warn "menu command is not implemented yet."
       hardhat_log_info "Use 'hardhat help' to see available commands."
@@ -176,6 +287,7 @@ hardhat_run_command() {
 
 main() {
   hardhat_parse_global_flags "$@"
+  hardhat_language_load
   hardhat_init_colors
   hardhat_parse_command
 
