@@ -4,12 +4,16 @@ HARDHAT_AUDIT_FINDINGS=()
 HARDHAT_AUDIT_NOTES=()
 HARDHAT_AUDIT_SCORE=100
 HARDHAT_AUDIT_SEVERITY="none"
+HARDHAT_AUDIT_SUMMARY="baseline security audit completed"
+HARDHAT_AUDIT_RECOMMENDATIONS=()
 
 hardhat_audit_reset_state() {
   HARDHAT_AUDIT_FINDINGS=()
   HARDHAT_AUDIT_NOTES=()
   HARDHAT_AUDIT_SCORE=100
   HARDHAT_AUDIT_SEVERITY="none"
+  HARDHAT_AUDIT_SUMMARY="baseline security audit completed"
+  HARDHAT_AUDIT_RECOMMENDATIONS=()
 }
 
 hardhat_audit_add_note() {
@@ -71,6 +75,28 @@ hardhat_audit_calculate_score() {
   HARDHAT_AUDIT_SCORE="${score}"
 }
 
+hardhat_audit_collect_recommendations() {
+  HARDHAT_AUDIT_RECOMMENDATIONS=()
+  local item recommendation
+  local -A seen=()
+
+  for item in "${HARDHAT_AUDIT_FINDINGS[@]}"; do
+    IFS='|' read -r _ _ _ _ recommendation <<<"${item}"
+    if [[ -z "${recommendation}" ]]; then
+      continue
+    fi
+    if [[ -n "${seen["${recommendation}"]+x}" ]]; then
+      continue
+    fi
+    HARDHAT_AUDIT_RECOMMENDATIONS+=("${recommendation}")
+    seen["${recommendation}"]=1
+  done
+}
+
+hardhat_audit_generated_at_utc() {
+  date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || printf 'unknown'
+}
+
 hardhat_audit_collect() {
   hardhat_audit_add_note "Running baseline checks for firewall, ports, services, SSH and updates."
   hardhat_module_firewall_collect_audit
@@ -83,7 +109,7 @@ hardhat_audit_collect() {
 hardhat_audit_render_human() {
   local findings_count="${#HARDHAT_AUDIT_FINDINGS[@]}"
   printf 'HardHat Audit Report\n'
-  printf 'Summary: baseline security audit completed\n'
+  printf 'Summary: %s\n' "${HARDHAT_AUDIT_SUMMARY}"
   printf 'Score: %s/100\n' "${HARDHAT_AUDIT_SCORE}"
   printf 'Overall severity: %s\n' "${HARDHAT_AUDIT_SEVERITY}"
   printf 'Findings: %s\n\n' "${findings_count}"
@@ -108,35 +134,54 @@ hardhat_audit_render_human() {
     printf '   Recommendation: %s\n' "${recommendation}"
     idx=$((idx + 1))
   done
+
+  if ((${#HARDHAT_AUDIT_RECOMMENDATIONS[@]} > 0)); then
+    printf '\nTop recommendations:\n'
+    local rec
+    for rec in "${HARDHAT_AUDIT_RECOMMENDATIONS[@]}"; do
+      printf -- '- %s\n' "${rec}"
+    done
+  fi
 }
 
 hardhat_audit_render_json() {
+  local distro_id
+  local generated_at
   local findings_count="${#HARDHAT_AUDIT_FINDINGS[@]}"
+  distro_id="$(hardhat_detect_distro_id || printf 'unknown')"
+  generated_at="$(hardhat_audit_generated_at_utc)"
+
   printf '{'
+  printf '"metadata":{'
+  printf '"tool":"hardhat",'
+  printf '"version":"%s",' "$(hardhat_json_escape "${HARDHAT_VERSION:-unknown}")"
   printf '"command":"audit",'
-  printf '"summary":"baseline security audit completed",'
+  printf '"generated_at":'
+  hardhat_json_nullable_string "${generated_at}"
+  printf '},'
+
+  printf '"system":{'
+  printf '"distro":'
+  hardhat_json_nullable_string "${distro_id}"
+  printf '},'
+
+  printf '"summary":{'
+  printf '"text":"%s",' "$(hardhat_json_escape "${HARDHAT_AUDIT_SUMMARY}")"
   printf '"score":%s,' "${HARDHAT_AUDIT_SCORE}"
   printf '"severity":"%s",' "$(hardhat_json_escape "${HARDHAT_AUDIT_SEVERITY}")"
-  printf '"findings_count":%s,' "${findings_count}"
+  printf '"findings_count":%s' "${findings_count}"
+  printf '},'
 
-  printf '"notes":['
-  local note_idx=0
-  local note
-  for note in "${HARDHAT_AUDIT_NOTES[@]}"; do
-    if ((note_idx > 0)); then
-      printf ','
-    fi
-    printf '"%s"' "$(hardhat_json_escape "${note}")"
-    note_idx=$((note_idx + 1))
-  done
-  printf '],'
+  printf '"notes":'
+  hardhat_json_print_string_array "${HARDHAT_AUDIT_NOTES[@]}"
+  printf ','
 
   printf '"findings":['
-  local idx=0
+  local note_idx=0
   local item id severity title description recommendation
   for item in "${HARDHAT_AUDIT_FINDINGS[@]}"; do
     IFS='|' read -r id severity title description recommendation <<<"${item}"
-    if ((idx > 0)); then
+    if ((note_idx > 0)); then
       printf ','
     fi
     printf '{'
@@ -146,9 +191,13 @@ hardhat_audit_render_json() {
     printf '"description":"%s",' "$(hardhat_json_escape "${description}")"
     printf '"recommendation":"%s"' "$(hardhat_json_escape "${recommendation}")"
     printf '}'
-    idx=$((idx + 1))
+    note_idx=$((note_idx + 1))
   done
-  printf ']}'
+  printf '],'
+
+  printf '"recommendations":'
+  hardhat_json_print_string_array "${HARDHAT_AUDIT_RECOMMENDATIONS[@]}"
+  printf '}'
   printf '\n'
 }
 
@@ -156,6 +205,7 @@ hardhat_module_audit_run() {
   hardhat_audit_reset_state
   hardhat_audit_collect
   hardhat_audit_calculate_score
+  hardhat_audit_collect_recommendations
 
   if [[ "${HARDHAT_OUTPUT_JSON:-0}" -eq 1 ]]; then
     hardhat_audit_render_json
