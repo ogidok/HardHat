@@ -90,7 +90,7 @@ hardhat_audit_render_human() {
 
   local note
   for note in "${HARDHAT_AUDIT_NOTES[@]}"; do
-    printf '- %s\n' "${note}"
+    printf -- '- %s\n' "${note}"
   done
 
   if ((findings_count == 0)); then
