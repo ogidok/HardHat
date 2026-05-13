@@ -1,5 +1,17 @@
 # HardHat
 
+```text
+           )                      )              
+        ( /(              (    ( /(           )  
+        )\())    )  (     )\ ) )\())    )  ( /(  
+        ((_)\  ( /(  )(   (()/(((_)\  ( /(  )\()) 
+        _((_) )(_))(()\   ((_))_((_) )(_))(_))/  
+        | || |((_)_  ((_)  _| || || |((_)_ | |_   
+        | __ |/ _` || '_|/ _` || __ |/ _` ||  _|  
+        |_||_|\__,_||_|  \__,_||_||_|\__,_| \__|  
+                                          
+```
+
 > HardHat — Linux Security Bootstrapper for Arch Linux
 
 HardHat es una herramienta CLI enfocada en **Arch Linux** para auditar el estado básico de seguridad del sistema, detectar configuraciones inseguras, sugerir mejoras y aplicar cambios de forma guiada y segura.
