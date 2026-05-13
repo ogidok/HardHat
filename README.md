@@ -470,6 +470,45 @@ Mientras el proyecto madura, la prioridad será:
 
 ---
 
+# Estructura inicial del repositorio (Fase 1)
+
+```text
+.
+├── bin/
+│   └── hardhat
+├── lib/
+│   ├── backup.sh
+│   ├── colors.sh
+│   ├── common.sh
+│   ├── confirm.sh
+│   ├── detect.sh
+│   ├── json.sh
+│   ├── log.sh
+│   ├── sudo.sh
+│   └── validate.sh
+├── modules/
+│   ├── audit.sh
+│   ├── firewall.sh
+│   ├── ports.sh
+│   ├── services.sh
+│   ├── ssh_audit.sh
+│   └── updates.sh
+├── installers/
+│   └── install.sh
+├── docs/
+│   ├── ARCHITECTURE.md
+│   └── MVP.md
+├── .editorconfig
+├── .gitignore
+├── shellcheckrc
+└── shfmt.conf
+```
+
+En esta fase la implementación es intencionalmente mínima: la arquitectura modular,
+el flujo del CLI y los stubs principales ya están definidos para iterar de forma segura.
+
+---
+
 # Licencia
 
 Pendiente de definir.
