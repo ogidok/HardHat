@@ -1,19 +1,19 @@
-# TODOs (Post-MVP baseline)
+# TODOs (Post-MVP)
 
-## Priority 1
-- Implement real `menu` workflow.
-- Improve SSH rule detection in `firewall apply` (less heuristic parsing).
-- Improve post-apply validation (check expected rules, not only active/default).
-- Add safer handling around interactive sudo/privileged command paths.
+## Prioridad 1
+- Implementar flujo real de `menu`.
+- Mejorar deteccion de regla SSH en `firewall apply` (menos heuristica).
+- Mejorar validacion post-apply (verificar reglas esperadas, no solo activo/default).
+- Endurecer manejo de rutas interactivas con sudo/privilegios.
 
-## Priority 2
-- Add optional JSON output for `firewall apply` summary.
-- Add command-specific help for all modules and subcommands.
-- Normalize message catalog for fully consistent wording.
-- Improve parser resilience for UFW output variations.
+## Prioridad 2
+- Agregar salida JSON opcional para resumen de `firewall apply`.
+- Agregar ayuda especifica por comando y subcomando en todos los modulos.
+- Normalizar catalogo de mensajes para consistencia total.
+- Mejorar resiliencia del parser ante variaciones de salida de UFW.
 
-## Priority 3
-- Add test strategy (shell unit tests and integration smoke tests).
-- Add PKGBUILD for Arch packaging.
-- Add dedicated uninstall command.
-- Extend docs with troubleshooting and permission models.
+## Prioridad 3
+- Definir estrategia de tests (unitarios shell + smoke tests de integracion).
+- Agregar PKGBUILD para empaquetado en Arch.
+- Agregar comando dedicado de desinstalacion.
+- Expandir documentacion de troubleshooting y modelo de permisos.
