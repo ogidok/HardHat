@@ -14,7 +14,7 @@ Importante:
 ## Compatibilidad oficial del MVP
 
 - Arch Linux
-- Backend de firewall: UFW
+- backend de firewall: UFW
 
 ## Comandos disponibles
 
@@ -50,7 +50,7 @@ Notas:
 
 ### `hardhat audit`
 
-Ejecuta auditoria baseline y devuelve:
+Ejecuta una auditoria baseline y devuelve:
 - resumen;
 - score;
 - severidad general;
@@ -66,13 +66,13 @@ Checks actuales:
 
 Salida:
 - humana por defecto;
-- JSON estable con metadata, sistema, summary, notes, findings y recommendations.
+- JSON estable con metadatos, sistema, resumen, notas, hallazgos y recomendaciones.
 
 ### `hardhat firewall audit`
 
 Audita especificamente UFW:
 - instalado o no;
-- activo/inactivo/unknown;
+- activo/inactivo/desconocido;
 - politica por defecto cuando se puede;
 - reglas parseadas cuando se puede;
 - deteccion de configuraciones debiles;
@@ -80,7 +80,7 @@ Audita especificamente UFW:
 
 Salida:
 - humana por defecto;
-- JSON con metadata, seccion firewall, summary, notes, findings y recommendations.
+- JSON con metadatos, seccion firewall, resumen, notas, hallazgos y recomendaciones.
 
 ### `hardhat firewall apply`
 
@@ -93,7 +93,7 @@ Aplica baseline segura de UFW con flujo controlado:
 6. pide confirmacion global (o usa `--yes`);
 7. aplica politicas baseline;
 8. valida estado final;
-9. registra evento de apply en log.
+9. registra evento de aplicacion en log.
 
 Politica baseline:
 - `deny incoming`
@@ -191,44 +191,3 @@ Nota:
 - `docs/MVP.md`: alcance y estado del MVP.
 - `docs/ARCHITECTURE.md`: arquitectura y flujo tecnico.
 - `docs/TODO.md`: pendientes priorizados de implementacion.
-│   ├── firewall.sh
-│   ├── ports.sh
-│   ├── services.sh
-│   ├── ssh_audit.sh
-│   └── updates.sh
-├── installers/
-│   └── install.sh
-├── docs/
-│   ├── ARCHITECTURE.md
-│   └── MVP.md
-├── .editorconfig
-├── .gitignore
-├── shellcheckrc
-└── shfmt.conf
-```
-
-En esta fase la implementación es intencionalmente mínima: la arquitectura modular,
-el flujo del CLI y los stubs principales ya están definidos para iterar de forma segura.
-
----
-
-# Licencia
-
-Pendiente de definir.
-
----
-
-# Nombre
-
-**HardHat**
-
-Inspirado en:
-
-- protección;
-- preparación;
-- seguridad;
-- herramientas de trabajo seguro.
-
-Tagline actual:
-
-> HardHat — Linux Security Bootstrapper for Arch Linux
