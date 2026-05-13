@@ -13,6 +13,63 @@ APP_LANG=""
 GLOBAL_CONFIG_DIR="/etc/hardhat"
 GLOBAL_CONFIG_FILE="/etc/hardhat/config"
 
+msg() {
+  local key="$1"
+
+  if [[ "${APP_LANG:-en}" == "es" ]]; then
+    case "${key}" in
+      lang_default_yes) printf 'Idioma no definido. Se usa en por --yes.\n' ;;
+      plan_title) printf 'Plan de instalacion:\n' ;;
+      plan_source_root) printf '  Raiz origen:    %s\n' "${ROOT_DIR}" ;;
+      plan_install_root) printf '  Raiz destino:   %s\n' "${INSTALL_ROOT}" ;;
+      plan_command_path) printf '  Ruta comando:   %s\n\n' "${TARGET_BIN}" ;;
+      plan_actions) printf 'Acciones:\n' ;;
+      plan_action_1) printf '  1) Crear %s\n' "${INSTALL_ROOT}" ;;
+      plan_action_2) printf '  2) Copiar bin/, lib/ y modules/ dentro de %s\n' "${INSTALL_ROOT}" ;;
+      plan_action_3) printf '  3) Crear symlink %s -> %s/bin/hardhat\n' "${TARGET_BIN}" "${INSTALL_ROOT}" ;;
+      plan_action_4) printf '  4) Guardar idioma global en %s (%s)\n' "${GLOBAL_CONFIG_FILE}" "${APP_LANG}" ;;
+      confirm_skipped) printf 'Confirmacion omitida por --yes\n' ;;
+      confirm_prompt) printf 'Continuar con la instalacion? [y/N]: ' ;;
+      install_cancelled) printf 'Instalacion cancelada.\n' ;;
+      sudo_required) printf 'sudo es necesario para instalar si no ejecutas como root.\n' ;;
+      dryrun_write) printf '[dry-run] escribir %s con HARDHAT_LANG=%s\n' "${GLOBAL_CONFIG_FILE}" "${APP_LANG}" ;;
+      dryrun_done) printf '\nDry-run completado. No se modificaron archivos.\n' ;;
+      install_done) printf '\nInstalacion completada.\n' ;;
+      run_help) printf 'Ejecuta: hardhat --help\n' ;;
+      installed_root) printf 'Raiz instalada: %s\n' "${INSTALL_ROOT}" ;;
+      installed_cmd) printf 'Comando instalado: %s\n' "${TARGET_BIN}" ;;
+      configured_lang) printf 'Idioma configurado: %s\n' "${APP_LANG}" ;;
+      *) return 1 ;;
+    esac
+    return 0
+  fi
+
+  case "${key}" in
+    lang_default_yes) printf 'Language not provided. Defaulting to en due to --yes.\n' ;;
+    plan_title) printf 'Install plan:\n' ;;
+    plan_source_root) printf '  Source root:    %s\n' "${ROOT_DIR}" ;;
+    plan_install_root) printf '  Install root:   %s\n' "${INSTALL_ROOT}" ;;
+    plan_command_path) printf '  Command path:   %s\n\n' "${TARGET_BIN}" ;;
+    plan_actions) printf 'Actions:\n' ;;
+    plan_action_1) printf '  1) Create %s\n' "${INSTALL_ROOT}" ;;
+    plan_action_2) printf '  2) Copy bin/, lib/ and modules/ into %s\n' "${INSTALL_ROOT}" ;;
+    plan_action_3) printf '  3) Create symlink %s -> %s/bin/hardhat\n' "${TARGET_BIN}" "${INSTALL_ROOT}" ;;
+    plan_action_4) printf '  4) Persist global app language in %s (%s)\n' "${GLOBAL_CONFIG_FILE}" "${APP_LANG}" ;;
+    confirm_skipped) printf 'Confirmation skipped by --yes\n' ;;
+    confirm_prompt) printf 'Proceed with installation? [y/N]: ' ;;
+    install_cancelled) printf 'Installation cancelled.\n' ;;
+    sudo_required) printf 'sudo is required for installation when not running as root.\n' ;;
+    dryrun_write) printf '[dry-run] write %s with HARDHAT_LANG=%s\n' "${GLOBAL_CONFIG_FILE}" "${APP_LANG}" ;;
+    dryrun_done) printf '\nDry-run complete. No files were changed.\n' ;;
+    install_done) printf '\nInstallation complete.\n' ;;
+    run_help) printf 'Run: hardhat --help\n' ;;
+    installed_root) printf 'Installed runtime root: %s\n' "${INSTALL_ROOT}" ;;
+    installed_cmd) printf 'Installed command path: %s\n' "${TARGET_BIN}" ;;
+    configured_lang) printf 'Configured language: %s\n' "${APP_LANG}" ;;
+    *) return 1 ;;
+  esac
+}
+
 install_usage() {
   cat <<'EOF'
 HardHat installer
@@ -104,7 +161,7 @@ select_language_if_needed() {
 
   if [[ "${ASSUME_YES}" -eq 1 ]]; then
     APP_LANG="en"
-    printf 'Language not provided. Defaulting to en due to --yes.\n'
+    msg lang_default_yes
     return 0
   fi
 
@@ -134,33 +191,32 @@ validate_source_tree() {
 }
 
 show_plan() {
-  cat <<EOF
-Install plan:
-  Source root:    ${ROOT_DIR}
-  Install root:   ${INSTALL_ROOT}
-  Command path:   ${TARGET_BIN}
-
-Actions:
-  1) Create ${INSTALL_ROOT}
-  2) Copy bin/, lib/ and modules/ into ${INSTALL_ROOT}
-  3) Create symlink ${TARGET_BIN} -> ${INSTALL_ROOT}/bin/hardhat
-  4) Persist global app language in ${GLOBAL_CONFIG_FILE} (${APP_LANG})
-EOF
+  msg plan_title
+  msg plan_source_root
+  msg plan_install_root
+  msg plan_command_path
+  msg plan_actions
+  msg plan_action_1
+  msg plan_action_2
+  msg plan_action_3
+  msg plan_action_4
 }
 
 confirm_plan() {
   if [[ "${ASSUME_YES}" -eq 1 ]]; then
-    printf 'Confirmation skipped by --yes\n'
+    msg confirm_skipped
     return 0
   fi
 
-  read -r -p "Proceed with installation? [y/N]: " answer
+  local prompt
+  prompt="$(msg confirm_prompt)"
+  read -r -p "${prompt}" answer
   case "${answer}" in
     y|Y|yes|YES)
       return 0
       ;;
     *)
-      printf 'Installation cancelled.\n'
+      msg install_cancelled
       return 1
       ;;
   esac
@@ -179,7 +235,7 @@ perform_install() {
 
   run_as_root mkdir -p "${GLOBAL_CONFIG_DIR}"
   if [[ "${DRY_RUN}" -eq 1 ]]; then
-    printf '[dry-run] write %s with HARDHAT_LANG=%s\n' "${GLOBAL_CONFIG_FILE}" "${APP_LANG}"
+    msg dryrun_write
   else
     local tmp_file
     tmp_file="$(mktemp)"
@@ -200,22 +256,22 @@ main() {
   fi
 
   if need_sudo && ! command -v sudo >/dev/null 2>&1; then
-    printf 'sudo is required for installation when not running as root.\n' >&2
+    msg sudo_required >&2
     exit 1
   fi
 
   perform_install
 
   if [[ "${DRY_RUN}" -eq 1 ]]; then
-    printf '\nDry-run complete. No files were changed.\n'
+    msg dryrun_done
     exit 0
   fi
 
-  printf '\nInstallation complete.\n'
-  printf 'Run: hardhat --help\n'
-  printf 'Installed runtime root: %s\n' "${INSTALL_ROOT}"
-  printf 'Installed command path: %s\n' "${TARGET_BIN}"
-  printf 'Configured language: %s\n' "${APP_LANG}"
+  msg install_done
+  msg run_help
+  msg installed_root
+  msg installed_cmd
+  msg configured_lang
 }
 
 main "$@"
