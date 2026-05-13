@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+HARDHAT_VERSION="0.1.0-dev"
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+
+# Global flags used by modules and shared libs.
+HARDHAT_DRY_RUN=0
+HARDHAT_ASSUME_YES=0
+HARDHAT_OUTPUT_JSON=0
+HARDHAT_VERBOSE=0
+HARDHAT_NO_COLOR=0
+
+source "${ROOT_DIR}/lib/colors.sh"
+source "${ROOT_DIR}/lib/log.sh"
+source "${ROOT_DIR}/lib/common.sh"
+source "${ROOT_DIR}/lib/detect.sh"
+source "${ROOT_DIR}/lib/validate.sh"
+source "${ROOT_DIR}/lib/json.sh"
+source "${ROOT_DIR}/lib/confirm.sh"
+source "${ROOT_DIR}/lib/backup.sh"
+source "${ROOT_DIR}/lib/sudo.sh"
+
+source "${ROOT_DIR}/modules/ports.sh"
+source "${ROOT_DIR}/modules/services.sh"
+source "${ROOT_DIR}/modules/ssh_audit.sh"
+source "${ROOT_DIR}/modules/updates.sh"
+source "${ROOT_DIR}/modules/firewall.sh"
+source "${ROOT_DIR}/modules/audit.sh"
+
+hardhat_usage() {
+  cat <<'EOF'
+HardHat - Linux Security Bootstrapper for Arch Linux
+
+Usage:
+  hardhat [global options] <command> [subcommand]
+
+Commands:
+  audit               Run baseline security audit
+  firewall audit      Audit UFW status and baseline policy
+  firewall apply      Apply baseline UFW policy (guided)
+  help                Show this help
+  version             Show version
+
+Global options:
+  --dry-run           Show planned actions without changing system
+  --yes               Skip interactive global confirmation
+  --json              Emit machine-friendly JSON output
+  --verbose           Enable verbose logs
+  --no-color          Disable ANSI colors
+  --help              Show this help
+  --version           Show version
+EOF
+}
+
+hardhat_parse_global_flags() {
+  while (($# > 0)); do
+    case "$1" in
+      --dry-run)
+        HARDHAT_DRY_RUN=1
+        shift
+        ;;
+      --yes)
+        HARDHAT_ASSUME_YES=1
+        shift
+        ;;
+      --json)
+        HARDHAT_OUTPUT_JSON=1
+        shift
+        ;;
+      --verbose)
+        HARDHAT_VERBOSE=1
+        shift
+        ;;
+      --no-color)
+        HARDHAT_NO_COLOR=1
+        shift
+        ;;
+      --help)
+        hardhat_usage
+        exit 0
+        ;;
+      --version)
+        printf '%s\n' "${HARDHAT_VERSION}"
+        exit 0
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -*)
+        hardhat_log_error "Unknown option: $1"
+        hardhat_usage
+        exit 1
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  HARDHAT_ARGS=("$@")
+}
+
+main() {
+  hardhat_parse_global_flags "$@"
+  hardhat_init_colors
+
+  if ! hardhat_detect_arch_linux; then
+    hardhat_log_error "HardHat MVP currently supports only Arch Linux."
+    exit 1
+  fi
+
+  local command="${HARDHAT_ARGS[0]:-help}"
+
+  case "${command}" in
+    audit)
+      hardhat_module_audit_run
+      ;;
+    firewall)
+      hardhat_module_firewall_run "${HARDHAT_ARGS[@]:1}"
+      ;;
+    help)
+      hardhat_usage
+      ;;
+    version)
+      printf '%s\n' "${HARDHAT_VERSION}"
+      ;;
+    *)
+      hardhat_log_error "Unknown command: ${command}"
+      hardhat_usage
+      exit 1
+      ;;
+  esac
+}
+
+main "$@"
