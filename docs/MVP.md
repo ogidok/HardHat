@@ -1,21 +1,38 @@
 # HardHat MVP Scope
 
 ## Goal
-Build a stable and safe CLI baseline for Arch Linux security auditing and guided hardening.
+Provide a stable first iteration of a security-focused Arch Linux CLI with useful baseline audit and controlled UFW apply flow.
 
-## Included in MVP
-- Arch Linux only.
-- Modular Bash architecture.
-- `hardhat` CLI command.
-- Baseline audit flow with score/severity placeholders.
-- Firewall checks and guided apply path scaffold (UFW only).
-- Dry-run support.
-- Global confirmation before apply.
-- Backup helper as hard precondition for future config changes.
-- Human and JSON output modes.
+## Implemented in current MVP
+- Arch Linux guard for operational commands.
+- Modular Bash project layout.
+- Global CLI options: `--dry-run`, `--yes`, `--json`, `--verbose`, `--no-color`, `--help`, `--version`.
+- Commands:
+	- `hardhat audit` (+ JSON output)
+	- `hardhat firewall audit` (+ JSON output)
+	- `hardhat firewall apply` (with plan, backup precondition, confirmation and validation)
+	- `hardhat menu` (stub)
+- Baseline checks:
+	- UFW status and defaults
+	- Listening ports
+	- Relevant running services
+	- Basic SSH configuration signals
+	- Pending updates as risk signal
+- Structured findings with severity and recommendations.
+- Score and summary generation for audit.
+- Installer for system command deployment.
 
-## Explicitly excluded for now
+## Explicitly not implemented yet
 - Multi-distro support.
-- nftables and iptables backends.
+- nftables/iptables backends.
 - Automatic rollback.
-- Test suite in initial phase.
+- Interactive menu behavior.
+- Dedicated uninstall command.
+- Automated tests.
+- Deep CVE scanning/integration with heavy scanners.
+
+## Safety commitments in MVP
+- No silent changes.
+- `--dry-run` must avoid system modifications.
+- If backup creation fails, `firewall apply` aborts.
+- Global confirmation required for apply unless `--yes` is provided.
