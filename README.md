@@ -318,24 +318,54 @@ El proyecto se diseñará primero para ser estable y consistente en Arch antes d
 
 # Instalación
 
-La experiencia deseada es poder ejecutar:
+La forma recomendada de instalación en esta fase es usar el instalador:
+
+```bash
+cd HardHat
+./installers/install.sh
+```
+
+También puedes simular la instalación sin modificar nada:
+
+```bash
+./installers/install.sh --dry-run
+```
+
+El instalador realiza estas acciones:
+
+1. valida que exista la estructura runtime (`bin/`, `lib/`, `modules/`);
+2. muestra un plan de instalación;
+3. pide confirmación (salvo `--yes`);
+4. copia runtime a `/opt/hardhat`;
+5. crea enlace del comando del sistema en `/usr/local/bin/hardhat`.
+
+Después de instalar, deberías poder ejecutar:
 
 ```bash
 hardhat
 ```
 
-y no depender de:
+y específicamente:
 
 ```bash
-./hardhat
+hardhat --help
 ```
 
-La estrategia inicial de instalación será:
+## Desinstalación manual
 
-1. script de instalación (`install.sh`);
-2. más adelante, posible `PKGBUILD` para Arch.
+Para desinstalar manualmente:
 
-> La instalación definitiva puede cambiar a medida que avance el proyecto.
+```bash
+sudo rm -f /usr/local/bin/hardhat
+sudo rm -rf /opt/hardhat
+```
+
+## Decisiones pendientes
+
+- empaquetado nativo para Arch (`PKGBUILD`) en fases futuras;
+- posible comando dedicado de uninstall.
+
+> La instalación puede evolucionar cuando se integre empaquetado oficial.
 
 ---
 

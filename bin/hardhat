@@ -43,6 +43,10 @@ HardHat - Linux Security Bootstrapper for Arch Linux
 Usage:
   hardhat [global options] <command> [subcommand]
 
+Note:
+  Global options can be passed before or after the command.
+  Examples: hardhat --json audit | hardhat audit --json
+
 Commands:
   audit               Run baseline security audit
   firewall audit      Audit UFW status and baseline policy
@@ -59,6 +63,12 @@ Global options:
   --no-color          Disable ANSI colors
   --help              Show this help
   --version           Show version
+
+Examples:
+  hardhat audit
+  hardhat audit --json
+  hardhat firewall audit
+  hardhat firewall apply --dry-run
 EOF
 }
 
