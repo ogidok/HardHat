@@ -82,7 +82,13 @@ msg() {
 
 show_ascii_banner() {
   [[ -f "${BANNER_FILE}" ]] || return 0
-  cat "${BANNER_FILE}"
+  if [[ -t 1 ]]; then
+    printf '\033[31m'
+    cat "${BANNER_FILE}"
+    printf '\033[0m'
+  else
+    cat "${BANNER_FILE}"
+  fi
   printf '\n'
   sleep "${BANNER_SECONDS}"
 }
