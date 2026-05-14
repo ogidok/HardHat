@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+ROOT_DIR="${SCRIPT_DIR}"
 
 INSTALL_ROOT="/opt/hardhat"
 BIN_DIR="/usr/local/bin"
@@ -12,6 +12,8 @@ DRY_RUN=0
 APP_LANG=""
 GLOBAL_CONFIG_DIR="/etc/hardhat"
 GLOBAL_CONFIG_FILE="/etc/hardhat/config"
+BANNER_FILE="${ROOT_DIR}/accsi.txt"
+BANNER_SECONDS=2
 
 msg() {
   local key="$1"
@@ -39,6 +41,10 @@ msg() {
       installed_root) printf 'Raiz instalada: %s\n' "${INSTALL_ROOT}" ;;
       installed_cmd) printf 'Comando instalado: %s\n' "${TARGET_BIN}" ;;
       configured_lang) printf 'Idioma configurado: %s\n' "${APP_LANG}" ;;
+      lang_select_title) printf 'Selecciona el idioma de la app:\n' ;;
+      lang_select_opt_1) printf '  1) English (en)\n' ;;
+      lang_select_opt_2) printf '  2) Espanol (es)\n' ;;
+      lang_select_prompt) printf 'Opcion [1/2] (default 1): ' ;;
       *) return 1 ;;
     esac
     return 0
@@ -66,8 +72,19 @@ msg() {
     installed_root) printf 'Installed runtime root: %s\n' "${INSTALL_ROOT}" ;;
     installed_cmd) printf 'Installed command path: %s\n' "${TARGET_BIN}" ;;
     configured_lang) printf 'Configured language: %s\n' "${APP_LANG}" ;;
+    lang_select_title) printf 'Select app language:\n' ;;
+    lang_select_opt_1) printf '  1) English (en)\n' ;;
+    lang_select_opt_2) printf '  2) Espanol (es)\n' ;;
+    lang_select_prompt) printf 'Choice [1/2] (default 1): ' ;;
     *) return 1 ;;
   esac
+}
+
+show_ascii_banner() {
+  [[ -f "${BANNER_FILE}" ]] || return 0
+  cat "${BANNER_FILE}"
+  printf '\n'
+  sleep "${BANNER_SECONDS}"
 }
 
 install_usage() {
@@ -75,7 +92,7 @@ install_usage() {
 HardHat installer
 
 Usage:
-  ./installers/install.sh [options]
+  ./install.sh [options]
 
 Options:
   --yes                Skip confirmation prompt
@@ -165,10 +182,12 @@ select_language_if_needed() {
     return 0
   fi
 
-  printf 'Select app language:\n'
-  printf '  1) English (en)\n'
-  printf '  2) Espanol (es)\n'
-  read -r -p 'Choice [1/2] (default 1): ' lang_choice
+  msg lang_select_title
+  msg lang_select_opt_1
+  msg lang_select_opt_2
+  local prompt
+  prompt="$(msg lang_select_prompt)"
+  read -r -p "${prompt}" lang_choice
   case "${lang_choice}" in
     2)
       APP_LANG="es"
@@ -248,6 +267,7 @@ perform_install() {
 main() {
   parse_args "$@"
   validate_source_tree
+  show_ascii_banner
   select_language_if_needed
   show_plan
 
