@@ -7,7 +7,7 @@ HardHat es una CLI en Bash, enfocada en Arch Linux, para auditoria baseline de s
 - `bin/hardhat`: entrypoint CLI, parsing de flags globales y despacho de comandos.
 - `lib/`: utilidades compartidas (logging, json, deteccion, validacion, privilegios, backup, confirmacion).
 - `modules/`: modulos funcionales (`audit`, `firewall`, `ports`, `services`, `ssh_audit`, `updates`).
-- `installers/`: flujo de instalacion para exponer comando del sistema.
+- `install.sh`: flujo de instalacion para exponer comando del sistema.
 
 ## Flujo de ejecucion
 1. El usuario ejecuta `hardhat`.

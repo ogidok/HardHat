@@ -107,7 +107,7 @@ Instalacion recomendada:
 
 ```bash
 cd HardHat
-./installers/install.sh
+./install.sh
 ```
 
 Durante la instalacion se solicita idioma preferido de la app.
@@ -116,19 +116,19 @@ Idiomas disponibles en esta fase: `en` y `es`.
 Simulacion de instalacion:
 
 ```bash
-./installers/install.sh --dry-run --yes
+./install.sh --dry-run --yes
 ```
 
 Instalacion no interactiva:
 
 ```bash
-./installers/install.sh --yes
+./install.sh --yes
 ```
 
 Instalacion no interactiva con idioma explicito:
 
 ```bash
-./installers/install.sh --yes --lang es
+./install.sh --yes --lang es
 ```
 
 El instalador:
@@ -173,8 +173,7 @@ sudo rm -rf /opt/hardhat
 │   ├── ARCHITECTURE.md
 │   ├── MVP.md
 │   └── TODO.md
-├── installers/
-│   └── install.sh
+├── install.sh
 ├── lib/
 │   ├── backup.sh
 │   ├── colors.sh
@@ -205,9 +204,9 @@ sudo rm -rf /opt/hardhat
 Checks recomendados:
 
 ```bash
-bash -n bin/hardhat installers/install.sh lib/*.sh modules/*.sh
-shellcheck -x bin/hardhat installers/install.sh lib/*.sh modules/*.sh
-shfmt -i 2 -ci -sr -bn -d bin/hardhat installers/install.sh lib/*.sh modules/*.sh
+bash -n bin/hardhat install.sh lib/*.sh modules/*.sh
+shellcheck -x bin/hardhat install.sh lib/*.sh modules/*.sh
+shfmt -i 2 -ci -sr -bn -d bin/hardhat install.sh lib/*.sh modules/*.sh
 ```
 
 Nota:
