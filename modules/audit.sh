@@ -110,10 +110,20 @@ hardhat_audit_generated_at_utc() {
 
 hardhat_audit_collect() {
   hardhat_audit_add_note "Running baseline checks for firewall, ports, services, SSH and updates."
+
+  hardhat_log_info "Audit: checking firewall state..."
   hardhat_module_firewall_collect_audit
+
+  hardhat_log_info "Audit: checking listening ports..."
   hardhat_module_ports_collect_audit
+
+  hardhat_log_info "Audit: checking active services..."
   hardhat_module_services_collect_audit
+
+  hardhat_log_info "Audit: checking SSH basic settings..."
   hardhat_module_ssh_audit_collect
+
+  hardhat_log_info "Audit: checking pending updates..."
   hardhat_module_updates_collect_audit
 }
 
