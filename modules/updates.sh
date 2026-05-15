@@ -40,13 +40,13 @@ hardhat_module_updates_collect_audit() {
     fi
   else
     if [[ "${use_es}" -eq 1 ]]; then
-      hardhat_audit_add_note "Check de updates omitido: pacman/checkupdates no disponible."
+      hardhat_audit_add_note "Verificacion de actualizaciones omitida: pacman/checkupdates no disponible."
       hardhat_audit_add_finding \
         "updates.check.unavailable" \
         "low" \
-        "Check de updates no disponible" \
-        "HardHat no pudo encontrar pacman o checkupdates para inspeccionar updates pendientes." \
-        "Instala herramientas de pacman y ejecuta checks de updates regularmente."
+        "Verificacion de actualizaciones no disponible" \
+        "HardHat no pudo encontrar pacman o checkupdates para inspeccionar actualizaciones pendientes." \
+        "Instala herramientas de pacman y ejecuta verificaciones de actualizaciones regularmente."
     else
       hardhat_audit_add_note "Update check skipped: pacman/checkupdates unavailable."
       hardhat_audit_add_finding \
@@ -61,13 +61,13 @@ hardhat_module_updates_collect_audit() {
 
   if [[ "${updates_rc}" -eq 124 ]]; then
     if [[ "${use_es}" -eq 1 ]]; then
-      hardhat_audit_add_note "Check de updates agotado despues de 15s."
+      hardhat_audit_add_note "Verificacion de actualizaciones agotada despues de 15s."
       hardhat_audit_add_finding \
         "updates.check.timeout" \
         "low" \
-        "Check de updates agotado" \
-        "HardHat detuvo el check de updates por timeout para evitar bloquear la auditoria." \
-        "Ejecuta checkupdates o pacman -Qu manualmente para verificar updates pendientes."
+        "Verificacion de actualizaciones agotada" \
+        "HardHat detuvo la verificacion de actualizaciones por timeout para evitar bloquear la auditoria." \
+        "Ejecuta checkupdates o pacman -Qu manualmente para verificar actualizaciones pendientes."
     else
       hardhat_audit_add_note "Update check timed out after 15s."
       hardhat_audit_add_finding \
@@ -89,12 +89,12 @@ hardhat_module_updates_collect_audit() {
       updates_count=0
     else
       if [[ "${use_es}" -eq 1 ]]; then
-        hardhat_audit_add_note "Estado de updates pendientes: unknown (check no concluyente)."
+        hardhat_audit_add_note "Estado de actualizaciones pendientes: desconocido (verificacion no concluyente)."
         hardhat_audit_add_finding \
           "updates.check.inconclusive" \
           "low" \
-          "Check de updates no concluyente" \
-          "HardHat no pudo confirmar con confianza el estado de updates pendientes con checkupdates." \
+          "Verificacion de actualizaciones no concluyente" \
+          "HardHat no pudo confirmar con confianza el estado de actualizaciones pendientes con checkupdates." \
           "Ejecuta checkupdates manualmente y valida mirrors/estado de red/repositorios."
       else
         hardhat_audit_add_note "Pending updates status: unknown (check inconclusive)."
@@ -112,12 +112,12 @@ hardhat_module_updates_collect_audit() {
       updates_confident=1
     else
       if [[ "${use_es}" -eq 1 ]]; then
-        hardhat_audit_add_note "Estado de updates pendientes: unknown (pacman -Qu no concluyente)."
+        hardhat_audit_add_note "Estado de actualizaciones pendientes: desconocido (pacman -Qu no concluyente)."
         hardhat_audit_add_finding \
           "updates.check.inconclusive" \
           "low" \
-          "Check de updates no concluyente" \
-          "HardHat no pudo confirmar con confianza el estado de updates pendientes con pacman -Qu." \
+          "Verificacion de actualizaciones no concluyente" \
+          "HardHat no pudo confirmar con confianza el estado de actualizaciones pendientes con pacman -Qu." \
           "Ejecuta pacman -Qu manualmente y valida mirrors/estado de red/repositorios."
       else
         hardhat_audit_add_note "Pending updates status: unknown (pacman -Qu inconclusive)."
@@ -134,7 +134,7 @@ hardhat_module_updates_collect_audit() {
 
   if [[ "${updates_confident}" -ne 1 ]]; then
     if [[ "${use_es}" -eq 1 ]]; then
-      hardhat_audit_add_note "Estado de updates pendientes: unknown (check no concluyente)."
+      hardhat_audit_add_note "Estado de actualizaciones pendientes: desconocido (verificacion no concluyente)."
     else
       hardhat_audit_add_note "Pending updates status: unknown (check inconclusive)."
     fi
@@ -146,7 +146,7 @@ hardhat_module_updates_collect_audit() {
   fi
 
   if [[ "${use_es}" -eq 1 ]]; then
-    hardhat_audit_add_note "Updates de paquetes pendientes detectados: ${updates_count}."
+    hardhat_audit_add_note "Actualizaciones de paquetes pendientes detectadas: ${updates_count}."
   else
     hardhat_audit_add_note "Pending package updates detected: ${updates_count}."
   fi
@@ -156,9 +156,9 @@ hardhat_module_updates_collect_audit() {
       hardhat_audit_add_finding \
         "updates.pending.high" \
         "high" \
-        "Muchos updates de sistema pendientes" \
-        "Un numero alto de updates pendientes puede incluir fixes de seguridad sin aplicar." \
-        "Revisa y aplica updates del sistema lo antes posible."
+        "Muchas actualizaciones de sistema pendientes" \
+        "Un numero alto de actualizaciones pendientes puede incluir correcciones de seguridad sin aplicar." \
+        "Revisa y aplica actualizaciones del sistema lo antes posible."
     else
       hardhat_audit_add_finding \
         "updates.pending.high" \
@@ -172,9 +172,9 @@ hardhat_module_updates_collect_audit() {
       hardhat_audit_add_finding \
         "updates.pending.medium" \
         "medium" \
-        "Updates de sistema pendientes" \
-        "Varios updates de paquetes estan pendientes y pueden incluir parches de seguridad." \
-        "Aplica updates pendientes en una ventana de mantenimiento controlada."
+        "Actualizaciones de sistema pendientes" \
+        "Varias actualizaciones de paquetes estan pendientes y pueden incluir parches de seguridad." \
+        "Aplica actualizaciones pendientes en una ventana de mantenimiento controlada."
     else
       hardhat_audit_add_finding \
         "updates.pending.medium" \
@@ -188,9 +188,9 @@ hardhat_module_updates_collect_audit() {
       hardhat_audit_add_finding \
         "updates.pending.low" \
         "low" \
-        "Pocos updates pendientes" \
-        "Hay updates pendientes y mantener paquetes al dia reduce exposicion." \
-        "Aplica updates pendientes pronto."
+        "Pocas actualizaciones pendientes" \
+        "Hay actualizaciones pendientes y mantener paquetes al dia reduce exposicion." \
+        "Aplica actualizaciones pendientes pronto."
     else
       hardhat_audit_add_finding \
         "updates.pending.low" \

@@ -22,7 +22,9 @@ Estado de release actual: MVP / preview publico.
   - actualizaciones pendientes como senal de riesgo
 - Hallazgos estructurados con severidad y recomendacion.
 - Calculo de score y resumen para auditoria.
-- En comandos con `--json`, `stdout` se reserva para JSON valido y los logs operativos van por `stderr`.
+- En comandos con `--json`, `stdout` se reserva para JSON valido.
+- En `--json`, no se imprime banner ASCII ni logs informativos `[INFO]`.
+- En `--json`, advertencias o errores relevantes pueden emitirse por `stderr`.
 - Instalador para exponer `hardhat` como comando del sistema.
 - Script de desinstalacion (`uninstall.sh`) con modo interactivo, `--yes` y `--dry-run`.
 

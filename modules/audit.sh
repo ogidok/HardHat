@@ -13,7 +13,7 @@ hardhat_audit_is_spanish() {
 
 hardhat_audit_default_summary() {
   if hardhat_audit_is_spanish; then
-    printf 'auditoria baseline de seguridad completada'
+    printf 'auditoria de seguridad de linea base completada'
     return 0
   fi
 
@@ -27,7 +27,7 @@ Uso:
   hardhat audit [--json]
 
 Descripcion:
-  Ejecuta checks baseline de firewall, puertos, servicios, SSH y updates,
+  Ejecuta validaciones de linea base de firewall, puertos, servicios, SSH y actualizaciones,
   y reporta score, severidad, hallazgos y recomendaciones.
 EOF
     return 0
@@ -135,7 +135,7 @@ hardhat_audit_generated_at_utc() {
 
 hardhat_audit_collect() {
   if hardhat_audit_is_spanish; then
-    hardhat_audit_add_note "Ejecutando checks baseline de firewall, puertos, servicios, SSH y updates."
+    hardhat_audit_add_note "Ejecutando validaciones de linea base de firewall, puertos, servicios, SSH y actualizaciones."
 
     hardhat_log_info "Auditoria: revisando estado de firewall..."
     hardhat_module_firewall_collect_audit

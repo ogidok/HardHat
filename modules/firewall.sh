@@ -19,6 +19,18 @@ HARDHAT_FIREWALL_INSTALL_METHOD="unknown"
 HARDHAT_FIREWALL_LOG_FILE="/var/log/hardhat.log"
 
 hardhat_module_firewall_usage() {
+  if hardhat_firewall_is_spanish; then
+    cat <<'EOF'
+Uso:
+  hardhat firewall audit [--json]
+  hardhat firewall apply [--dry-run] [--yes]
+
+Nota:
+  Si UFW no esta instalado, apply puede guiar su instalacion antes de aplicar la linea base.
+EOF
+    return 0
+  fi
+
   cat <<'EOF'
 Usage:
   hardhat firewall audit [--json]
@@ -513,13 +525,13 @@ hardhat_module_firewall_collect_audit() {
 
     if hardhat_firewall_is_spanish; then
       hardhat_firewall_add_note "UFW no esta instalado en este sistema."
-      hardhat_firewall_add_note "No hay una baseline de firewall soportada por el MVP activa."
-      hardhat_firewall_add_note "La exposicion del sistema aumenta hasta aplicar una politica baseline de firewall."
+      hardhat_firewall_add_note "No hay una linea base de firewall soportada por el MVP activa."
+      hardhat_firewall_add_note "La exposicion del sistema aumenta hasta aplicar una politica de linea base de firewall."
       hardhat_firewall_add_finding \
         "firewall.ufw.missing" \
         "high" \
         "Backend de firewall soportado ausente" \
-        "UFW no esta instalado, por lo que HardHat no puede confirmar ni aplicar la baseline de firewall del MVP. Esto aumenta exposicion del sistema." \
+        "UFW no esta instalado, por lo que HardHat no puede confirmar ni aplicar la linea base de firewall del MVP. Esto aumenta exposicion del sistema." \
         "Instala y configura UFW con 'hardhat firewall apply' (o instala UFW con pacman y luego ejecuta 'hardhat firewall apply')."
     else
       hardhat_firewall_add_note "UFW is not installed on this system."
@@ -582,7 +594,7 @@ hardhat_module_firewall_collect_audit() {
         "high" \
         "UFW inactivo" \
         "El firewall esta instalado pero no esta aplicando reglas de filtrado." \
-        "Habilita UFW y aplica defaults baseline (deny incoming, allow outgoing)."
+        "Habilita UFW y aplica la linea base (deny incoming, allow outgoing)."
     else
       hardhat_firewall_add_note "UFW is installed but inactive."
       hardhat_firewall_add_finding \
@@ -594,7 +606,7 @@ hardhat_module_firewall_collect_audit() {
     fi
   else
     if hardhat_firewall_is_spanish; then
-      hardhat_firewall_add_note "El estado de UFW no reporto active o inactive de forma clara."
+      hardhat_firewall_add_note "El estado de UFW no reporto claramente si esta activo o inactivo."
     else
       hardhat_firewall_add_note "UFW status did not report active or inactive clearly."
     fi
@@ -610,8 +622,8 @@ hardhat_module_firewall_collect_audit() {
           "firewall.ufw.default_unknown" \
           "low" \
           "Politica por defecto de UFW desconocida" \
-          "HardHat no pudo parsear la politica por defecto desde la salida verbose de UFW." \
-          "Inspecciona defaults de UFW manualmente con ufw status verbose."
+          "HardHat no pudo interpretar la politica por defecto desde la salida detallada de UFW." \
+          "Inspecciona los valores por defecto de UFW manualmente con ufw status verbose."
       else
         hardhat_firewall_add_note "UFW default policy could not be extracted."
         hardhat_firewall_add_finding \
@@ -632,9 +644,9 @@ hardhat_module_firewall_collect_audit() {
           hardhat_firewall_add_finding \
             "firewall.ufw.default_incoming" \
             "medium" \
-            "Politica default de incoming debil" \
-            "La politica default incoming de UFW no es deny/reject." \
-            "Configura la politica default incoming de UFW en deny."
+            "Politica de entrada por defecto debil" \
+            "La politica de entrada por defecto de UFW no es deny/reject." \
+            "Configura la politica de entrada por defecto de UFW en deny."
         else
           hardhat_firewall_add_finding \
             "firewall.ufw.default_incoming" \
@@ -647,7 +659,7 @@ hardhat_module_firewall_collect_audit() {
     fi
   else
     if hardhat_firewall_is_spanish; then
-      hardhat_firewall_add_note "Salida verbose de UFW no disponible para verificar politica por defecto."
+      hardhat_firewall_add_note "Salida detallada de UFW no disponible para verificar politica por defecto."
     else
       hardhat_firewall_add_note "UFW verbose output unavailable for default policy check."
     fi
@@ -673,24 +685,45 @@ hardhat_module_firewall_collect_audit() {
 hardhat_module_firewall_render_human() {
   local findings_count="${#HARDHAT_FIREWALL_FINDINGS[@]}"
   if hardhat_firewall_is_spanish; then
+    local backend_missing_text="no"
+    local installed_text="no"
+    local active_text="${HARDHAT_UFW_ACTIVE}"
+    local default_policy_text="${HARDHAT_UFW_DEFAULT_POLICY}"
+
+    if [[ "${HARDHAT_FIREWALL_BACKEND_MISSING}" -eq 1 ]]; then
+      backend_missing_text="si"
+    fi
+
+    if [[ "${HARDHAT_UFW_INSTALLED}" -eq 1 ]]; then
+      installed_text="si"
+    fi
+
+    if [[ "${active_text}" == "unknown" ]]; then
+      active_text="desconocido"
+    fi
+
+    if [[ "${default_policy_text}" == "unknown" ]]; then
+      default_policy_text="desconocida"
+    fi
+
     printf 'Auditoria de Firewall HardHat\n'
     printf 'Backend esperado: UFW\n'
-    printf 'Backend ausente: %s\n' "$( [[ "${HARDHAT_FIREWALL_BACKEND_MISSING}" -eq 1 ]] && printf yes || printf no )"
-    printf 'Instalado: %s\n' "$( [[ "${HARDHAT_UFW_INSTALLED}" -eq 1 ]] && printf yes || printf no )"
-    printf 'Activo: %s\n' "${HARDHAT_UFW_ACTIVE}"
-    printf 'Politica por defecto: %s\n' "${HARDHAT_UFW_DEFAULT_POLICY}"
+    printf 'Backend ausente: %s\n' "${backend_missing_text}"
+    printf 'Instalado: %s\n' "${installed_text}"
+    printf 'Activo: %s\n' "${active_text}"
+    printf 'Politica por defecto: %s\n' "${default_policy_text}"
     printf 'Reglas detectadas: %s\n' "${#HARDHAT_UFW_RULES[@]}"
     printf 'Severidad general: %s\n' "${HARDHAT_FIREWALL_SEVERITY}"
     printf 'Hallazgos: %s\n\n' "${findings_count}"
 
     if [[ "${HARDHAT_FIREWALL_BACKEND_MISSING}" -eq 1 ]]; then
       printf 'Estado de riesgo: ALTO\n'
-      printf 'UFW falta, por lo que este sistema no tiene una baseline de firewall del MVP activa.\n'
-      printf 'Por que importa: la exposicion entrante puede ser mayor sin filtrado baseline.\n'
+      printf 'UFW falta, por lo que este sistema no tiene una linea base de firewall del MVP activa.\n'
+      printf 'Por que importa: la exposicion entrante puede ser mayor sin filtrado de linea base.\n'
       if [[ "${HARDHAT_FIREWALL_INSTALL_SUPPORTED}" -eq 1 ]]; then
-        printf 'Accion: ejecuta hardhat firewall apply para instalar/configurar UFW con flujo guiado de baseline.\n\n'
+        printf 'Accion: ejecuta hardhat firewall apply para instalar/configurar UFW con flujo guiado de linea base.\n\n'
       else
-        printf 'Accion: instala UFW y luego ejecuta hardhat firewall apply para aplicar baseline.\n\n'
+        printf 'Accion: instala UFW y luego ejecuta hardhat firewall apply para aplicar la linea base.\n\n'
       fi
     fi
 

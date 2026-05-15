@@ -1,10 +1,10 @@
 # HardHat
 
-HardHat es una herramienta CLI para Arch Linux, escrita en Bash, enfocada en auditoria basica de seguridad y aplicacion guiada de cambios seguros de firewall.
+HardHat es una herramienta CLI para Arch Linux, escrita en Bash, enfocada en auditoria basica de seguridad y aplicacion guiada de cambios de firewall.
 
 ## Estado del proyecto
 
-MVP / preview funcional. Lo implementado ya se puede usar desde linea de comandos para validacion tecnica y pruebas controladas.
+MVP/preview funcional. Lo implementado ya se puede usar desde linea de comandos para validacion tecnica y pruebas controladas.
 
 Importante:
 - no hay rollback automatico;
@@ -16,7 +16,8 @@ Importante:
 - Arch Linux
 - backend de firewall: UFW
 
-En el futuro puede evaluarse soporte para otras distribuciones minimalistas, pero el MVP actual solo soporta Arch Linux.
+En el futuro puede evaluarse soporte para otras distribuciones, pero el MVP actual solo soporta Arch Linux.
+
 ## Comandos disponibles
 
 ```bash
@@ -71,7 +72,8 @@ Salida:
 
 Comportamiento de salida con `--json`:
 - `stdout` contiene solo JSON valido.
-- mensajes operativos y logs se emiten por `stderr`.
+- no se imprime banner ASCII ni logs informativos `[INFO]`.
+- advertencias o errores relevantes pueden emitirse por `stderr`.
 
 ### `hardhat firewall audit`
 
@@ -90,7 +92,8 @@ Salida:
 
 Comportamiento de salida con `--json`:
 - `stdout` contiene solo JSON valido.
-- mensajes operativos y logs se emiten por `stderr`.
+- no se imprime banner ASCII ni logs informativos `[INFO]`.
+- advertencias o errores relevantes pueden emitirse por `stderr`.
 
 Si UFW no esta instalado:
 - HardHat informa que no hay firewall soportado/configurado para este MVP.

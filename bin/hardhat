@@ -62,9 +62,9 @@ Nota:
   Ejemplos: hardhat --json audit | hardhat audit --json
 
 Comandos:
-  audit               Ejecuta auditoria de seguridad baseline
-  firewall audit      Audita estado de UFW y politica baseline
-  firewall apply      Aplica baseline de UFW (guiado; instala UFW si falta)
+  audit               Ejecuta auditoria de seguridad de linea base
+  firewall audit      Audita estado de UFW y politica de linea base
+  firewall apply      Aplica linea base de UFW (guiado; instala UFW si falta)
   language show       Muestra idioma actual
   language set <id>   Configura idioma (en|es)
   menu                Abre menu interactivo (no implementado)
@@ -189,18 +189,30 @@ hardhat_run_language_command() {
       ;;
     set)
       if [[ -z "${lang_value}" ]]; then
-        hardhat_log_error "Missing language value (en|es)."
+        if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+          hardhat_log_error "Falta valor de idioma (en|es)."
+        else
+          hardhat_log_error "Missing language value (en|es)."
+        fi
         hardhat_language_usage
         return 1
       fi
 
       if ! hardhat_validate_language_code "${lang_value}"; then
-        hardhat_log_error "Unsupported language: ${lang_value}. Use en or es."
+        if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+          hardhat_log_error "Idioma no soportado: ${lang_value}. Usa en o es."
+        else
+          hardhat_log_error "Unsupported language: ${lang_value}. Use en or es."
+        fi
         return 1
       fi
 
       if ! hardhat_language_set_user "${lang_value}"; then
-        hardhat_log_error "Unable to write user language config."
+        if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+          hardhat_log_error "No se pudo escribir la configuracion de idioma del usuario."
+        else
+          hardhat_log_error "Unable to write user language config."
+        fi
         return 1
       fi
 
@@ -215,7 +227,11 @@ hardhat_run_language_command() {
       hardhat_language_usage
       ;;
     *)
-      hardhat_log_error "Unknown language subcommand: ${subcommand}"
+      if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+        hardhat_log_error "Subcomando de language desconocido: ${subcommand}"
+      else
+        hardhat_log_error "Unknown language subcommand: ${subcommand}"
+      fi
       hardhat_language_usage
       return 1
       ;;

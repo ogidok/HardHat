@@ -22,7 +22,9 @@ HardHat es una CLI en Bash, enfocada en Arch Linux, para auditoria baseline de s
 - Cada hallazgo incluye `id`, `severity`, `title`, `description`, `recommendation`.
 - El modulo de auditoria calcula score y severidad general.
 - El render JSON expone objetos estables para automatizacion.
-- En modo `--json`, `stdout` se reserva para JSON y los logs operativos se emiten por `stderr`.
+- En modo `--json`, `stdout` se reserva para JSON valido.
+- En modo `--json`, no se imprime banner ASCII ni logs informativos `[INFO]`.
+- En modo `--json`, advertencias o errores relevantes pueden emitirse por `stderr`.
 
 ## Modelo de seguridad
 - Sin cambios silenciosos.
