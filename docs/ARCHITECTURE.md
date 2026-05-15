@@ -15,6 +15,7 @@ HardHat es una CLI en Bash, enfocada en Arch Linux, para auditoria baseline de s
 3. Se aplica guarda de compatibilidad Arch para comandos operativos.
 4. El comando se enruta al modulo correspondiente.
 5. El modulo recolecta datos, evalua y renderiza salida.
+6. En `firewall apply`, si falta UFW, se informa riesgo, se muestra plan y se ofrece instalacion guiada antes de aplicar baseline.
 
 ## Modelo de datos
 - Los checks generan notas y hallazgos estructurados.
@@ -26,7 +27,10 @@ HardHat es una CLI en Bash, enfocada en Arch Linux, para auditoria baseline de s
 - Sin cambios silenciosos.
 - `--dry-run` simula flujo de apply sin tocar estado del sistema.
 - Si UFW no existe, `firewall apply` informa exposicion, muestra plan y pide confirmacion explicita antes de instalar con pacman.
-- Backup obligatorio antes de cambios en `firewall apply`.
+- Backups en `firewall apply` con politica contextual:
+	- UFW preexistente: backup obligatorio de configuracion existente.
+	- UFW recien instalado: no bloquear si aun no hay archivos; respaldar cualquier archivo existente antes de modificar.
+- Si existe configuracion y backup falla, apply se aborta.
 - Confirmacion global requerida salvo uso de `--yes`.
 - Rollback automatico fuera de alcance del MVP.
 

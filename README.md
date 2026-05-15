@@ -72,6 +72,7 @@ Salida:
 
 Audita especificamente UFW:
 - instalado o no;
+- backend esperado y backend ausente/presente;
 - activo/inactivo/desconocido;
 - politica por defecto cuando se puede;
 - reglas parseadas cuando se puede;
@@ -80,19 +81,24 @@ Audita especificamente UFW:
 
 Salida:
 - humana por defecto;
-- JSON con metadatos, seccion firewall, resumen, notas, hallazgos y recomendaciones.
+- JSON con metadatos, seccion firewall, estado de backend, resumen, notas, hallazgos y recomendaciones.
+
+Si UFW no esta instalado:
+- HardHat informa que no hay firewall soportado/configurado para este MVP.
+- HardHat marca esta condicion como riesgo por aumento de exposicion.
+- HardHat recomienda instalar y configurar UFW con `hardhat firewall apply`.
 
 ### `hardhat firewall apply`
 
-Aplica baseline segura de UFW con flujo controlado:
+Aplica baseline segura de UFW con flujo guiado y seguro:
 1. valida entorno y compatibilidad;
 2. audita estado actual;
-3. si UFW no esta instalado, informa riesgo y ofrece instalarlo;
+3. si UFW no esta instalado, informa riesgo y ofrece instalarlo con pacman;
 4. construye y muestra plan;
 5. en `--dry-run` no modifica nada;
 6. pide confirmacion explicita (o usa `--yes`);
 7. si hace falta, instala UFW con pacman;
-8. crea backups obligatorios antes de modificar configuracion;
+8. aplica politica de backup segun contexto (ver notas de seguridad);
 9. aplica politicas baseline;
 10. valida estado final;
 11. registra evento de aplicacion en log.
@@ -107,6 +113,12 @@ Cuando UFW no esta instalado:
 - HardHat avisa que no hay firewall soportado para el MVP.
 - HardHat indica que el sistema puede estar expuesto sin baseline.
 - HardHat ofrece instalar UFW y continuar con la configuracion segura.
+
+Notas de seguridad para backup en `firewall apply`:
+- Caso A (UFW preexistente): backup obligatorio de configuracion existente antes de aplicar cambios.
+- Caso B (instalacion nueva de UFW): si aun no existen archivos de configuracion, HardHat no bloquea por backup imposible; si existen archivos tras instalar, los respalda antes de modificar.
+- Si existe configuracion y el backup falla, HardHat aborta.
+- No hay rollback automatico en el MVP.
 
 ## Instalacion
 
