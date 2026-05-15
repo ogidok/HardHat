@@ -16,6 +16,7 @@ Importante:
 - Arch Linux
 - backend de firewall: UFW
 
+- Mas adelante se implementara soporte para mas distribuciones , (gentoos y void) se busca cubrir distribuciones de riceado 
 ## Comandos disponibles
 
 ```bash

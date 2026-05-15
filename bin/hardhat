@@ -28,6 +28,7 @@ HARDHAT_SUBCOMMAND=""
 HARDHAT_ARGS=()
 HARDHAT_SHOW_HELP=0
 HARDHAT_SHOW_VERSION=0
+HARDHAT_BANNER_FILE="${ROOT_DIR}/accsi.txt"
 
 source "${ROOT_DIR}/lib/colors.sh"
 source "${ROOT_DIR}/lib/log.sh"
@@ -144,6 +145,31 @@ Usage:
 EOF
 }
 
+hardhat_banner_target_fd() {
+  if [[ "${HARDHAT_OUTPUT_JSON:-0}" -eq 1 ]]; then
+    printf '2'
+    return 0
+  fi
+
+  printf '1'
+}
+
+hardhat_show_ascii_banner() {
+  [[ -f "${HARDHAT_BANNER_FILE}" ]] || return 0
+
+  local target_fd
+  target_fd="$(hardhat_banner_target_fd)"
+
+  if [[ -t 1 ]]; then
+    printf '\033[31m' >&"${target_fd}"
+    cat "${HARDHAT_BANNER_FILE}" >&"${target_fd}"
+    printf '\033[0m\n' >&"${target_fd}"
+  else
+    cat "${HARDHAT_BANNER_FILE}" >&"${target_fd}"
+    printf '\n' >&"${target_fd}"
+  fi
+}
+
 hardhat_run_language_command() {
   local subcommand="${HARDHAT_ARGS[1]:-show}"
   local lang_value="${HARDHAT_ARGS[2]:-}"
@@ -239,11 +265,13 @@ hardhat_parse_global_flags() {
   done
 
   if [[ "${HARDHAT_SHOW_HELP}" -eq 1 ]]; then
+    hardhat_show_ascii_banner
     hardhat_usage
     exit 0
   fi
 
   if [[ "${HARDHAT_SHOW_VERSION}" -eq 1 ]]; then
+    hardhat_show_ascii_banner
     printf '%s\n' "${HARDHAT_VERSION}"
     exit 0
   fi
@@ -301,6 +329,8 @@ main() {
   hardhat_parse_global_flags "$@"
   hardhat_init_colors
   hardhat_parse_command
+
+  hardhat_show_ascii_banner
 
   if hardhat_command_requires_arch; then
     hardhat_require_arch_or_exit

@@ -30,9 +30,10 @@ msg() {
       plan_actions) printf 'Acciones:\n' ;;
       plan_action_1) printf '  1) Crear %s\n' "${INSTALL_ROOT}" ;;
       plan_action_2) printf '  2) Copiar bin/, lib/ y modules/ dentro de %s\n' "${INSTALL_ROOT}" ;;
-      plan_action_3) printf '  3) Crear symlink %s -> %s/bin/hardhat\n' "${TARGET_BIN}" "${INSTALL_ROOT}" ;;
-      plan_action_4) printf '  4) Guardar idioma global en %s (%s)\n' "${GLOBAL_CONFIG_FILE}" "${APP_LANG}" ;;
-      plan_action_5) printf '  5) Guardar idioma de usuario en %s (%s)\n' "${USER_CONFIG_FILE}" "${APP_LANG}" ;;
+      plan_action_3) printf '  3) Copiar accsi.txt dentro de %s\n' "${INSTALL_ROOT}" ;;
+      plan_action_4) printf '  4) Crear symlink %s -> %s/bin/hardhat\n' "${TARGET_BIN}" "${INSTALL_ROOT}" ;;
+      plan_action_5) printf '  5) Guardar idioma global en %s (%s)\n' "${GLOBAL_CONFIG_FILE}" "${APP_LANG}" ;;
+      plan_action_6) printf '  6) Guardar idioma de usuario en %s (%s)\n' "${USER_CONFIG_FILE}" "${APP_LANG}" ;;
       confirm_skipped) printf 'Confirmacion omitida por --yes\n' ;;
       confirm_prompt) printf 'Continuar con la instalacion? [y/N]: ' ;;
       install_cancelled) printf 'Instalacion cancelada.\n' ;;
@@ -64,9 +65,10 @@ msg() {
     plan_actions) printf 'Actions:\n' ;;
     plan_action_1) printf '  1) Create %s\n' "${INSTALL_ROOT}" ;;
     plan_action_2) printf '  2) Copy bin/, lib/ and modules/ into %s\n' "${INSTALL_ROOT}" ;;
-    plan_action_3) printf '  3) Create symlink %s -> %s/bin/hardhat\n' "${TARGET_BIN}" "${INSTALL_ROOT}" ;;
-    plan_action_4) printf '  4) Persist global app language in %s (%s)\n' "${GLOBAL_CONFIG_FILE}" "${APP_LANG}" ;;
-    plan_action_5) printf '  5) Persist user app language in %s (%s)\n' "${USER_CONFIG_FILE}" "${APP_LANG}" ;;
+    plan_action_3) printf '  3) Copy accsi.txt into %s\n' "${INSTALL_ROOT}" ;;
+    plan_action_4) printf '  4) Create symlink %s -> %s/bin/hardhat\n' "${TARGET_BIN}" "${INSTALL_ROOT}" ;;
+    plan_action_5) printf '  5) Persist global app language in %s (%s)\n' "${GLOBAL_CONFIG_FILE}" "${APP_LANG}" ;;
+    plan_action_6) printf '  6) Persist user app language in %s (%s)\n' "${USER_CONFIG_FILE}" "${APP_LANG}" ;;
     confirm_skipped) printf 'Confirmation skipped by --yes\n' ;;
     confirm_prompt) printf 'Proceed with installation? [y/N]: ' ;;
     install_cancelled) printf 'Installation cancelled.\n' ;;
@@ -217,6 +219,10 @@ validate_source_tree() {
     printf 'Missing source file: %s\n' "${ROOT_DIR}/bin/hardhat" >&2
     exit 1
   fi
+  if [[ ! -f "${ROOT_DIR}/accsi.txt" ]]; then
+    printf 'Missing source file: %s\n' "${ROOT_DIR}/accsi.txt" >&2
+    exit 1
+  fi
   if [[ ! -d "${ROOT_DIR}/lib" ]] || [[ ! -d "${ROOT_DIR}/modules" ]]; then
     printf 'Missing runtime directories (lib/modules) under %s\n' "${ROOT_DIR}" >&2
     exit 1
@@ -234,6 +240,7 @@ show_plan() {
   msg plan_action_3
   msg plan_action_4
   msg plan_action_5
+  msg plan_action_6
 }
 
 confirm_plan() {
@@ -263,6 +270,7 @@ perform_install() {
   run_as_root cp -a "${ROOT_DIR}/bin" "${INSTALL_ROOT}/bin"
   run_as_root cp -a "${ROOT_DIR}/lib" "${INSTALL_ROOT}/lib"
   run_as_root cp -a "${ROOT_DIR}/modules" "${INSTALL_ROOT}/modules"
+  run_as_root cp -a "${ROOT_DIR}/accsi.txt" "${INSTALL_ROOT}/accsi.txt"
 
   run_as_root chmod +x "${INSTALL_ROOT}/bin/hardhat"
   run_as_root ln -sfn "${INSTALL_ROOT}/bin/hardhat" "${TARGET_BIN}"
