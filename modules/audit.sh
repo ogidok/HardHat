@@ -7,7 +7,32 @@ HARDHAT_AUDIT_SEVERITY="none"
 HARDHAT_AUDIT_SUMMARY="baseline security audit completed"
 HARDHAT_AUDIT_RECOMMENDATIONS=()
 
+hardhat_audit_is_spanish() {
+  [[ "${HARDHAT_LANG:-en}" == "es" ]]
+}
+
+hardhat_audit_default_summary() {
+  if hardhat_audit_is_spanish; then
+    printf 'auditoria baseline de seguridad completada'
+    return 0
+  fi
+
+  printf 'baseline security audit completed'
+}
+
 hardhat_module_audit_usage() {
+  if hardhat_audit_is_spanish; then
+    cat <<'EOF'
+Uso:
+  hardhat audit [--json]
+
+Descripcion:
+  Ejecuta checks baseline de firewall, puertos, servicios, SSH y updates,
+  y reporta score, severidad, hallazgos y recomendaciones.
+EOF
+    return 0
+  fi
+
   cat <<'EOF'
 Usage:
   hardhat audit [--json]
@@ -23,7 +48,7 @@ hardhat_audit_reset_state() {
   HARDHAT_AUDIT_NOTES=()
   HARDHAT_AUDIT_SCORE=100
   HARDHAT_AUDIT_SEVERITY="none"
-  HARDHAT_AUDIT_SUMMARY="baseline security audit completed"
+  HARDHAT_AUDIT_SUMMARY="$(hardhat_audit_default_summary)"
   HARDHAT_AUDIT_RECOMMENDATIONS=()
 }
 
@@ -109,6 +134,26 @@ hardhat_audit_generated_at_utc() {
 }
 
 hardhat_audit_collect() {
+  if hardhat_audit_is_spanish; then
+    hardhat_audit_add_note "Ejecutando checks baseline de firewall, puertos, servicios, SSH y updates."
+
+    hardhat_log_info "Auditoria: revisando estado de firewall..."
+    hardhat_module_firewall_collect_audit
+
+    hardhat_log_info "Auditoria: revisando puertos en escucha..."
+    hardhat_module_ports_collect_audit
+
+    hardhat_log_info "Auditoria: revisando servicios activos..."
+    hardhat_module_services_collect_audit
+
+    hardhat_log_info "Auditoria: revisando configuracion basica de SSH..."
+    hardhat_module_ssh_audit_collect
+
+    hardhat_log_info "Auditoria: revisando updates pendientes..."
+    hardhat_module_updates_collect_audit
+    return 0
+  fi
+
   hardhat_audit_add_note "Running baseline checks for firewall, ports, services, SSH and updates."
 
   hardhat_log_info "Audit: checking firewall state..."
@@ -129,6 +174,45 @@ hardhat_audit_collect() {
 
 hardhat_audit_render_human() {
   local findings_count="${#HARDHAT_AUDIT_FINDINGS[@]}"
+
+  if hardhat_audit_is_spanish; then
+    printf 'Reporte de Auditoria HardHat\n'
+    printf 'Resumen: %s\n' "${HARDHAT_AUDIT_SUMMARY}"
+    printf 'Score: %s/100\n' "${HARDHAT_AUDIT_SCORE}"
+    printf 'Severidad general: %s\n' "${HARDHAT_AUDIT_SEVERITY}"
+    printf 'Hallazgos: %s\n\n' "${findings_count}"
+
+    local note
+    for note in "${HARDHAT_AUDIT_NOTES[@]}"; do
+      printf -- '- %s\n' "${note}"
+    done
+
+    if ((findings_count == 0)); then
+      printf '\nNo se detectaron hallazgos en esta auditoria baseline.\n'
+      return 0
+    fi
+
+    printf '\nHallazgos detallados:\n'
+    local idx=1
+    local item id severity title description recommendation
+    for item in "${HARDHAT_AUDIT_FINDINGS[@]}"; do
+      IFS='|' read -r id severity title description recommendation <<<"${item}"
+      printf '%s. [%s] %s (%s)\n' "${idx}" "${severity}" "${title}" "${id}"
+      printf '   Descripcion: %s\n' "${description}"
+      printf '   Recomendacion: %s\n' "${recommendation}"
+      idx=$((idx + 1))
+    done
+
+    if ((${#HARDHAT_AUDIT_RECOMMENDATIONS[@]} > 0)); then
+      printf '\nRecomendaciones principales:\n'
+      local rec
+      for rec in "${HARDHAT_AUDIT_RECOMMENDATIONS[@]}"; do
+        printf -- '- %s\n' "${rec}"
+      done
+    fi
+    return 0
+  fi
+
   printf 'HardHat Audit Report\n'
   printf 'Summary: %s\n' "${HARDHAT_AUDIT_SUMMARY}"
   printf 'Score: %s/100\n' "${HARDHAT_AUDIT_SCORE}"

@@ -118,6 +118,10 @@ hardhat_firewall_compute_severity() {
   done
 }
 
+hardhat_firewall_is_spanish() {
+  [[ "${HARDHAT_LANG:-en}" == "es" ]]
+}
+
 hardhat_firewall_run_ufw_capture() {
   local output
   if output="$(ufw "$@" 2>&1)"; then
@@ -167,31 +171,57 @@ hardhat_firewall_extract_rules() {
 
 hardhat_firewall_analyze_rules() {
   if ((${#HARDHAT_UFW_RULES[@]} == 0)); then
-    hardhat_firewall_add_note "No explicit UFW rules detected or they could not be parsed."
+    if hardhat_firewall_is_spanish; then
+      hardhat_firewall_add_note "No se detectaron reglas explicitas de UFW o no se pudieron parsear."
+    else
+      hardhat_firewall_add_note "No explicit UFW rules detected or they could not be parsed."
+    fi
     return 0
   fi
 
-  hardhat_firewall_add_note "UFW rules detected: ${#HARDHAT_UFW_RULES[@]}."
+  if hardhat_firewall_is_spanish; then
+    hardhat_firewall_add_note "Reglas UFW detectadas: ${#HARDHAT_UFW_RULES[@]}."
+  else
+    hardhat_firewall_add_note "UFW rules detected: ${#HARDHAT_UFW_RULES[@]}."
+  fi
 
   local rules_text
   rules_text="$(printf '%s\n' "${HARDHAT_UFW_RULES[@]}")"
 
   if grep -qiE 'ALLOW IN[[:space:]]+Anywhere( |$)|ALLOW[[:space:]]+Anywhere( |$)' <<<"${rules_text}"; then
-    hardhat_firewall_add_finding \
-      "firewall.ufw.allow_anywhere" \
-      "medium" \
-      "Broad allow rule detected" \
-      "At least one UFW rule allows inbound traffic from Anywhere without clear source restriction." \
-      "Restrict allow rules to trusted source ranges and only required ports."
+    if hardhat_firewall_is_spanish; then
+      hardhat_firewall_add_finding \
+        "firewall.ufw.allow_anywhere" \
+        "medium" \
+        "Regla allow amplia detectada" \
+        "Al menos una regla UFW permite trafico entrante desde Anywhere sin restriccion clara de origen." \
+        "Restringe reglas allow a rangos de origen confiables y solo puertos necesarios."
+    else
+      hardhat_firewall_add_finding \
+        "firewall.ufw.allow_anywhere" \
+        "medium" \
+        "Broad allow rule detected" \
+        "At least one UFW rule allows inbound traffic from Anywhere without clear source restriction." \
+        "Restrict allow rules to trusted source ranges and only required ports."
+    fi
   fi
 
   if grep -qiE '(23|3389)(/tcp|/udp)?[[:space:]].*(ALLOW).*(Anywhere)' <<<"${rules_text}"; then
-    hardhat_firewall_add_finding \
-      "firewall.ufw.risky_port_anywhere" \
-      "high" \
-      "Risky remote-access rule exposed" \
-      "A sensitive port (Telnet or RDP) appears allowed from Anywhere." \
-      "Close risky remote-access ports or restrict them to trusted source networks."
+    if hardhat_firewall_is_spanish; then
+      hardhat_firewall_add_finding \
+        "firewall.ufw.risky_port_anywhere" \
+        "high" \
+        "Regla de acceso remoto riesgosa expuesta" \
+        "Un puerto sensible (Telnet o RDP) parece permitido desde Anywhere." \
+        "Cierra puertos remotos riesgosos o restringelos a redes de origen confiables."
+    else
+      hardhat_firewall_add_finding \
+        "firewall.ufw.risky_port_anywhere" \
+        "high" \
+        "Risky remote-access rule exposed" \
+        "A sensitive port (Telnet or RDP) appears allowed from Anywhere." \
+        "Close risky remote-access ports or restrict them to trusted source networks."
+    fi
   fi
 }
 
@@ -481,31 +511,57 @@ hardhat_module_firewall_collect_audit() {
       HARDHAT_FIREWALL_INSTALL_METHOD="pacman"
     fi
 
-    hardhat_firewall_add_note "UFW is not installed on this system."
-    hardhat_firewall_add_note "No MVP-supported firewall baseline is currently active."
-    hardhat_firewall_add_note "System exposure is increased until a baseline firewall policy is applied."
-    hardhat_firewall_add_finding \
-      "firewall.ufw.missing" \
-      "high" \
-      "Supported firewall backend missing" \
-      "UFW is not installed, so HardHat cannot confirm or enforce the MVP firewall baseline. This increases system exposure." \
-      "Install and configure UFW using 'hardhat firewall apply' (or install UFW with pacman first, then run 'hardhat firewall apply')."
+    if hardhat_firewall_is_spanish; then
+      hardhat_firewall_add_note "UFW no esta instalado en este sistema."
+      hardhat_firewall_add_note "No hay una baseline de firewall soportada por el MVP activa."
+      hardhat_firewall_add_note "La exposicion del sistema aumenta hasta aplicar una politica baseline de firewall."
+      hardhat_firewall_add_finding \
+        "firewall.ufw.missing" \
+        "high" \
+        "Backend de firewall soportado ausente" \
+        "UFW no esta instalado, por lo que HardHat no puede confirmar ni aplicar la baseline de firewall del MVP. Esto aumenta exposicion del sistema." \
+        "Instala y configura UFW con 'hardhat firewall apply' (o instala UFW con pacman y luego ejecuta 'hardhat firewall apply')."
+    else
+      hardhat_firewall_add_note "UFW is not installed on this system."
+      hardhat_firewall_add_note "No MVP-supported firewall baseline is currently active."
+      hardhat_firewall_add_note "System exposure is increased until a baseline firewall policy is applied."
+      hardhat_firewall_add_finding \
+        "firewall.ufw.missing" \
+        "high" \
+        "Supported firewall backend missing" \
+        "UFW is not installed, so HardHat cannot confirm or enforce the MVP firewall baseline. This increases system exposure." \
+        "Install and configure UFW using 'hardhat firewall apply' (or install UFW with pacman first, then run 'hardhat firewall apply')."
+    fi
     hardhat_firewall_compute_severity
     return 0
   fi
 
   HARDHAT_UFW_INSTALLED=1
-  hardhat_firewall_add_note "UFW is installed."
+  if hardhat_firewall_is_spanish; then
+    hardhat_firewall_add_note "UFW esta instalado."
+  else
+    hardhat_firewall_add_note "UFW is installed."
+  fi
 
   local status_output=""
   if ! status_output="$(hardhat_firewall_run_ufw_capture status)"; then
-    hardhat_firewall_add_note "UFW status could not be read with current privileges; audit continues with partial firewall visibility."
-    hardhat_firewall_add_finding \
-      "firewall.ufw.status_unavailable" \
-      "low" \
-      "UFW status unavailable" \
-      "HardHat could not retrieve current UFW status output." \
-      "Run audit with permissions that allow reading UFW status."
+    if hardhat_firewall_is_spanish; then
+      hardhat_firewall_add_note "No se pudo leer el estado de UFW con los privilegios actuales; la auditoria continua con visibilidad parcial de firewall."
+      hardhat_firewall_add_finding \
+        "firewall.ufw.status_unavailable" \
+        "low" \
+        "Estado de UFW no disponible" \
+        "HardHat no pudo recuperar la salida actual de estado de UFW." \
+        "Ejecuta la auditoria con permisos que permitan leer estado de UFW."
+    else
+      hardhat_firewall_add_note "UFW status could not be read with current privileges; audit continues with partial firewall visibility."
+      hardhat_firewall_add_finding \
+        "firewall.ufw.status_unavailable" \
+        "low" \
+        "UFW status unavailable" \
+        "HardHat could not retrieve current UFW status output." \
+        "Run audit with permissions that allow reading UFW status."
+    fi
     hardhat_firewall_compute_severity
     return 0
   fi
@@ -567,6 +623,58 @@ hardhat_module_firewall_collect_audit() {
 
 hardhat_module_firewall_render_human() {
   local findings_count="${#HARDHAT_FIREWALL_FINDINGS[@]}"
+  if hardhat_firewall_is_spanish; then
+    printf 'Auditoria de Firewall HardHat\n'
+    printf 'Backend esperado: UFW\n'
+    printf 'Backend ausente: %s\n' "$( [[ "${HARDHAT_FIREWALL_BACKEND_MISSING}" -eq 1 ]] && printf yes || printf no )"
+    printf 'Instalado: %s\n' "$( [[ "${HARDHAT_UFW_INSTALLED}" -eq 1 ]] && printf yes || printf no )"
+    printf 'Activo: %s\n' "${HARDHAT_UFW_ACTIVE}"
+    printf 'Politica por defecto: %s\n' "${HARDHAT_UFW_DEFAULT_POLICY}"
+    printf 'Reglas detectadas: %s\n' "${#HARDHAT_UFW_RULES[@]}"
+    printf 'Severidad general: %s\n' "${HARDHAT_FIREWALL_SEVERITY}"
+    printf 'Hallazgos: %s\n\n' "${findings_count}"
+
+    if [[ "${HARDHAT_FIREWALL_BACKEND_MISSING}" -eq 1 ]]; then
+      printf 'Estado de riesgo: ALTO\n'
+      printf 'UFW falta, por lo que este sistema no tiene una baseline de firewall del MVP activa.\n'
+      printf 'Por que importa: la exposicion entrante puede ser mayor sin filtrado baseline.\n'
+      if [[ "${HARDHAT_FIREWALL_INSTALL_SUPPORTED}" -eq 1 ]]; then
+        printf 'Accion: ejecuta hardhat firewall apply para instalar/configurar UFW con flujo guiado de baseline.\n\n'
+      else
+        printf 'Accion: instala UFW y luego ejecuta hardhat firewall apply para aplicar baseline.\n\n'
+      fi
+    fi
+
+    local note
+    for note in "${HARDHAT_FIREWALL_NOTES[@]}"; do
+      printf -- '- %s\n' "${note}"
+    done
+
+    if ((findings_count > 0)); then
+      printf '\nHallazgos detallados:\n'
+      local idx=1
+      local item id severity title description recommendation
+      for item in "${HARDHAT_FIREWALL_FINDINGS[@]}"; do
+        IFS='|' read -r id severity title description recommendation <<<"${item}"
+        printf '%s. [%s] %s (%s)\n' "${idx}" "${severity}" "${title}" "${id}"
+        printf '   Descripcion: %s\n' "${description}"
+        printf '   Recomendacion: %s\n' "${recommendation}"
+        idx=$((idx + 1))
+      done
+    else
+      printf '\nNo se detecto configuracion debil de firewall con los checks actuales.\n'
+    fi
+
+    if ((${#HARDHAT_FIREWALL_RECOMMENDATIONS[@]} > 0)); then
+      printf '\nRecomendaciones:\n'
+      local rec
+      for rec in "${HARDHAT_FIREWALL_RECOMMENDATIONS[@]}"; do
+        printf -- '- %s\n' "${rec}"
+      done
+    fi
+    return 0
+  fi
+
   printf 'HardHat Firewall Audit\n'
   printf 'Expected backend: UFW\n'
   printf 'Backend missing: %s\n' "$( [[ "${HARDHAT_FIREWALL_BACKEND_MISSING}" -eq 1 ]] && printf yes || printf no )"
