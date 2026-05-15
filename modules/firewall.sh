@@ -298,26 +298,47 @@ hardhat_firewall_detect_ssh_context() {
   if hardhat_firewall_is_sshd_active; then
     HARDHAT_FIREWALL_SSH_ACTIVE=1
     HARDHAT_FIREWALL_SSH_PORT="$(hardhat_firewall_detect_ssh_port)"
-    hardhat_firewall_add_note "sshd is active. Detected SSH port: ${HARDHAT_FIREWALL_SSH_PORT}."
+    if hardhat_firewall_is_spanish; then
+      hardhat_firewall_add_note "sshd esta activo. Puerto SSH detectado: ${HARDHAT_FIREWALL_SSH_PORT}."
+    else
+      hardhat_firewall_add_note "sshd is active. Detected SSH port: ${HARDHAT_FIREWALL_SSH_PORT}."
+    fi
 
     local rules_text
     rules_text="$(printf '%s\n' "${HARDHAT_UFW_RULES[@]}")"
     if grep -qiE "${HARDHAT_FIREWALL_SSH_PORT}(/tcp)?[[:space:]].*(ALLOW)" <<<"${rules_text}"; then
       HARDHAT_FIREWALL_SSH_RULE_NEEDED=0
-      hardhat_firewall_add_note "An allow rule for SSH port ${HARDHAT_FIREWALL_SSH_PORT} appears to exist."
+      if hardhat_firewall_is_spanish; then
+        hardhat_firewall_add_note "Parece existir una regla allow para el puerto SSH ${HARDHAT_FIREWALL_SSH_PORT}."
+      else
+        hardhat_firewall_add_note "An allow rule for SSH port ${HARDHAT_FIREWALL_SSH_PORT} appears to exist."
+      fi
     else
       HARDHAT_FIREWALL_SSH_RULE_NEEDED=1
-      hardhat_firewall_add_note "No explicit allow rule found for SSH port ${HARDHAT_FIREWALL_SSH_PORT}."
-      hardhat_firewall_add_recommendation "Allow SSH port ${HARDHAT_FIREWALL_SSH_PORT}/tcp before enabling strict defaults."
+      if hardhat_firewall_is_spanish; then
+        hardhat_firewall_add_note "No se encontro una regla allow explicita para el puerto SSH ${HARDHAT_FIREWALL_SSH_PORT}."
+        hardhat_firewall_add_recommendation "Permite el puerto SSH ${HARDHAT_FIREWALL_SSH_PORT}/tcp antes de habilitar defaults estrictos."
+      else
+        hardhat_firewall_add_note "No explicit allow rule found for SSH port ${HARDHAT_FIREWALL_SSH_PORT}."
+        hardhat_firewall_add_recommendation "Allow SSH port ${HARDHAT_FIREWALL_SSH_PORT}/tcp before enabling strict defaults."
+      fi
     fi
   else
-    hardhat_firewall_add_note "sshd is not active."
+    if hardhat_firewall_is_spanish; then
+      hardhat_firewall_add_note "sshd no esta activo."
+    else
+      hardhat_firewall_add_note "sshd is not active."
+    fi
   fi
 }
 
 hardhat_firewall_validate_environment() {
   if ! hardhat_detect_arch_linux; then
-    hardhat_log_error "HardHat firewall apply currently supports only Arch Linux."
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_error "HardHat firewall apply actualmente solo soporta Arch Linux."
+    else
+      hardhat_log_error "HardHat firewall apply currently supports only Arch Linux."
+    fi
     return 1
   fi
 
@@ -329,6 +350,13 @@ hardhat_firewall_validate_environment() {
 }
 
 hardhat_firewall_report_missing_backend() {
+  if hardhat_firewall_is_spanish; then
+    hardhat_log_warn "UFW no esta instalado. No hay backend de firewall soportado configurado para este MVP."
+    hardhat_log_warn "Este sistema no tiene actualmente una linea base de firewall de HardHat y puede estar expuesto a trafico entrante."
+    hardhat_log_info "HardHat puede instalar UFW y aplicar ahora una linea base segura."
+    return 0
+  fi
+
   hardhat_log_warn "UFW is not installed. No supported firewall backend is configured for this MVP."
   hardhat_log_warn "This system currently has no HardHat firewall baseline and may be exposed to inbound traffic."
   hardhat_log_info "HardHat can install UFW and apply a safe baseline now."
@@ -336,12 +364,20 @@ hardhat_firewall_report_missing_backend() {
 
 hardhat_firewall_install_ufw() {
   if command -v ufw >/dev/null 2>&1; then
-    hardhat_log_info "UFW is already installed."
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_info "UFW ya esta instalado."
+    else
+      hardhat_log_info "UFW is already installed."
+    fi
     return 0
   fi
 
   if ! command -v pacman >/dev/null 2>&1; then
-    hardhat_log_error "pacman is not available; cannot install UFW automatically."
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_error "pacman no esta disponible; no se puede instalar UFW automaticamente."
+    else
+      hardhat_log_error "pacman is not available; cannot install UFW automatically."
+    fi
     return 1
   fi
 
@@ -350,45 +386,128 @@ hardhat_firewall_install_ufw() {
     pacman_args=(-S --needed --noconfirm ufw)
   fi
 
-  hardhat_log_info "Installing UFW with pacman..."
+  if hardhat_firewall_is_spanish; then
+    hardhat_log_info "Instalando UFW con pacman..."
+  else
+    hardhat_log_info "Installing UFW with pacman..."
+  fi
   if ! hardhat_sudo_run pacman "${pacman_args[@]}"; then
-    hardhat_log_error "Failed to install UFW via pacman."
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_error "Fallo la instalacion de UFW via pacman."
+    else
+      hardhat_log_error "Failed to install UFW via pacman."
+    fi
     return 1
   fi
 
   if ! command -v ufw >/dev/null 2>&1; then
-    hardhat_log_error "UFW installation command completed but ufw is still unavailable in PATH."
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_error "El comando de instalacion de UFW finalizo, pero ufw sigue sin estar disponible en PATH."
+    else
+      hardhat_log_error "UFW installation command completed but ufw is still unavailable in PATH."
+    fi
     return 1
   fi
 
-  hardhat_log_success "UFW installed successfully."
+  if hardhat_firewall_is_spanish; then
+    hardhat_log_success "UFW se instalo correctamente."
+  else
+    hardhat_log_success "UFW installed successfully."
+  fi
   return 0
 }
 
 hardhat_firewall_build_apply_plan() {
   HARDHAT_FIREWALL_PLAN=()
 
-  if [[ "${HARDHAT_UFW_INSTALLED}" -ne 1 ]]; then
-    HARDHAT_FIREWALL_PLAN+=("Install UFW package with pacman.")
-    HARDHAT_FIREWALL_PLAN+=("Collect current UFW status after installation.")
+  local use_es=0
+  if hardhat_firewall_is_spanish; then
+    use_es=1
   fi
 
-  HARDHAT_FIREWALL_PLAN+=("Create backups of UFW configuration files before applying policy changes.")
-  HARDHAT_FIREWALL_PLAN+=("Set UFW default incoming policy to deny.")
-  HARDHAT_FIREWALL_PLAN+=("Set UFW default outgoing policy to allow.")
+  if [[ "${HARDHAT_UFW_INSTALLED}" -ne 1 ]]; then
+    if [[ "${use_es}" -eq 1 ]]; then
+      HARDHAT_FIREWALL_PLAN+=("Instalar paquete UFW con pacman.")
+      HARDHAT_FIREWALL_PLAN+=("Recolectar estado actual de UFW despues de la instalacion.")
+    else
+      HARDHAT_FIREWALL_PLAN+=("Install UFW package with pacman.")
+      HARDHAT_FIREWALL_PLAN+=("Collect current UFW status after installation.")
+    fi
+  fi
+
+  if [[ "${use_es}" -eq 1 ]]; then
+    HARDHAT_FIREWALL_PLAN+=("Crear backups de archivos de configuracion de UFW antes de aplicar cambios de politica.")
+    HARDHAT_FIREWALL_PLAN+=("Configurar politica de entrada por defecto de UFW en deny.")
+    HARDHAT_FIREWALL_PLAN+=("Configurar politica de salida por defecto de UFW en allow.")
+  else
+    HARDHAT_FIREWALL_PLAN+=("Create backups of UFW configuration files before applying policy changes.")
+    HARDHAT_FIREWALL_PLAN+=("Set UFW default incoming policy to deny.")
+    HARDHAT_FIREWALL_PLAN+=("Set UFW default outgoing policy to allow.")
+  fi
 
   if [[ "${HARDHAT_FIREWALL_SSH_ACTIVE}" -eq 1 ]] && [[ "${HARDHAT_FIREWALL_SSH_RULE_NEEDED}" -eq 1 ]]; then
-    HARDHAT_FIREWALL_PLAN+=("Add UFW allow rule for SSH on port ${HARDHAT_FIREWALL_SSH_PORT}/tcp.")
+    if [[ "${use_es}" -eq 1 ]]; then
+      HARDHAT_FIREWALL_PLAN+=("Agregar regla allow de UFW para SSH en el puerto ${HARDHAT_FIREWALL_SSH_PORT}/tcp.")
+    else
+      HARDHAT_FIREWALL_PLAN+=("Add UFW allow rule for SSH on port ${HARDHAT_FIREWALL_SSH_PORT}/tcp.")
+    fi
   fi
 
   if [[ "${HARDHAT_UFW_ACTIVE}" != "yes" ]]; then
-    HARDHAT_FIREWALL_PLAN+=("Enable UFW to enforce firewall rules.")
+    if [[ "${use_es}" -eq 1 ]]; then
+      HARDHAT_FIREWALL_PLAN+=("Habilitar UFW para aplicar reglas de firewall.")
+    else
+      HARDHAT_FIREWALL_PLAN+=("Enable UFW to enforce firewall rules.")
+    fi
   else
-    HARDHAT_FIREWALL_PLAN+=("UFW already active; refresh baseline defaults without disabling firewall.")
+    if [[ "${use_es}" -eq 1 ]]; then
+      HARDHAT_FIREWALL_PLAN+=("UFW ya esta activo; refrescar defaults de linea base sin deshabilitar firewall.")
+    else
+      HARDHAT_FIREWALL_PLAN+=("UFW already active; refresh baseline defaults without disabling firewall.")
+    fi
   fi
 }
 
 hardhat_firewall_render_apply_plan() {
+  if hardhat_firewall_is_spanish; then
+    local installed_text="no"
+    local active_text="${HARDHAT_UFW_ACTIVE}"
+    local default_policy_text="${HARDHAT_UFW_DEFAULT_POLICY}"
+
+    if [[ "${HARDHAT_UFW_INSTALLED}" -eq 1 ]]; then
+      installed_text="si"
+    fi
+
+    if [[ "${active_text}" == "unknown" ]]; then
+      active_text="desconocido"
+    fi
+
+    if [[ "${default_policy_text}" == "unknown" ]]; then
+      default_policy_text="desconocida"
+    fi
+
+    printf 'Plan de Aplicacion de Firewall HardHat\n'
+    printf 'Backend objetivo: UFW\n'
+    printf 'Estado actual: instalado=%s activo=%s politica_por_defecto=%s\n\n' \
+      "${installed_text}" \
+      "${active_text}" \
+      "${default_policy_text}"
+
+    local idx=1
+    local step
+    for step in "${HARDHAT_FIREWALL_PLAN[@]}"; do
+      printf '%s. %s\n' "${idx}" "${step}"
+      idx=$((idx + 1))
+    done
+
+    printf '\nAvisos de seguridad:\n'
+    printf -- '- Los archivos de configuracion existentes de UFW se respaldan antes de aplicar cambios de politica.\n'
+    printf -- '- En una instalacion inicial de UFW, apply continua si aun no existen archivos de configuracion de UFW.\n'
+    printf -- '- Si un backup requerido falla, HardHat no aplica cambios de politica.\n'
+    printf -- '- No hay rollback automatico en esta fase.\n'
+    return 0
+  fi
+
   printf 'HardHat Firewall Apply Plan\n'
   printf 'Target backend: UFW\n'
   printf 'Current status: installed=%s active=%s default_policy=%s\n\n' \
@@ -438,7 +557,11 @@ hardhat_firewall_create_backups_or_fail() {
     existing_count=$((existing_count + 1))
 
     if ! hardhat_backup_file "${source_file}" "${backup_dir}"; then
-      hardhat_log_error "Backup failed for ${source_file}; aborting apply."
+      if hardhat_firewall_is_spanish; then
+        hardhat_log_error "Fallo el backup de ${source_file}; abortando apply."
+      else
+        hardhat_log_error "Backup failed for ${source_file}; aborting apply."
+      fi
       return 1
     fi
     backup_count=$((backup_count + 1))
@@ -446,39 +569,67 @@ hardhat_firewall_create_backups_or_fail() {
 
   if ((existing_count == 0)); then
     if [[ "${require_existing_files}" -eq 1 ]]; then
-      hardhat_log_error "UFW appears pre-existing but no configuration file was found for backup; refusing to apply changes."
+      if hardhat_firewall_is_spanish; then
+        hardhat_log_error "UFW parece preexistente, pero no se encontro ningun archivo de configuracion para backup; se rechaza aplicar cambios."
+      else
+        hardhat_log_error "UFW appears pre-existing but no configuration file was found for backup; refusing to apply changes."
+      fi
       return 1
     fi
 
-    hardhat_log_warn "No UFW configuration files found to back up after installation. Continuing with initial baseline apply."
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_warn "No se encontraron archivos de configuracion de UFW para respaldar despues de la instalacion. Continuando con apply inicial de linea base."
+    else
+      hardhat_log_warn "No UFW configuration files found to back up after installation. Continuing with initial baseline apply."
+    fi
     return 0
   fi
 
-  hardhat_log_success "Backup stage completed (${backup_count} file(s))."
+  if hardhat_firewall_is_spanish; then
+    hardhat_log_success "Etapa de backup completada (${backup_count} archivo(s))."
+  else
+    hardhat_log_success "Backup stage completed (${backup_count} file(s))."
+  fi
   return 0
 }
 
 hardhat_firewall_apply_actions() {
   if ! hardhat_sudo_run ufw --force default deny incoming; then
-    hardhat_log_error "Failed to set UFW default incoming policy."
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_error "Fallo al configurar la politica de entrada por defecto de UFW."
+    else
+      hardhat_log_error "Failed to set UFW default incoming policy."
+    fi
     return 1
   fi
 
   if ! hardhat_sudo_run ufw --force default allow outgoing; then
-    hardhat_log_error "Failed to set UFW default outgoing policy."
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_error "Fallo al configurar la politica de salida por defecto de UFW."
+    else
+      hardhat_log_error "Failed to set UFW default outgoing policy."
+    fi
     return 1
   fi
 
   if [[ "${HARDHAT_FIREWALL_SSH_ACTIVE}" -eq 1 ]] && [[ "${HARDHAT_FIREWALL_SSH_RULE_NEEDED}" -eq 1 ]]; then
     if ! hardhat_sudo_run ufw allow "${HARDHAT_FIREWALL_SSH_PORT}/tcp"; then
-      hardhat_log_error "Failed to add SSH allow rule for port ${HARDHAT_FIREWALL_SSH_PORT}/tcp."
+      if hardhat_firewall_is_spanish; then
+        hardhat_log_error "Fallo al agregar regla allow de SSH para el puerto ${HARDHAT_FIREWALL_SSH_PORT}/tcp."
+      else
+        hardhat_log_error "Failed to add SSH allow rule for port ${HARDHAT_FIREWALL_SSH_PORT}/tcp."
+      fi
       return 1
     fi
   fi
 
   if [[ "${HARDHAT_UFW_ACTIVE}" != "yes" ]]; then
     if ! hardhat_sudo_run ufw --force enable; then
-      hardhat_log_error "Failed to enable UFW."
+      if hardhat_firewall_is_spanish; then
+        hardhat_log_error "Fallo al habilitar UFW."
+      else
+        hardhat_log_error "Failed to enable UFW."
+      fi
       return 1
     fi
   fi
@@ -491,24 +642,44 @@ hardhat_firewall_validate_post_apply() {
 
   local ok=1
   if [[ "${HARDHAT_UFW_ACTIVE}" != "yes" ]]; then
-    hardhat_log_warn "Post-apply validation: UFW is not reported as active."
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_warn "Validacion posterior a apply: UFW no aparece como activo."
+    else
+      hardhat_log_warn "Post-apply validation: UFW is not reported as active."
+    fi
     ok=0
   fi
 
   if [[ "${HARDHAT_UFW_DEFAULT_POLICY}" == "unknown" ]]; then
-    hardhat_log_warn "Post-apply validation: could not read UFW default policy."
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_warn "Validacion posterior a apply: no se pudo leer la politica por defecto de UFW."
+    else
+      hardhat_log_warn "Post-apply validation: could not read UFW default policy."
+    fi
     ok=0
   elif ! grep -qiE '(deny|reject)[[:space:]]*\(incoming\)' <<<"${HARDHAT_UFW_DEFAULT_POLICY}"; then
-    hardhat_log_warn "Post-apply validation: incoming default policy is not deny/reject."
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_warn "Validacion posterior a apply: la politica de entrada por defecto no es deny/reject."
+    else
+      hardhat_log_warn "Post-apply validation: incoming default policy is not deny/reject."
+    fi
     ok=0
   fi
 
   if [[ "${ok}" -eq 1 ]]; then
-    hardhat_log_success "Firewall baseline applied and validated."
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_success "Linea base de firewall aplicada y validada."
+    else
+      hardhat_log_success "Firewall baseline applied and validated."
+    fi
     return 0
   fi
 
-  hardhat_log_warn "Firewall apply completed with validation warnings; review status manually."
+  if hardhat_firewall_is_spanish; then
+    hardhat_log_warn "firewall apply finalizo con advertencias de validacion; revisa el estado manualmente."
+  else
+    hardhat_log_warn "Firewall apply completed with validation warnings; review status manually."
+  fi
   return 1
 }
 
@@ -911,7 +1082,11 @@ hardhat_module_firewall_apply() {
   hardhat_firewall_render_apply_plan
 
   if [[ "${HARDHAT_DRY_RUN:-0}" -eq 1 ]]; then
-    hardhat_log_info "Dry-run mode enabled: no changes were made."
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_info "Modo dry-run habilitado: no se realizaron cambios."
+    else
+      hardhat_log_info "Dry-run mode enabled: no changes were made."
+    fi
     if [[ "${requires_ufw_install}" -eq 1 ]]; then
       hardhat_firewall_write_log "dry-run missing_ufw_plan_reviewed"
     else
@@ -921,7 +1096,12 @@ hardhat_module_firewall_apply() {
   fi
 
   if [[ "${requires_ufw_install}" -eq 1 ]]; then
-    if ! hardhat_confirm_global "UFW is missing. Install UFW with pacman and apply the firewall baseline now?"; then
+    if hardhat_firewall_is_spanish; then
+      if ! hardhat_confirm_global "UFW no esta instalado. Instalar UFW con pacman y aplicar ahora la linea base de firewall?"; then
+        hardhat_firewall_write_log "aborted missing_ufw_user_cancelled"
+        return 1
+      fi
+    elif ! hardhat_confirm_global "UFW is missing. Install UFW with pacman and apply the firewall baseline now?"; then
       hardhat_firewall_write_log "aborted missing_ufw_user_cancelled"
       return 1
     fi
@@ -934,12 +1114,20 @@ hardhat_module_firewall_apply() {
 
     hardhat_module_firewall_collect_audit
     if [[ "${HARDHAT_UFW_INSTALLED}" -ne 1 ]]; then
-      hardhat_log_error "UFW still not detected after installation attempt; aborting apply."
+      if hardhat_firewall_is_spanish; then
+        hardhat_log_error "UFW aun no se detecta despues del intento de instalacion; abortando apply."
+      else
+        hardhat_log_error "UFW still not detected after installation attempt; aborting apply."
+      fi
       hardhat_firewall_write_log "failed ufw_not_detected_after_install"
       return 1
     fi
 
-    hardhat_log_info "UFW installation completed. Continuing with baseline configuration."
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_info "Instalacion de UFW completada. Continuando con configuracion de linea base."
+    else
+      hardhat_log_info "UFW installation completed. Continuing with baseline configuration."
+    fi
     hardhat_firewall_detect_ssh_context
     backup_require_existing_files=0
   fi
@@ -950,13 +1138,22 @@ hardhat_module_firewall_apply() {
   fi
 
   if [[ "${preconfirmed_apply}" -ne 1 ]]; then
-    if ! hardhat_confirm_global "Proceed with firewall baseline apply?"; then
+    if hardhat_firewall_is_spanish; then
+      if ! hardhat_confirm_global "Continuar con firewall apply de linea base?"; then
+        hardhat_firewall_write_log "aborted user_cancelled"
+        return 1
+      fi
+    elif ! hardhat_confirm_global "Proceed with firewall baseline apply?"; then
       hardhat_firewall_write_log "aborted user_cancelled"
       return 1
     fi
   fi
 
-  hardhat_log_warn "Automatic rollback is not available in this phase."
+  if hardhat_firewall_is_spanish; then
+    hardhat_log_warn "No hay rollback automatico en esta fase."
+  else
+    hardhat_log_warn "Automatic rollback is not available in this phase."
+  fi
 
   if ! hardhat_firewall_apply_actions; then
     hardhat_firewall_write_log "failed apply_actions"
@@ -965,12 +1162,20 @@ hardhat_module_firewall_apply() {
 
   if hardhat_firewall_validate_post_apply; then
     hardhat_firewall_write_log "success validated"
-    hardhat_log_info "Final state: active=${HARDHAT_UFW_ACTIVE}, default_policy=${HARDHAT_UFW_DEFAULT_POLICY}."
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_info "Estado final: active=${HARDHAT_UFW_ACTIVE}, default_policy=${HARDHAT_UFW_DEFAULT_POLICY}."
+    else
+      hardhat_log_info "Final state: active=${HARDHAT_UFW_ACTIVE}, default_policy=${HARDHAT_UFW_DEFAULT_POLICY}."
+    fi
     return 0
   fi
 
   hardhat_firewall_write_log "warning validation_failed"
-  hardhat_log_warn "Final state: active=${HARDHAT_UFW_ACTIVE}, default_policy=${HARDHAT_UFW_DEFAULT_POLICY}."
+  if hardhat_firewall_is_spanish; then
+    hardhat_log_warn "Estado final: active=${HARDHAT_UFW_ACTIVE}, default_policy=${HARDHAT_UFW_DEFAULT_POLICY}."
+  else
+    hardhat_log_warn "Final state: active=${HARDHAT_UFW_ACTIVE}, default_policy=${HARDHAT_UFW_DEFAULT_POLICY}."
+  fi
   return 1
 }
 
