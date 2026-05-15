@@ -269,3 +269,8 @@ Nota:
 - `docs/MVP.md`: alcance y estado del MVP.
 - `docs/ARCHITECTURE.md`: arquitectura y flujo tecnico.
 - `docs/TODO.md`: pendientes priorizados de implementacion.
+
+
+## Licencia
+
+Este proyecto se distribuye bajo la licencia MIT.
