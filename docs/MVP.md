@@ -21,6 +21,7 @@ Entregar una primera iteracion estable de una CLI de seguridad para Arch Linux, 
 - Hallazgos estructurados con severidad y recomendacion.
 - Calculo de score y resumen para auditoria.
 - Instalador para exponer `hardhat` como comando del sistema.
+- Script de desinstalacion (`uninstall.sh`) con modo interactivo, `--yes` y `--dry-run`.
 
 ## No implementado todavia
 - Soporte multi-distro.

@@ -157,6 +157,7 @@ El instalador:
 - copia runtime a `/opt/hardhat`;
 - crea enlace en `/usr/local/bin/hardhat`.
 - guarda idioma global en `/etc/hardhat/config`.
+- guarda idioma del usuario actual en `~/.config/hardhat/config`.
 
 ## Configurar idioma despues de instalar
 
@@ -175,12 +176,34 @@ hardhat language set en
 
 La preferencia de usuario se guarda en `~/.config/hardhat/config` y tiene prioridad sobre la configuracion global.
 
-## Desinstalacion manual
+## Desinstalacion
+
+Desinstalacion recomendada:
 
 ```bash
-sudo rm -f /usr/local/bin/hardhat
-sudo rm -rf /opt/hardhat
+./uninstall.sh
 ```
+
+Desinstalacion no interactiva:
+
+```bash
+./uninstall.sh --yes
+```
+
+Simulacion de desinstalacion:
+
+```bash
+./uninstall.sh --dry-run --yes
+```
+
+Eliminar tambien configuracion global (`/etc/hardhat/config`):
+
+```bash
+./uninstall.sh --yes --purge-config
+```
+
+Nota:
+- Por seguridad, el desinstalador solo elimina `/usr/local/bin/hardhat` si apunta al runtime de HardHat esperado.
 
 ## Estructura actual del proyecto
 
@@ -193,6 +216,7 @@ sudo rm -rf /opt/hardhat
 │   ├── MVP.md
 │   └── TODO.md
 ├── install.sh
+├── uninstall.sh
 ├── lib/
 │   ├── backup.sh
 │   ├── colors.sh
@@ -223,9 +247,9 @@ sudo rm -rf /opt/hardhat
 Checks recomendados:
 
 ```bash
-bash -n bin/hardhat install.sh lib/*.sh modules/*.sh
-shellcheck -x bin/hardhat install.sh lib/*.sh modules/*.sh
-shfmt -i 2 -ci -sr -bn -d bin/hardhat install.sh lib/*.sh modules/*.sh
+bash -n bin/hardhat install.sh uninstall.sh lib/*.sh modules/*.sh
+shellcheck -x bin/hardhat install.sh uninstall.sh lib/*.sh modules/*.sh
+shfmt -i 2 -ci -sr -bn -d bin/hardhat install.sh uninstall.sh lib/*.sh modules/*.sh
 ```
 
 Nota:

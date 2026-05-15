@@ -12,6 +12,8 @@ DRY_RUN=0
 APP_LANG=""
 GLOBAL_CONFIG_DIR="/etc/hardhat"
 GLOBAL_CONFIG_FILE="/etc/hardhat/config"
+USER_CONFIG_DIR="${HOME}/.config/hardhat"
+USER_CONFIG_FILE="${USER_CONFIG_DIR}/config"
 BANNER_FILE="${ROOT_DIR}/accsi.txt"
 BANNER_SECONDS=2
 
@@ -30,17 +32,20 @@ msg() {
       plan_action_2) printf '  2) Copiar bin/, lib/ y modules/ dentro de %s\n' "${INSTALL_ROOT}" ;;
       plan_action_3) printf '  3) Crear symlink %s -> %s/bin/hardhat\n' "${TARGET_BIN}" "${INSTALL_ROOT}" ;;
       plan_action_4) printf '  4) Guardar idioma global en %s (%s)\n' "${GLOBAL_CONFIG_FILE}" "${APP_LANG}" ;;
+      plan_action_5) printf '  5) Guardar idioma de usuario en %s (%s)\n' "${USER_CONFIG_FILE}" "${APP_LANG}" ;;
       confirm_skipped) printf 'Confirmacion omitida por --yes\n' ;;
       confirm_prompt) printf 'Continuar con la instalacion? [y/N]: ' ;;
       install_cancelled) printf 'Instalacion cancelada.\n' ;;
       sudo_required) printf 'sudo es necesario para instalar si no ejecutas como root.\n' ;;
       dryrun_write) printf '[dry-run] escribir %s con HARDHAT_LANG=%s\n' "${GLOBAL_CONFIG_FILE}" "${APP_LANG}" ;;
+      dryrun_write_user) printf '[dry-run] escribir %s con HARDHAT_LANG=%s\n' "${USER_CONFIG_FILE}" "${APP_LANG}" ;;
       dryrun_done) printf '\nDry-run completado. No se modificaron archivos.\n' ;;
       install_done) printf '\nInstalacion completada.\n' ;;
       run_help) printf 'Ejecuta: hardhat --help\n' ;;
       installed_root) printf 'Raiz instalada: %s\n' "${INSTALL_ROOT}" ;;
       installed_cmd) printf 'Comando instalado: %s\n' "${TARGET_BIN}" ;;
       configured_lang) printf 'Idioma configurado: %s\n' "${APP_LANG}" ;;
+      configured_lang_user) printf 'Idioma de usuario configurado: %s\n' "${APP_LANG}" ;;
       lang_select_title) printf 'Selecciona el idioma de la app:\n' ;;
       lang_select_opt_1) printf '  1) English (en)\n' ;;
       lang_select_opt_2) printf '  2) Espanol (es)\n' ;;
@@ -61,17 +66,20 @@ msg() {
     plan_action_2) printf '  2) Copy bin/, lib/ and modules/ into %s\n' "${INSTALL_ROOT}" ;;
     plan_action_3) printf '  3) Create symlink %s -> %s/bin/hardhat\n' "${TARGET_BIN}" "${INSTALL_ROOT}" ;;
     plan_action_4) printf '  4) Persist global app language in %s (%s)\n' "${GLOBAL_CONFIG_FILE}" "${APP_LANG}" ;;
+    plan_action_5) printf '  5) Persist user app language in %s (%s)\n' "${USER_CONFIG_FILE}" "${APP_LANG}" ;;
     confirm_skipped) printf 'Confirmation skipped by --yes\n' ;;
     confirm_prompt) printf 'Proceed with installation? [y/N]: ' ;;
     install_cancelled) printf 'Installation cancelled.\n' ;;
     sudo_required) printf 'sudo is required for installation when not running as root.\n' ;;
     dryrun_write) printf '[dry-run] write %s with HARDHAT_LANG=%s\n' "${GLOBAL_CONFIG_FILE}" "${APP_LANG}" ;;
+    dryrun_write_user) printf '[dry-run] write %s with HARDHAT_LANG=%s\n' "${USER_CONFIG_FILE}" "${APP_LANG}" ;;
     dryrun_done) printf '\nDry-run complete. No files were changed.\n' ;;
     install_done) printf '\nInstallation complete.\n' ;;
     run_help) printf 'Run: hardhat --help\n' ;;
     installed_root) printf 'Installed runtime root: %s\n' "${INSTALL_ROOT}" ;;
     installed_cmd) printf 'Installed command path: %s\n' "${TARGET_BIN}" ;;
     configured_lang) printf 'Configured language: %s\n' "${APP_LANG}" ;;
+    configured_lang_user) printf 'Configured user language: %s\n' "${APP_LANG}" ;;
     lang_select_title) printf 'Select app language:\n' ;;
     lang_select_opt_1) printf '  1) English (en)\n' ;;
     lang_select_opt_2) printf '  2) Espanol (es)\n' ;;
@@ -225,6 +233,7 @@ show_plan() {
   msg plan_action_2
   msg plan_action_3
   msg plan_action_4
+  msg plan_action_5
 }
 
 confirm_plan() {
@@ -261,12 +270,16 @@ perform_install() {
   run_as_root mkdir -p "${GLOBAL_CONFIG_DIR}"
   if [[ "${DRY_RUN}" -eq 1 ]]; then
     msg dryrun_write
+    msg dryrun_write_user
   else
     local tmp_file
     tmp_file="$(mktemp)"
     printf 'HARDHAT_LANG=%s\n' "${APP_LANG}" >"${tmp_file}"
     run_as_root install -m 0644 "${tmp_file}" "${GLOBAL_CONFIG_FILE}"
     rm -f "${tmp_file}"
+
+    mkdir -p "${USER_CONFIG_DIR}"
+    printf 'HARDHAT_LANG=%s\n' "${APP_LANG}" >"${USER_CONFIG_FILE}"
   fi
 }
 
@@ -298,6 +311,7 @@ main() {
   msg installed_root
   msg installed_cmd
   msg configured_lang
+  msg configured_lang_user
 }
 
 main "$@"
