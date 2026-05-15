@@ -297,8 +297,8 @@ hardhat_run_command() {
 }
 
 main() {
-  hardhat_parse_global_flags "$@"
   hardhat_language_load
+  hardhat_parse_global_flags "$@"
   hardhat_init_colors
   hardhat_parse_command
 
