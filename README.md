@@ -16,7 +16,7 @@ Importante:
 - Arch Linux
 - backend de firewall: UFW
 
-- Mas adelante se implementara soporte para mas distribuciones , (gentoos y void) se busca cubrir distribuciones de riceado 
+En el futuro puede evaluarse soporte para otras distribuciones minimalistas, pero el MVP actual solo soporta Arch Linux.
 ## Comandos disponibles
 
 ```bash
