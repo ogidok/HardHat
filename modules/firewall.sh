@@ -665,7 +665,11 @@ hardhat_module_firewall_apply() {
 
   if [[ "${HARDHAT_DRY_RUN:-0}" -eq 1 ]]; then
     hardhat_log_info "Dry-run mode enabled: no changes were made."
-    hardhat_firewall_write_log "dry-run plan_reviewed"
+    if [[ "${requires_ufw_install}" -eq 1 ]]; then
+      hardhat_firewall_write_log "dry-run missing_ufw_plan_reviewed"
+    else
+      hardhat_firewall_write_log "dry-run plan_reviewed"
+    fi
     return 0
   fi
 
@@ -688,6 +692,7 @@ hardhat_module_firewall_apply() {
       return 1
     fi
 
+    hardhat_log_info "UFW installation completed. Continuing with baseline configuration."
     hardhat_firewall_detect_ssh_context
   fi
 
