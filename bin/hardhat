@@ -63,7 +63,7 @@ Nota:
 Comandos:
   audit               Ejecuta auditoria de seguridad baseline
   firewall audit      Audita estado de UFW y politica baseline
-  firewall apply      Aplica baseline de UFW (guiado)
+  firewall apply      Aplica baseline de UFW (guiado; instala UFW si falta)
   language show       Muestra idioma actual
   language set <id>   Configura idioma (en|es)
   menu                Abre menu interactivo (no implementado)
@@ -102,7 +102,7 @@ Note:
 Commands:
   audit               Run baseline security audit
   firewall audit      Audit UFW status and baseline policy
-  firewall apply      Apply UFW baseline policy (guided)
+  firewall apply      Apply UFW baseline policy (guided; installs UFW if missing)
   language show       Show current language
   language set <id>   Set language (en|es)
   menu                Open interactive menu (not implemented yet)
