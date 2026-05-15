@@ -1,3 +1,17 @@
+
+```
+    )                      )              
+ ( /(              (    ( /(           )  
+ )\())    )  (     )\ ) )\())    )  ( /(  
+((_)\  ( /(  )(   (()/(((_)\  ( /(  )\()) 
+ _((_) )(_))(()\   ((_))_((_) )(_))(_))/  
+| || |((_)_  ((_)  _| || || |((_)_ | |_   
+| __ |/ _` || '_|/ _` || __ |/ _` ||  _|  
+|_||_|\__,_||_|  \__,_||_||_|\__,_| \__|  
+                                         v1
+```
+
+
 # HardHat
 
 HardHat es una herramienta CLI para Arch Linux, escrita en Bash, enfocada en auditoria basica de seguridad y aplicacion guiada de cambios de firewall.
