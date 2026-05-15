@@ -360,11 +360,13 @@ hardhat_firewall_render_apply_plan() {
 
   printf '\nSafety notices:\n'
   printf -- '- Backups are mandatory before applying changes.\n'
+  printf -- '- On first-time UFW install, there may be no existing UFW config files to back up yet.\n'
   printf -- '- If backups fail, HardHat will not apply any changes.\n'
   printf -- '- Automatic rollback is not available in this phase.\n'
 }
 
 hardhat_firewall_create_backups_or_fail() {
+  local require_existing_files="${1:-1}"
   local backup_dir="/var/backups/hardhat/firewall"
   local -a candidates=(
     "/etc/ufw/ufw.conf"
@@ -391,8 +393,13 @@ hardhat_firewall_create_backups_or_fail() {
   done
 
   if ((backup_count == 0)); then
-    hardhat_log_error "No UFW configuration file available to back up; refusing to apply changes."
-    return 1
+    if [[ "${require_existing_files}" -eq 1 ]]; then
+      hardhat_log_error "No UFW configuration file available to back up; refusing to apply changes."
+      return 1
+    fi
+
+    hardhat_log_warn "No UFW configuration files found to back up after installation. Continuing with initial baseline apply."
+    return 0
   fi
 
   hardhat_log_success "Backup stage completed (${backup_count} file(s))."
@@ -684,6 +691,7 @@ hardhat_module_firewall_audit() {
 hardhat_module_firewall_apply() {
   local requires_ufw_install=0
   local preconfirmed_apply=0
+  local backup_require_existing_files=1
 
   if ! hardhat_firewall_validate_environment; then
     return 1
@@ -731,9 +739,10 @@ hardhat_module_firewall_apply() {
 
     hardhat_log_info "UFW installation completed. Continuing with baseline configuration."
     hardhat_firewall_detect_ssh_context
+    backup_require_existing_files=0
   fi
 
-  if ! hardhat_firewall_create_backups_or_fail; then
+  if ! hardhat_firewall_create_backups_or_fail "${backup_require_existing_files}"; then
     hardhat_firewall_write_log "aborted backup_failed"
     return 1
   fi
