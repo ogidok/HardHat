@@ -362,9 +362,9 @@ hardhat_firewall_render_apply_plan() {
   done
 
   printf '\nSafety notices:\n'
-  printf -- '- Backups are mandatory before applying changes.\n'
-  printf -- '- On first-time UFW install, there may be no existing UFW config files to back up yet.\n'
-  printf -- '- If backups fail, HardHat will not apply any changes.\n'
+  printf -- '- Existing UFW configuration files are backed up before policy changes.\n'
+  printf -- '- On first-time UFW install, apply continues if no UFW config files exist yet.\n'
+  printf -- '- If a required backup fails, HardHat does not apply policy changes.\n'
   printf -- '- Automatic rollback is not available in this phase.\n'
 }
 
@@ -499,7 +499,7 @@ hardhat_module_firewall_collect_audit() {
 
   local status_output=""
   if ! status_output="$(hardhat_firewall_run_ufw_capture status)"; then
-    hardhat_firewall_add_note "UFW status could not be read with current privileges."
+    hardhat_firewall_add_note "UFW status could not be read with current privileges; audit continues with partial firewall visibility."
     hardhat_firewall_add_finding \
       "firewall.ufw.status_unavailable" \
       "low" \

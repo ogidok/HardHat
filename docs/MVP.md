@@ -3,6 +3,8 @@
 ## Objetivo
 Entregar una primera iteracion estable de una CLI de seguridad para Arch Linux, con auditoria util y aplicacion controlada de baseline de UFW.
 
+Estado de release actual: MVP / preview publico.
+
 ## Implementado en el MVP actual
 - Guardia de compatibilidad para Arch Linux en comandos operativos.
 - Estructura modular en Bash.
@@ -20,6 +22,7 @@ Entregar una primera iteracion estable de una CLI de seguridad para Arch Linux, 
   - actualizaciones pendientes como senal de riesgo
 - Hallazgos estructurados con severidad y recomendacion.
 - Calculo de score y resumen para auditoria.
+- En comandos con `--json`, `stdout` se reserva para JSON valido y los logs operativos van por `stderr`.
 - Instalador para exponer `hardhat` como comando del sistema.
 - Script de desinstalacion (`uninstall.sh`) con modo interactivo, `--yes` y `--dry-run`.
 

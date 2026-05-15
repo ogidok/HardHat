@@ -4,7 +4,7 @@ HardHat es una herramienta CLI para Arch Linux, escrita en Bash, enfocada en aud
 
 ## Estado del proyecto
 
-MVP funcional en progreso. Lo implementado ya se puede usar desde linea de comandos.
+MVP / preview funcional. Lo implementado ya se puede usar desde linea de comandos para validacion tecnica y pruebas controladas.
 
 Importante:
 - no hay rollback automatico;
@@ -68,6 +68,10 @@ Salida:
 - humana por defecto;
 - JSON estable con metadatos, sistema, resumen, notas, hallazgos y recomendaciones.
 
+Comportamiento de salida con `--json`:
+- `stdout` contiene solo JSON valido.
+- mensajes operativos y logs se emiten por `stderr`.
+
 ### `hardhat firewall audit`
 
 Audita especificamente UFW:
@@ -82,6 +86,10 @@ Audita especificamente UFW:
 Salida:
 - humana por defecto;
 - JSON con metadatos, seccion firewall, estado de backend, resumen, notas, hallazgos y recomendaciones.
+
+Comportamiento de salida con `--json`:
+- `stdout` contiene solo JSON valido.
+- mensajes operativos y logs se emiten por `stderr`.
 
 Si UFW no esta instalado:
 - HardHat informa que no hay firewall soportado/configurado para este MVP.
