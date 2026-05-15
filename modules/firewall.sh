@@ -287,7 +287,7 @@ hardhat_firewall_validate_environment() {
 }
 
 hardhat_firewall_report_missing_backend() {
-  hardhat_log_error "UFW is not installed. No supported firewall backend is configured for this MVP."
+  hardhat_log_warn "UFW is not installed. No supported firewall backend is configured for this MVP."
   hardhat_log_warn "This system currently has no HardHat firewall baseline and may be exposed to inbound traffic."
   hardhat_log_info "HardHat can install UFW and apply a safe baseline now."
 }
