@@ -449,13 +449,15 @@ hardhat_module_firewall_collect_audit() {
   hardhat_firewall_reset_state
 
   if ! command -v ufw >/dev/null 2>&1; then
-    hardhat_firewall_add_note "UFW is not installed."
+    hardhat_firewall_add_note "UFW is not installed on this system."
+    hardhat_firewall_add_note "No MVP-supported firewall baseline is currently active."
+    hardhat_firewall_add_note "System exposure is increased until a baseline firewall policy is applied."
     hardhat_firewall_add_finding \
       "firewall.ufw.missing" \
       "high" \
-      "UFW not installed" \
-      "No supported firewall backend was detected for MVP baseline checks. The system may be exposed without baseline filtering." \
-      "Install UFW, apply a deny-incoming baseline and keep only required allow rules."
+      "Supported firewall backend missing" \
+      "UFW is not installed, so HardHat cannot confirm or enforce the MVP firewall baseline. This increases system exposure." \
+      "Install and configure UFW using 'hardhat firewall apply' (or install UFW with pacman first, then run 'hardhat firewall apply')."
     hardhat_firewall_compute_severity
     return 0
   fi
