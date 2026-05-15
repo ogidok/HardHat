@@ -272,16 +272,55 @@ hardhat_firewall_validate_environment() {
     return 1
   fi
 
-  if ! command -v ufw >/dev/null 2>&1; then
-    hardhat_log_error "UFW is not installed; cannot apply firewall baseline."
+  return 0
+}
+
+hardhat_firewall_report_missing_backend() {
+  hardhat_log_error "UFW is not installed. No supported firewall backend is configured for this MVP."
+  hardhat_log_warn "This system currently has no HardHat firewall baseline and may be exposed to inbound traffic."
+  hardhat_log_info "HardHat can install UFW and apply a safe baseline now."
+}
+
+hardhat_firewall_install_ufw() {
+  if command -v ufw >/dev/null 2>&1; then
+    hardhat_log_info "UFW is already installed."
+    return 0
+  fi
+
+  if ! command -v pacman >/dev/null 2>&1; then
+    hardhat_log_error "pacman is not available; cannot install UFW automatically."
     return 1
   fi
 
+  local -a pacman_args=(-S --needed ufw)
+  if [[ "${HARDHAT_ASSUME_YES:-0}" -eq 1 ]]; then
+    pacman_args=(-S --needed --noconfirm ufw)
+  fi
+
+  hardhat_log_info "Installing UFW with pacman..."
+  if ! hardhat_sudo_run pacman "${pacman_args[@]}"; then
+    hardhat_log_error "Failed to install UFW via pacman."
+    return 1
+  fi
+
+  if ! command -v ufw >/dev/null 2>&1; then
+    hardhat_log_error "UFW installation command completed but ufw is still unavailable in PATH."
+    return 1
+  fi
+
+  hardhat_log_success "UFW installed successfully."
   return 0
 }
 
 hardhat_firewall_build_apply_plan() {
   HARDHAT_FIREWALL_PLAN=()
+
+  if [[ "${HARDHAT_UFW_INSTALLED}" -ne 1 ]]; then
+    HARDHAT_FIREWALL_PLAN+=("Install UFW package with pacman.")
+    HARDHAT_FIREWALL_PLAN+=("Collect current UFW status after installation.")
+  fi
+
+  HARDHAT_FIREWALL_PLAN+=("Create backups of UFW configuration files before applying policy changes.")
   HARDHAT_FIREWALL_PLAN+=("Set UFW default incoming policy to deny.")
   HARDHAT_FIREWALL_PLAN+=("Set UFW default outgoing policy to allow.")
 
@@ -413,10 +452,10 @@ hardhat_module_firewall_collect_audit() {
     hardhat_firewall_add_note "UFW is not installed."
     hardhat_firewall_add_finding \
       "firewall.ufw.missing" \
-      "medium" \
+      "high" \
       "UFW not installed" \
-      "No supported firewall backend was detected for MVP baseline checks." \
-      "Install UFW and define a default deny-incoming policy."
+      "No supported firewall backend was detected for MVP baseline checks. The system may be exposed without baseline filtering." \
+      "Install UFW, apply a deny-incoming baseline and keep only required allow rules."
     hardhat_firewall_compute_severity
     return 0
   fi
@@ -606,6 +645,9 @@ hardhat_module_firewall_audit() {
 }
 
 hardhat_module_firewall_apply() {
+  local requires_ufw_install=0
+  local preconfirmed_apply=0
+
   if ! hardhat_firewall_validate_environment; then
     return 1
   fi
@@ -613,8 +655,8 @@ hardhat_module_firewall_apply() {
   hardhat_module_firewall_collect_audit
 
   if [[ "${HARDHAT_UFW_INSTALLED}" -ne 1 ]]; then
-    hardhat_log_error "UFW is not available; refusing to apply firewall baseline."
-    return 1
+    requires_ufw_install=1
+    hardhat_firewall_report_missing_backend
   fi
 
   hardhat_firewall_detect_ssh_context
@@ -627,14 +669,38 @@ hardhat_module_firewall_apply() {
     return 0
   fi
 
+  if [[ "${requires_ufw_install}" -eq 1 ]]; then
+    if ! hardhat_confirm_global "UFW is missing. Install UFW with pacman and apply the firewall baseline now?"; then
+      hardhat_firewall_write_log "aborted missing_ufw_user_cancelled"
+      return 1
+    fi
+    preconfirmed_apply=1
+
+    if ! hardhat_firewall_install_ufw; then
+      hardhat_firewall_write_log "failed ufw_install"
+      return 1
+    fi
+
+    hardhat_module_firewall_collect_audit
+    if [[ "${HARDHAT_UFW_INSTALLED}" -ne 1 ]]; then
+      hardhat_log_error "UFW still not detected after installation attempt; aborting apply."
+      hardhat_firewall_write_log "failed ufw_not_detected_after_install"
+      return 1
+    fi
+
+    hardhat_firewall_detect_ssh_context
+  fi
+
   if ! hardhat_firewall_create_backups_or_fail; then
     hardhat_firewall_write_log "aborted backup_failed"
     return 1
   fi
 
-  if ! hardhat_confirm_global "Proceed with firewall baseline apply?"; then
-    hardhat_firewall_write_log "aborted user_cancelled"
-    return 1
+  if [[ "${preconfirmed_apply}" -ne 1 ]]; then
+    if ! hardhat_confirm_global "Proceed with firewall baseline apply?"; then
+      hardhat_firewall_write_log "aborted user_cancelled"
+      return 1
+    fi
   fi
 
   hardhat_log_warn "Automatic rollback is not available in this phase."

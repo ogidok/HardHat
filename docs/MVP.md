@@ -10,7 +10,7 @@ Entregar una primera iteracion estable de una CLI de seguridad para Arch Linux, 
 - Comandos:
   - `hardhat audit` (con salida JSON)
   - `hardhat firewall audit` (con salida JSON)
-  - `hardhat firewall apply` (con plan, precondicion de backup, confirmacion y validacion)
+  - `hardhat firewall apply` (con plan, instalacion guiada de UFW si falta, precondicion de backup, confirmacion y validacion)
   - `hardhat menu` (stub)
 - Checks baseline:
   - estado y politicas de UFW
@@ -34,5 +34,6 @@ Entregar una primera iteracion estable de una CLI de seguridad para Arch Linux, 
 ## Compromisos de seguridad del MVP
 - Sin cambios silenciosos.
 - `--dry-run` no debe modificar el sistema.
+- Si UFW no esta instalado, se informa riesgo de exposicion y se solicita confirmacion explicita antes de instalar/configurar.
 - Si falla la creacion de backup, `firewall apply` se aborta.
 - Se requiere confirmacion global en apply, salvo `--yes`.

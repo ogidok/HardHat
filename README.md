@@ -87,19 +87,26 @@ Salida:
 Aplica baseline segura de UFW con flujo controlado:
 1. valida entorno y compatibilidad;
 2. audita estado actual;
-3. construye y muestra plan;
-4. en `--dry-run` no modifica nada;
-5. crea backups obligatorios;
-6. pide confirmacion global (o usa `--yes`);
-7. aplica politicas baseline;
-8. valida estado final;
-9. registra evento de aplicacion en log.
+3. si UFW no esta instalado, informa riesgo y ofrece instalarlo;
+4. construye y muestra plan;
+5. en `--dry-run` no modifica nada;
+6. pide confirmacion explicita (o usa `--yes`);
+7. si hace falta, instala UFW con pacman;
+8. crea backups obligatorios antes de modificar configuracion;
+9. aplica politicas baseline;
+10. valida estado final;
+11. registra evento de aplicacion en log.
 
 Politica baseline:
 - `deny incoming`
 - `allow outgoing`
 
 Si `sshd` esta activo, intenta detectar puerto SSH y agrega regla allow cuando hace falta para reducir riesgo de lockout.
+
+Cuando UFW no esta instalado:
+- HardHat avisa que no hay firewall soportado para el MVP.
+- HardHat indica que el sistema puede estar expuesto sin baseline.
+- HardHat ofrece instalar UFW y continuar con la configuracion segura.
 
 ## Instalacion
 
