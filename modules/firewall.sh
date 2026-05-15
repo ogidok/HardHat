@@ -12,6 +12,10 @@ HARDHAT_FIREWALL_PLAN=()
 HARDHAT_FIREWALL_SSH_ACTIVE=0
 HARDHAT_FIREWALL_SSH_PORT="unknown"
 HARDHAT_FIREWALL_SSH_RULE_NEEDED=0
+HARDHAT_FIREWALL_BACKEND_MISSING=0
+HARDHAT_FIREWALL_INSTALL_RECOMMENDED=0
+HARDHAT_FIREWALL_INSTALL_SUPPORTED=0
+HARDHAT_FIREWALL_INSTALL_METHOD="unknown"
 HARDHAT_FIREWALL_LOG_FILE="/var/log/hardhat.log"
 
 hardhat_module_firewall_usage() {
@@ -35,6 +39,10 @@ hardhat_firewall_reset_state() {
   HARDHAT_FIREWALL_SSH_ACTIVE=0
   HARDHAT_FIREWALL_SSH_PORT="unknown"
   HARDHAT_FIREWALL_SSH_RULE_NEEDED=0
+  HARDHAT_FIREWALL_BACKEND_MISSING=0
+  HARDHAT_FIREWALL_INSTALL_RECOMMENDED=0
+  HARDHAT_FIREWALL_INSTALL_SUPPORTED=0
+  HARDHAT_FIREWALL_INSTALL_METHOD="unknown"
 }
 
 hardhat_firewall_add_recommendation() {
@@ -449,6 +457,13 @@ hardhat_module_firewall_collect_audit() {
   hardhat_firewall_reset_state
 
   if ! command -v ufw >/dev/null 2>&1; then
+    HARDHAT_FIREWALL_BACKEND_MISSING=1
+    HARDHAT_FIREWALL_INSTALL_RECOMMENDED=1
+    if hardhat_detect_arch_linux && command -v pacman >/dev/null 2>&1; then
+      HARDHAT_FIREWALL_INSTALL_SUPPORTED=1
+      HARDHAT_FIREWALL_INSTALL_METHOD="pacman"
+    fi
+
     hardhat_firewall_add_note "UFW is not installed on this system."
     hardhat_firewall_add_note "No MVP-supported firewall baseline is currently active."
     hardhat_firewall_add_note "System exposure is increased until a baseline firewall policy is applied."
@@ -536,13 +551,25 @@ hardhat_module_firewall_collect_audit() {
 hardhat_module_firewall_render_human() {
   local findings_count="${#HARDHAT_FIREWALL_FINDINGS[@]}"
   printf 'HardHat Firewall Audit\n'
-  printf 'Backend: UFW\n'
+  printf 'Expected backend: UFW\n'
+  printf 'Backend missing: %s\n' "$( [[ "${HARDHAT_FIREWALL_BACKEND_MISSING}" -eq 1 ]] && printf yes || printf no )"
   printf 'Installed: %s\n' "$( [[ "${HARDHAT_UFW_INSTALLED}" -eq 1 ]] && printf yes || printf no )"
   printf 'Active: %s\n' "${HARDHAT_UFW_ACTIVE}"
   printf 'Default policy: %s\n' "${HARDHAT_UFW_DEFAULT_POLICY}"
   printf 'Rules detected: %s\n' "${#HARDHAT_UFW_RULES[@]}"
   printf 'Overall severity: %s\n' "${HARDHAT_FIREWALL_SEVERITY}"
   printf 'Findings: %s\n\n' "${findings_count}"
+
+  if [[ "${HARDHAT_FIREWALL_BACKEND_MISSING}" -eq 1 ]]; then
+    printf 'Risk status: HIGH\n'
+    printf 'UFW is missing, so this system has no MVP-supported firewall baseline active.\n'
+    printf 'Why this matters: inbound exposure can be higher without baseline filtering.\n'
+    if [[ "${HARDHAT_FIREWALL_INSTALL_SUPPORTED}" -eq 1 ]]; then
+      printf 'Action: run hardhat firewall apply to install/configure UFW with the guided baseline flow.\n\n'
+    else
+      printf 'Action: install UFW and then run hardhat firewall apply to apply baseline defaults.\n\n'
+    fi
+  fi
 
   local note
   for note in "${HARDHAT_FIREWALL_NOTES[@]}"; do
@@ -591,12 +618,20 @@ hardhat_module_firewall_render_json() {
 
   printf '"firewall":{'
   printf '"backend":"ufw",'
+  printf '"expected_backend":"ufw",'
+  printf '"backend_present":%s,' "$( [[ "${HARDHAT_UFW_INSTALLED}" -eq 1 ]] && printf true || printf false )"
+  printf '"backend_missing":%s,' "$( [[ "${HARDHAT_FIREWALL_BACKEND_MISSING}" -eq 1 ]] && printf true || printf false )"
   printf '"ufw_installed":%s,' "$( [[ "${HARDHAT_UFW_INSTALLED}" -eq 1 ]] && printf true || printf false )"
   printf '"active":'
   hardhat_json_nullable_string "${HARDHAT_UFW_ACTIVE}"
   printf ','
   printf '"default_policy":'
   hardhat_json_nullable_string "${HARDHAT_UFW_DEFAULT_POLICY}"
+  printf ','
+  printf '"install_recommended":%s,' "$( [[ "${HARDHAT_FIREWALL_INSTALL_RECOMMENDED}" -eq 1 ]] && printf true || printf false )"
+  printf '"install_supported":%s,' "$( [[ "${HARDHAT_FIREWALL_INSTALL_SUPPORTED}" -eq 1 ]] && printf true || printf false )"
+  printf '"install_method":'
+  hardhat_json_nullable_string "${HARDHAT_FIREWALL_INSTALL_METHOD}"
   printf ','
   printf '"rules_count":%s,' "${#HARDHAT_UFW_RULES[@]}"
   printf '"rules":'
