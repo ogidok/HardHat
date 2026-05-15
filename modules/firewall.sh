@@ -366,6 +366,11 @@ hardhat_firewall_render_apply_plan() {
 }
 
 hardhat_firewall_create_backups_or_fail() {
+  # Policy:
+  # - require_existing_files=1: UFW existed before apply; at least one existing
+  #   config file must be backed up successfully or apply is aborted.
+  # - require_existing_files=0: first-time UFW install path; continue if no
+  #   files exist yet, but back up anything that already exists.
   local require_existing_files="${1:-1}"
   local backup_dir="/var/backups/hardhat/firewall"
   local -a candidates=(
@@ -378,12 +383,14 @@ hardhat_firewall_create_backups_or_fail() {
   )
 
   local source_file
+  local existing_count=0
   local backup_count=0
 
   for source_file in "${candidates[@]}"; do
     if [[ ! -f "${source_file}" ]]; then
       continue
     fi
+    existing_count=$((existing_count + 1))
 
     if ! hardhat_backup_file "${source_file}" "${backup_dir}"; then
       hardhat_log_error "Backup failed for ${source_file}; aborting apply."
@@ -392,9 +399,9 @@ hardhat_firewall_create_backups_or_fail() {
     backup_count=$((backup_count + 1))
   done
 
-  if ((backup_count == 0)); then
+  if ((existing_count == 0)); then
     if [[ "${require_existing_files}" -eq 1 ]]; then
-      hardhat_log_error "No UFW configuration file available to back up; refusing to apply changes."
+      hardhat_log_error "UFW appears pre-existing but no configuration file was found for backup; refusing to apply changes."
       return 1
     fi
 
@@ -691,6 +698,8 @@ hardhat_module_firewall_audit() {
 hardhat_module_firewall_apply() {
   local requires_ufw_install=0
   local preconfirmed_apply=0
+  # Default policy assumes pre-existing UFW and requires existing backup files.
+  # It switches to 0 only when UFW was missing and installed in this run.
   local backup_require_existing_files=1
 
   if ! hardhat_firewall_validate_environment; then
