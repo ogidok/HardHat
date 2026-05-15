@@ -28,8 +28,8 @@ HardHat es una CLI en Bash, enfocada en Arch Linux, para auditoria baseline de s
 - `--dry-run` simula flujo de apply sin tocar estado del sistema.
 - Si UFW no existe, `firewall apply` informa exposicion, muestra plan y pide confirmacion explicita antes de instalar con pacman.
 - Backups en `firewall apply` con politica contextual:
-	- UFW preexistente: backup obligatorio de configuracion existente.
-	- UFW recien instalado: no bloquear si aun no hay archivos; respaldar cualquier archivo existente antes de modificar.
+  - UFW preexistente: backup obligatorio de configuracion existente.
+  - UFW recien instalado: no bloquear si aun no hay archivos; respaldar cualquier archivo existente antes de modificar.
 - Si existe configuracion y backup falla, apply se aborta.
 - Confirmacion global requerida salvo uso de `--yes`.
 - Rollback automatico fuera de alcance del MVP.

@@ -22,7 +22,10 @@ hardhat_module_firewall_usage() {
   cat <<'EOF'
 Usage:
   hardhat firewall audit [--json]
-  hardhat firewall apply [--dry-run] [--yes]  # guided install if UFW is missing
+  hardhat firewall apply [--dry-run] [--yes]
+
+Note:
+  If UFW is missing, apply can guide installation before baseline configuration.
 EOF
 }
 
