@@ -16,6 +16,8 @@ hardhat_module_updates_collect_audit() {
   local updates_raw=""
   local updates_count=0
   local updates_rc=0
+  local updates_source=""
+  local updates_confident=0
   local use_es=0
 
   if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
@@ -23,11 +25,17 @@ hardhat_module_updates_collect_audit() {
   fi
 
   if command -v checkupdates >/dev/null 2>&1; then
-    if ! updates_raw="$(hardhat_updates_capture_with_timeout 15s checkupdates)"; then
+    updates_source="checkupdates"
+    if updates_raw="$(hardhat_updates_capture_with_timeout 15s checkupdates)"; then
+      updates_rc=0
+    else
       updates_rc=$?
     fi
   elif command -v pacman >/dev/null 2>&1; then
-    if ! updates_raw="$(hardhat_updates_capture_with_timeout 15s pacman -Qu)"; then
+    updates_source="pacman"
+    if updates_raw="$(hardhat_updates_capture_with_timeout 15s pacman -Qu)"; then
+      updates_rc=0
+    else
       updates_rc=$?
     fi
   else
@@ -68,6 +76,67 @@ hardhat_module_updates_collect_audit() {
         "Update check timed out" \
         "HardHat stopped update check after timeout to avoid blocking audit execution." \
         "Run checkupdates or pacman -Qu manually to verify pending updates."
+    fi
+    return 0
+  fi
+
+  if [[ "${updates_source}" == "checkupdates" ]]; then
+    # checkupdates returns 2 when there are no updates and non-zero in other error scenarios.
+    if [[ "${updates_rc}" -eq 0 ]]; then
+      updates_confident=1
+    elif [[ "${updates_rc}" -eq 2 ]] && [[ -z "${updates_raw}" ]]; then
+      updates_confident=1
+      updates_count=0
+    else
+      if [[ "${use_es}" -eq 1 ]]; then
+        hardhat_audit_add_note "Estado de updates pendientes: unknown (check no concluyente)."
+        hardhat_audit_add_finding \
+          "updates.check.inconclusive" \
+          "low" \
+          "Check de updates no concluyente" \
+          "HardHat no pudo confirmar con confianza el estado de updates pendientes con checkupdates." \
+          "Ejecuta checkupdates manualmente y valida mirrors/estado de red/repositorios."
+      else
+        hardhat_audit_add_note "Pending updates status: unknown (check inconclusive)."
+        hardhat_audit_add_finding \
+          "updates.check.inconclusive" \
+          "low" \
+          "Update check inconclusive" \
+          "HardHat could not confidently confirm pending updates status using checkupdates." \
+          "Run checkupdates manually and validate mirrors/network/repository state."
+      fi
+      return 0
+    fi
+  elif [[ "${updates_source}" == "pacman" ]]; then
+    if [[ "${updates_rc}" -eq 0 ]]; then
+      updates_confident=1
+    else
+      if [[ "${use_es}" -eq 1 ]]; then
+        hardhat_audit_add_note "Estado de updates pendientes: unknown (pacman -Qu no concluyente)."
+        hardhat_audit_add_finding \
+          "updates.check.inconclusive" \
+          "low" \
+          "Check de updates no concluyente" \
+          "HardHat no pudo confirmar con confianza el estado de updates pendientes con pacman -Qu." \
+          "Ejecuta pacman -Qu manualmente y valida mirrors/estado de red/repositorios."
+      else
+        hardhat_audit_add_note "Pending updates status: unknown (pacman -Qu inconclusive)."
+        hardhat_audit_add_finding \
+          "updates.check.inconclusive" \
+          "low" \
+          "Update check inconclusive" \
+          "HardHat could not confidently confirm pending updates status with pacman -Qu." \
+          "Run pacman -Qu manually and validate mirrors/network/repository state."
+      fi
+      return 0
+    fi
+  fi
+
+  if [[ "${updates_confident}" -ne 1 ]]; then
+    if [[ "${use_es}" -eq 1 ]]; then
+      hardhat_audit_add_note "Estado de updates pendientes: unknown (check no concluyente)."
+    else
+      hardhat_audit_add_note "Pending updates status: unknown (check inconclusive)."
     fi
     return 0
   fi

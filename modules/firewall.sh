@@ -568,44 +568,89 @@ hardhat_module_firewall_collect_audit() {
 
   if grep -qiE 'status:[[:space:]]*active' <<<"${status_output}"; then
     HARDHAT_UFW_ACTIVE="yes"
-    hardhat_firewall_add_note "UFW is active."
+    if hardhat_firewall_is_spanish; then
+      hardhat_firewall_add_note "UFW esta activo."
+    else
+      hardhat_firewall_add_note "UFW is active."
+    fi
   elif grep -qiE 'status:[[:space:]]*inactive' <<<"${status_output}"; then
     HARDHAT_UFW_ACTIVE="no"
-    hardhat_firewall_add_note "UFW is installed but inactive."
-    hardhat_firewall_add_finding \
-      "firewall.ufw.inactive" \
-      "high" \
-      "UFW inactive" \
-      "Firewall is installed but not enforcing any filtering rules." \
-      "Enable UFW and apply baseline defaults (deny incoming, allow outgoing)."
+    if hardhat_firewall_is_spanish; then
+      hardhat_firewall_add_note "UFW esta instalado pero inactivo."
+      hardhat_firewall_add_finding \
+        "firewall.ufw.inactive" \
+        "high" \
+        "UFW inactivo" \
+        "El firewall esta instalado pero no esta aplicando reglas de filtrado." \
+        "Habilita UFW y aplica defaults baseline (deny incoming, allow outgoing)."
+    else
+      hardhat_firewall_add_note "UFW is installed but inactive."
+      hardhat_firewall_add_finding \
+        "firewall.ufw.inactive" \
+        "high" \
+        "UFW inactive" \
+        "Firewall is installed but not enforcing any filtering rules." \
+        "Enable UFW and apply baseline defaults (deny incoming, allow outgoing)."
+    fi
   else
-    hardhat_firewall_add_note "UFW status did not report active or inactive clearly."
+    if hardhat_firewall_is_spanish; then
+      hardhat_firewall_add_note "El estado de UFW no reporto active o inactive de forma clara."
+    else
+      hardhat_firewall_add_note "UFW status did not report active or inactive clearly."
+    fi
   fi
 
   local status_verbose_output=""
   if status_verbose_output="$(hardhat_firewall_run_ufw_capture status verbose)"; then
     HARDHAT_UFW_DEFAULT_POLICY="$(hardhat_firewall_extract_default_policy "${status_verbose_output}")"
     if [[ "${HARDHAT_UFW_DEFAULT_POLICY}" == "unknown" ]]; then
-      hardhat_firewall_add_note "UFW default policy could not be extracted."
-      hardhat_firewall_add_finding \
-        "firewall.ufw.default_unknown" \
-        "low" \
-        "UFW default policy unknown" \
-        "HardHat could not parse default policy from UFW verbose output." \
-        "Inspect UFW defaults manually with ufw status verbose."
-    else
-      hardhat_firewall_add_note "UFW default policy: ${HARDHAT_UFW_DEFAULT_POLICY}."
-      if ! grep -qiE '(deny|reject)[[:space:]]*\(incoming\)' <<<"${HARDHAT_UFW_DEFAULT_POLICY}"; then
+      if hardhat_firewall_is_spanish; then
+        hardhat_firewall_add_note "No se pudo extraer la politica por defecto de UFW."
         hardhat_firewall_add_finding \
-          "firewall.ufw.default_incoming" \
-          "medium" \
-          "Weak default incoming policy" \
-          "UFW default incoming policy is not deny/reject." \
-          "Set UFW default incoming policy to deny."
+          "firewall.ufw.default_unknown" \
+          "low" \
+          "Politica por defecto de UFW desconocida" \
+          "HardHat no pudo parsear la politica por defecto desde la salida verbose de UFW." \
+          "Inspecciona defaults de UFW manualmente con ufw status verbose."
+      else
+        hardhat_firewall_add_note "UFW default policy could not be extracted."
+        hardhat_firewall_add_finding \
+          "firewall.ufw.default_unknown" \
+          "low" \
+          "UFW default policy unknown" \
+          "HardHat could not parse default policy from UFW verbose output." \
+          "Inspect UFW defaults manually with ufw status verbose."
+      fi
+    else
+      if hardhat_firewall_is_spanish; then
+        hardhat_firewall_add_note "Politica por defecto de UFW: ${HARDHAT_UFW_DEFAULT_POLICY}."
+      else
+        hardhat_firewall_add_note "UFW default policy: ${HARDHAT_UFW_DEFAULT_POLICY}."
+      fi
+      if ! grep -qiE '(deny|reject)[[:space:]]*\(incoming\)' <<<"${HARDHAT_UFW_DEFAULT_POLICY}"; then
+        if hardhat_firewall_is_spanish; then
+          hardhat_firewall_add_finding \
+            "firewall.ufw.default_incoming" \
+            "medium" \
+            "Politica default de incoming debil" \
+            "La politica default incoming de UFW no es deny/reject." \
+            "Configura la politica default incoming de UFW en deny."
+        else
+          hardhat_firewall_add_finding \
+            "firewall.ufw.default_incoming" \
+            "medium" \
+            "Weak default incoming policy" \
+            "UFW default incoming policy is not deny/reject." \
+            "Set UFW default incoming policy to deny."
+        fi
       fi
     fi
   else
-    hardhat_firewall_add_note "UFW verbose output unavailable for default policy check."
+    if hardhat_firewall_is_spanish; then
+      hardhat_firewall_add_note "Salida verbose de UFW no disponible para verificar politica por defecto."
+    else
+      hardhat_firewall_add_note "UFW verbose output unavailable for default policy check."
+    fi
   fi
 
   local rules_output=""
@@ -614,7 +659,11 @@ hardhat_module_firewall_collect_audit() {
   elif rules_output="$(hardhat_firewall_run_ufw_capture status)"; then
     hardhat_firewall_extract_rules "${rules_output}"
   else
-    hardhat_firewall_add_note "UFW rules output unavailable."
+    if hardhat_firewall_is_spanish; then
+      hardhat_firewall_add_note "Salida de reglas UFW no disponible."
+    else
+      hardhat_firewall_add_note "UFW rules output unavailable."
+    fi
   fi
 
   hardhat_firewall_analyze_rules

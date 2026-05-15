@@ -10,6 +10,10 @@ hardhat_log_target_fd() {
 }
 
 hardhat_log_info() {
+  if [[ "${HARDHAT_OUTPUT_JSON:-0}" -eq 1 ]]; then
+    return 0
+  fi
+
   local target_fd
   target_fd="$(hardhat_log_target_fd)"
   printf '%b[INFO]%b %s\n' "${HARDHAT_COLOR_BLUE}" "${HARDHAT_COLOR_RESET}" "$*" >&"${target_fd}"
