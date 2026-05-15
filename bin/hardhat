@@ -155,6 +155,11 @@ hardhat_banner_target_fd() {
 }
 
 hardhat_show_ascii_banner() {
+  # In JSON mode, suppress branding/banner entirely to keep automation output predictable.
+  if [[ "${HARDHAT_OUTPUT_JSON:-0}" -eq 1 ]]; then
+    return 0
+  fi
+
   [[ -f "${HARDHAT_BANNER_FILE}" ]] || return 0
 
   local target_fd
