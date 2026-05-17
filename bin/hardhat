@@ -48,6 +48,7 @@ source "${ROOT_DIR}/modules/ssh_audit.sh"
 source "${ROOT_DIR}/modules/updates.sh"
 source "${ROOT_DIR}/modules/firewall.sh"
 source "${ROOT_DIR}/modules/audit.sh"
+source "${ROOT_DIR}/modules/uninstall.sh"
 
 hardhat_usage() {
   if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
@@ -65,6 +66,7 @@ Comandos:
   audit               Ejecuta auditoria de seguridad de linea base
   firewall audit      Audita estado de UFW y politica de linea base
   firewall apply      Aplica linea base de UFW (guiado; instala UFW si falta)
+  uninstall           Desinstala HardHat de forma segura
   language show       Muestra idioma actual
   language set <id>   Configura idioma (en|es)
   menu                Abre menu interactivo (no implementado)
@@ -85,6 +87,7 @@ Ejemplos:
   hardhat audit --json
   hardhat firewall audit
   hardhat firewall apply --dry-run
+  hardhat uninstall --dry-run --yes
   hardhat language set es
 EOF
     return
@@ -104,6 +107,7 @@ Commands:
   audit               Run baseline security audit
   firewall audit      Audit UFW status and baseline policy
   firewall apply      Apply UFW baseline policy (guided; installs UFW if missing)
+  uninstall           Uninstall HardHat safely
   language show       Show current language
   language set <id>   Set language (en|es)
   menu                Open interactive menu (not implemented yet)
@@ -124,6 +128,7 @@ Examples:
   hardhat audit --json
   hardhat firewall audit
   hardhat firewall apply --dry-run
+  hardhat uninstall --dry-run --yes
   hardhat language set en
 EOF
 }
@@ -242,6 +247,7 @@ hardhat_parse_global_flags() {
   local -a positionals=()
   local arg
   local stop_flag_parsing=0
+  local seen_command=0
 
   for arg in "$@"; do
     if [[ "${stop_flag_parsing}" -eq 1 ]]; then
@@ -275,12 +281,17 @@ hardhat_parse_global_flags() {
         stop_flag_parsing=1
         ;;
       -*)
-        hardhat_log_error "Unknown option: ${arg}"
-        hardhat_usage
-        exit 1
+        if [[ "${seen_command}" -eq 1 ]]; then
+          positionals+=("${arg}")
+        else
+          hardhat_log_error "Unknown option: ${arg}"
+          hardhat_usage
+          exit 1
+        fi
         ;;
       *)
         positionals+=("${arg}")
+        seen_command=1
         ;;
     esac
   done
@@ -323,6 +334,9 @@ hardhat_run_command() {
       ;;
     firewall)
       hardhat_module_firewall_run "${HARDHAT_ARGS[@]:1}"
+      ;;
+    uninstall)
+      hardhat_module_uninstall_run "${HARDHAT_ARGS[@]:1}"
       ;;
     language)
       hardhat_run_language_command

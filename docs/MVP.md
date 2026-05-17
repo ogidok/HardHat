@@ -13,6 +13,7 @@ Estado de release actual: MVP / preview publico.
   - `hardhat audit` (con salida JSON)
   - `hardhat firewall audit` (con salida JSON y estado explicito de backend esperado/ausente)
   - `hardhat firewall apply` (con plan, instalacion guiada de UFW si falta, backup contextual, confirmacion y validacion)
+  - `hardhat uninstall` (con plan, confirmacion, `--dry-run`, `--yes` e idempotencia)
   - `hardhat menu` (stub)
 - Checks baseline:
   - estado y politicas de UFW
@@ -26,14 +27,13 @@ Estado de release actual: MVP / preview publico.
 - En `--json`, no se imprime banner ASCII ni logs informativos `[INFO]`.
 - En `--json`, advertencias o errores relevantes pueden emitirse por `stderr`.
 - Instalador para exponer `hardhat` como comando del sistema.
-- Script de desinstalacion (`uninstall.sh`) con modo interactivo, `--yes` y `--dry-run`.
+- Wrapper de compatibilidad `uninstall.sh` (deprecado) que delega en `hardhat uninstall`.
 
 ## No implementado todavia
 - Soporte multi-distro.
 - Backends nftables/iptables.
 - Rollback automatico.
 - Comportamiento real del menu interactivo.
-- Comando dedicado de desinstalacion.
 - Tests automatizados.
 - Escaneo profundo de CVEs o integracion con herramientas pesadas.
 

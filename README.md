@@ -43,6 +43,8 @@ hardhat firewall audit
 hardhat firewall audit --json
 hardhat firewall apply
 hardhat firewall apply --dry-run
+hardhat uninstall
+hardhat uninstall --dry-run --yes
 hardhat menu
 ```
 
@@ -204,32 +206,44 @@ La preferencia de usuario se guarda en `~/.config/hardhat/config` y tiene priori
 
 ## Desinstalacion
 
-Desinstalacion recomendada:
+Desinstalacion recomendada (via CLI):
 
 ```bash
-./uninstall.sh
+hardhat uninstall
 ```
 
 Desinstalacion no interactiva:
 
 ```bash
-./uninstall.sh --yes
+hardhat uninstall --yes
 ```
 
 Simulacion de desinstalacion:
 
 ```bash
-./uninstall.sh --dry-run --yes
+hardhat uninstall --dry-run --yes
 ```
 
-Eliminar tambien configuracion global (`/etc/hardhat/config`):
+Eliminar tambien configuracion global y de usuario:
 
 ```bash
-./uninstall.sh --yes --purge-config
+hardhat uninstall --yes --purge-config
 ```
 
 Nota:
 - Por seguridad, el desinstalador solo elimina `/usr/local/bin/hardhat` si apunta al runtime de HardHat esperado.
+- `uninstall.sh` se mantiene como wrapper temporal/deprecado para compatibilidad.
+
+Opciones de `hardhat uninstall`:
+
+```bash
+--yes
+--dry-run
+--purge-config
+--install-root <path>
+--bin-dir <path>
+--lang <en|es>
+```
 
 ## Estructura actual del proyecto
 
@@ -276,6 +290,24 @@ Checks recomendados:
 bash -n bin/hardhat install.sh uninstall.sh lib/*.sh modules/*.sh
 shellcheck -x bin/hardhat install.sh uninstall.sh lib/*.sh modules/*.sh
 shfmt -i 2 -ci -sr -bn -d bin/hardhat install.sh uninstall.sh lib/*.sh modules/*.sh
+```
+
+Smoke test sugerido para uninstall:
+
+```bash
+hardhat uninstall --dry-run --yes --install-root /tmp/hh-test/root --bin-dir /tmp/hh-test/bin --purge-config
+```
+
+## Tests (estructura base)
+
+```bash
+tests/uninstall_subcommand_smoke.sh
+```
+
+Ejecutar:
+
+```bash
+bash tests/uninstall_subcommand_smoke.sh
 ```
 
 Nota:

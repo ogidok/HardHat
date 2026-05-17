@@ -2,7 +2,7 @@
 
 Nota de estado:
 - Este archivo lista solo pendientes reales post-MVP.
-- Ya implementado en el estado actual: `audit`, `firewall audit`, `firewall apply`, instalacion, desinstalacion con `uninstall.sh`, salida JSON, backups y documentacion base del proyecto.
+- Ya implementado en el estado actual: `audit`, `firewall audit`, `firewall apply`, instalacion, `hardhat uninstall` (con wrapper de compatibilidad `uninstall.sh`), salida JSON, backups y documentacion base del proyecto.
 
 ## Prioridad 1
 - Implementar flujo real de `menu`.
@@ -19,5 +19,4 @@ Nota de estado:
 ## Prioridad 3
 - Definir estrategia de tests (unitarios shell + smoke tests de integracion).
 - Agregar PKGBUILD para empaquetado en Arch.
-- Integrar desinstalacion como subcomando dedicado en `hardhat` (hoy existe `uninstall.sh` externo).
 - Expandir documentacion de troubleshooting y modelo de permisos.
