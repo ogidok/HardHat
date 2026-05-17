@@ -20,3 +20,4 @@ Nota de estado:
 - Definir estrategia de tests (unitarios shell + smoke tests de integracion).
 - Agregar PKGBUILD para empaquetado en Arch.
 - Expandir documentacion de troubleshooting y modelo de permisos.
+
