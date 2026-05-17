@@ -23,24 +23,70 @@ hardhat_audit_default_summary() {
 hardhat_module_audit_usage() {
   if hardhat_audit_is_spanish; then
     cat <<'EOF'
+HardHat audit - Auditoria de seguridad
+
 Uso:
-  hardhat audit [--json]
+  hardhat audit [opciones]
 
 Descripcion:
   Ejecuta validaciones de linea base de firewall, puertos, servicios, SSH y actualizaciones,
   y reporta score, severidad, hallazgos y recomendaciones.
+
+Opciones:
+  -h, --help          Muestra esta ayuda
+  --json              Emite salida JSON en stdout
+
+Ejemplos:
+  hardhat audit
+  hardhat audit --json
 EOF
     return 0
   fi
 
   cat <<'EOF'
+HardHat audit - Security audit
+
 Usage:
-  hardhat audit [--json]
+  hardhat audit [options]
 
 Description:
   Runs baseline checks for firewall, ports, services, SSH and updates,
   then reports score, severity, findings and recommendations.
+
+Options:
+  -h, --help          Show this help
+  --json              Emit JSON output on stdout
+
+Examples:
+  hardhat audit
+  hardhat audit --json
 EOF
+}
+
+hardhat_module_audit_validate_args() {
+  local arg
+  for arg in "$@"; do
+    case "${arg}" in
+      -h|--help|help)
+        hardhat_module_audit_usage
+        return 2
+        ;;
+      --json)
+        ;;
+      *)
+        if hardhat_audit_is_spanish; then
+          hardhat_log_error "Argumento no valido para audit: ${arg}"
+          hardhat_log_info "Usa 'hardhat audit --help' para ver uso."
+        else
+          hardhat_log_error "Invalid argument for audit: ${arg}"
+          hardhat_log_info "Use 'hardhat audit --help' for usage."
+        fi
+        return 1
+        ;;
+    esac
+  done
+
+  return 0
 }
 
 hardhat_audit_reset_state() {
@@ -307,10 +353,14 @@ hardhat_audit_render_json() {
 }
 
 hardhat_module_audit_run() {
-  local arg="${1:-}"
-  if [[ "${arg}" == "help" ]]; then
-    hardhat_module_audit_usage
+  local validate_status=0
+  hardhat_module_audit_validate_args "$@" || validate_status=$?
+  if [[ "${validate_status}" -eq 2 ]]; then
     return 0
+  fi
+  if [[ "${validate_status}" -ne 0 ]]; then
+    hardhat_module_audit_usage
+    return 1
   fi
 
   hardhat_audit_reset_state

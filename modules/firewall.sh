@@ -21,9 +21,26 @@ HARDHAT_FIREWALL_LOG_FILE="/var/log/hardhat.log"
 hardhat_module_firewall_usage() {
   if hardhat_firewall_is_spanish; then
     cat <<'EOF'
+HardHat firewall - Gestion de firewall
+
 Uso:
-  hardhat firewall audit [--json]
-  hardhat firewall apply [--dry-run] [--yes]
+  hardhat firewall <subcomando> [opciones]
+
+Subcomandos:
+  audit               Audita estado y baseline de UFW
+  apply               Aplica baseline de UFW (cambios en sistema)
+  help                Muestra esta ayuda
+
+Opciones globales frecuentes:
+  --json              Salida JSON (especialmente util con audit)
+  --dry-run           Simula acciones sin aplicar cambios
+  --yes               Omite confirmaciones interactivas
+
+Ejemplos:
+  hardhat firewall audit
+  hardhat firewall audit --json
+  hardhat firewall apply --dry-run
+  hardhat firewall apply --yes
 
 Nota:
   Si UFW no esta instalado, apply puede guiar su instalacion antes de aplicar la linea base.
@@ -32,13 +49,147 @@ EOF
   fi
 
   cat <<'EOF'
+HardHat firewall - Firewall management
+
 Usage:
-  hardhat firewall audit [--json]
-  hardhat firewall apply [--dry-run] [--yes]
+  hardhat firewall <subcommand> [options]
+
+Subcommands:
+  audit               Audit UFW state and baseline
+  apply               Apply UFW baseline (changes system state)
+  help                Show this help
+
+Common global options:
+  --json              JSON output (especially useful with audit)
+  --dry-run           Simulate actions without applying changes
+  --yes               Skip interactive confirmations
+
+Examples:
+  hardhat firewall audit
+  hardhat firewall audit --json
+  hardhat firewall apply --dry-run
+  hardhat firewall apply --yes
 
 Note:
   If UFW is missing, apply can guide installation before baseline configuration.
 EOF
+}
+
+hardhat_module_firewall_audit_usage() {
+  if hardhat_firewall_is_spanish; then
+    cat <<'EOF'
+HardHat firewall audit - Auditoria de UFW
+
+Uso:
+  hardhat firewall audit [opciones]
+
+Opciones:
+  -h, --help          Muestra esta ayuda
+  --json              Emite salida JSON en stdout
+
+Ejemplos:
+  hardhat firewall audit
+  hardhat firewall audit --json
+EOF
+    return 0
+  fi
+
+  cat <<'EOF'
+HardHat firewall audit - UFW audit
+
+Usage:
+  hardhat firewall audit [options]
+
+Options:
+  -h, --help          Show this help
+  --json              Emit JSON output on stdout
+
+Examples:
+  hardhat firewall audit
+  hardhat firewall audit --json
+EOF
+}
+
+hardhat_module_firewall_apply_usage() {
+  if hardhat_firewall_is_spanish; then
+    cat <<'EOF'
+HardHat firewall apply - Aplicacion de baseline
+
+Uso:
+  hardhat firewall apply [opciones]
+
+Opciones:
+  -h, --help          Muestra esta ayuda
+  --dry-run           Simula sin aplicar cambios
+  --yes               Omite confirmaciones
+
+Ejemplos:
+  hardhat firewall apply --dry-run
+  hardhat firewall apply --yes
+
+Notas:
+  - Puede requerir privilegios elevados para modificar UFW.
+  - Si UFW no existe, puede ofrecer instalacion guiada.
+  - No hay rollback automatico en esta fase.
+EOF
+    return 0
+  fi
+
+  cat <<'EOF'
+HardHat firewall apply - Baseline apply
+
+Usage:
+  hardhat firewall apply [options]
+
+Options:
+  -h, --help          Show this help
+  --dry-run           Simulate without applying changes
+  --yes               Skip confirmations
+
+Examples:
+  hardhat firewall apply --dry-run
+  hardhat firewall apply --yes
+
+Notes:
+  - Elevated privileges may be required to modify UFW.
+  - If UFW is missing, guided installation may be offered.
+  - Automatic rollback is not available in this phase.
+EOF
+}
+
+hardhat_module_firewall_validate_subcommand_args() {
+  local subcommand="$1"
+  shift || true
+
+  local arg
+  for arg in "$@"; do
+    case "${subcommand}:${arg}" in
+      audit:-h|audit:--help|audit:help)
+        hardhat_module_firewall_audit_usage
+        return 2
+        ;;
+      audit:--json)
+        ;;
+      apply:-h|apply:--help|apply:help)
+        hardhat_module_firewall_apply_usage
+        return 2
+        ;;
+      apply:--dry-run|apply:--yes)
+        ;;
+      *)
+        if hardhat_firewall_is_spanish; then
+          hardhat_log_error "Argumento no valido para firewall ${subcommand}: ${arg}"
+          hardhat_log_info "Usa 'hardhat firewall ${subcommand} --help' para ver uso."
+        else
+          hardhat_log_error "Invalid argument for firewall ${subcommand}: ${arg}"
+          hardhat_log_info "Use 'hardhat firewall ${subcommand} --help' for usage."
+        fi
+        return 1
+        ;;
+    esac
+  done
+
+  return 0
 }
 
 hardhat_firewall_reset_state() {
@@ -1181,18 +1332,42 @@ hardhat_module_firewall_apply() {
 
 hardhat_module_firewall_run() {
   local subcommand="${1:-audit}"
+  local validate_status=0
+
   case "${subcommand}" in
+    -h|--help|help)
+      hardhat_module_firewall_usage
+      ;;
     audit)
+      hardhat_module_firewall_validate_subcommand_args audit "${@:2}" || validate_status=$?
+      if [[ "${validate_status}" -eq 2 ]]; then
+        return 0
+      fi
+      if [[ "${validate_status}" -ne 0 ]]; then
+        hardhat_module_firewall_audit_usage
+        return 1
+      fi
       hardhat_module_firewall_audit
       ;;
     apply)
+      hardhat_module_firewall_validate_subcommand_args apply "${@:2}" || validate_status=$?
+      if [[ "${validate_status}" -eq 2 ]]; then
+        return 0
+      fi
+      if [[ "${validate_status}" -ne 0 ]]; then
+        hardhat_module_firewall_apply_usage
+        return 1
+      fi
       hardhat_module_firewall_apply
       ;;
-    help)
-      hardhat_module_firewall_usage
-      ;;
     *)
-      hardhat_log_error "Unknown firewall subcommand: ${subcommand}"
+      if hardhat_firewall_is_spanish; then
+        hardhat_log_error "Subcomando de firewall desconocido: ${subcommand}"
+        hardhat_log_info "Usa 'hardhat firewall help' para ver subcomandos disponibles."
+      else
+        hardhat_log_error "Unknown firewall subcommand: ${subcommand}"
+        hardhat_log_info "Use 'hardhat firewall help' to see available subcommands."
+      fi
       hardhat_module_firewall_usage
       return 1
       ;;

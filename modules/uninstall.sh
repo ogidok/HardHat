@@ -16,17 +16,26 @@ hardhat_uninstall_msg() {
     case "${key}" in
       usage)
         cat <<'EOF'
+HardHat uninstall - Desinstalacion segura
+
 Uso:
   hardhat uninstall [opciones]
 
+Descripcion:
+  Elimina runtime y comando de HardHat. Solo borra el comando si apunta al runtime esperado.
+
 Opciones:
+  -h, --help          Muestra esta ayuda
   --yes                Omite confirmacion interactiva
   --dry-run            Muestra acciones sin modificar archivos
   --purge-config       Elimina configuracion global y de usuario
   --install-root PATH  Raiz runtime (default: /opt/hardhat)
   --bin-dir PATH       Directorio del comando (default: /usr/local/bin)
   --lang <en|es>       Sobrescribe idioma de mensajes
-  --help               Muestra esta ayuda
+
+Ejemplos:
+  hardhat uninstall --dry-run --yes
+  hardhat uninstall --yes --purge-config
 EOF
         ;;
       plan_title) printf 'Plan de desinstalacion:\n' ;;
@@ -62,17 +71,26 @@ EOF
   case "${key}" in
     usage)
       cat <<'EOF'
+HardHat uninstall - Safe uninstall
+
 Usage:
   hardhat uninstall [options]
 
+Description:
+  Removes HardHat runtime and command. The command is removed only if it points to the expected runtime.
+
 Options:
+  -h, --help          Show this help
   --yes                Skip interactive confirmation
   --dry-run            Show actions without changing files
   --purge-config       Remove global and user configuration
   --install-root PATH  Runtime root (default: /opt/hardhat)
   --bin-dir PATH       Command directory (default: /usr/local/bin)
   --lang <en|es>       Override message language
-  --help               Show this help
+
+Examples:
+  hardhat uninstall --dry-run --yes
+  hardhat uninstall --yes --purge-config
 EOF
       ;;
     plan_title) printf 'Uninstall plan:\n' ;;
@@ -158,7 +176,7 @@ hardhat_module_uninstall_parse_args() {
         ;;
       --yes|--dry-run)
         ;;
-      --help|help)
+      -h|--help|help)
         hardhat_module_uninstall_usage
         return 2
         ;;

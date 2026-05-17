@@ -36,15 +36,22 @@ En el futuro puede evaluarse soporte para otras distribuciones, pero el MVP actu
 
 ```bash
 hardhat help
+hardhat help firewall
+hardhat help firewall apply
 hardhat version
 hardhat audit
+hardhat audit --help
 hardhat audit --json
 hardhat firewall audit
+hardhat firewall audit --help
 hardhat firewall audit --json
 hardhat firewall apply
+hardhat firewall apply --help
 hardhat firewall apply --dry-run
 hardhat uninstall
+hardhat uninstall --help
 hardhat uninstall --dry-run --yes
+hardhat language --help
 hardhat menu
 ```
 
@@ -60,6 +67,7 @@ Notas:
 --json
 --verbose
 --no-color
+-h
 --help
 --version
 ```
@@ -301,12 +309,14 @@ hardhat uninstall --dry-run --yes --install-root /tmp/hh-test/root --bin-dir /tm
 ## Tests (estructura base)
 
 ```bash
+tests/help_usage_smoke.sh
 tests/uninstall_subcommand_smoke.sh
 ```
 
 Ejecutar:
 
 ```bash
+bash tests/help_usage_smoke.sh
 bash tests/uninstall_subcommand_smoke.sh
 ```
 

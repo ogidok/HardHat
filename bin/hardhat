@@ -79,7 +79,7 @@ Opciones globales:
   --json              Emite salida JSON para automatizacion
   --verbose           Habilita logs detallados
   --no-color          Desactiva colores ANSI
-  --help              Muestra esta ayuda
+  -h, --help          Muestra esta ayuda
   --version           Muestra version
 
 Ejemplos:
@@ -120,7 +120,7 @@ Global options:
   --json              Emit machine-friendly JSON output
   --verbose           Enable verbose logs
   --no-color          Disable ANSI colors
-  --help              Show this help
+  -h, --help          Show this help
   --version           Show version
 
 Examples:
@@ -136,18 +136,109 @@ EOF
 hardhat_language_usage() {
   if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
     cat <<'EOF'
+HardHat language - Gestion de idioma
+
 Uso:
   hardhat language show
   hardhat language set <en|es>
+  hardhat language help
+
+Descripcion:
+  Muestra o configura el idioma de mensajes de la CLI.
+
+Ejemplos:
+  hardhat language show
+  hardhat language set es
 EOF
     return
   fi
 
   cat <<'EOF'
+HardHat language - Language management
+
 Usage:
   hardhat language show
   hardhat language set <en|es>
+  hardhat language help
+
+Description:
+  Shows or sets the CLI message language.
+
+Examples:
+  hardhat language show
+  hardhat language set en
 EOF
+}
+
+hardhat_help_for_command() {
+  local command="${1:-}"
+  local subcommand="${2:-}"
+
+  case "${command}" in
+    ""|help)
+      hardhat_usage
+      ;;
+    audit)
+      hardhat_module_audit_usage
+      ;;
+    firewall)
+      case "${subcommand}" in
+        ""|help)
+          hardhat_module_firewall_usage
+          ;;
+        audit)
+          hardhat_module_firewall_audit_usage
+          ;;
+        apply)
+          hardhat_module_firewall_apply_usage
+          ;;
+        *)
+          if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+            hardhat_log_error "Subcomando desconocido para firewall help: ${subcommand}"
+          else
+            hardhat_log_error "Unknown subcommand for firewall help: ${subcommand}"
+          fi
+          hardhat_module_firewall_usage
+          return 1
+          ;;
+      esac
+      ;;
+    uninstall)
+      hardhat_module_uninstall_usage
+      ;;
+    language)
+      hardhat_language_usage
+      ;;
+    menu)
+      if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+        printf 'Uso:\n'
+        printf '  hardhat menu\n\n'
+        printf 'Descripcion:\n'
+        printf '  Comando reservado para menu interactivo (aun no implementado).\n'
+      else
+        printf 'Usage:\n'
+        printf '  hardhat menu\n\n'
+        printf 'Description:\n'
+        printf '  Reserved command for interactive menu (not implemented yet).\n'
+      fi
+      ;;
+    version)
+      if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+        printf 'Uso:\n  hardhat version\n'
+      else
+        printf 'Usage:\n  hardhat version\n'
+      fi
+      ;;
+    *)
+      if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+        hardhat_log_error "Comando desconocido para help: ${command}"
+      else
+        hardhat_log_error "Unknown command for help: ${command}"
+      fi
+      hardhat_usage
+      return 1
+      ;;
+  esac
 }
 
 hardhat_banner_target_fd() {
@@ -185,7 +276,19 @@ hardhat_run_language_command() {
   local lang_value="${HARDHAT_ARGS[2]:-}"
 
   case "${subcommand}" in
+    -h|--help|help)
+      hardhat_language_usage
+      ;;
     show)
+      if [[ -n "${lang_value}" ]]; then
+        if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+          hardhat_log_error "El subcomando 'show' no acepta argumentos extra."
+        else
+          hardhat_log_error "The 'show' subcommand does not accept extra arguments."
+        fi
+        hardhat_language_usage
+        return 1
+      fi
       if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
         printf 'Idioma actual: %s\n' "${HARDHAT_LANG}"
       else
@@ -228,9 +331,6 @@ hardhat_run_language_command() {
         hardhat_log_success "Language set to en."
       fi
       ;;
-    help)
-      hardhat_language_usage
-      ;;
     *)
       if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
         hardhat_log_error "Subcomando de language desconocido: ${subcommand}"
@@ -271,11 +371,19 @@ hardhat_parse_global_flags() {
       --no-color)
         HARDHAT_NO_COLOR=1
         ;;
-      --help)
-        HARDHAT_SHOW_HELP=1
+      -h|--help)
+        if [[ "${seen_command}" -eq 1 ]]; then
+          positionals+=("${arg}")
+        else
+          HARDHAT_SHOW_HELP=1
+        fi
         ;;
       --version)
-        HARDHAT_SHOW_VERSION=1
+        if [[ "${seen_command}" -eq 1 ]]; then
+          positionals+=("${arg}")
+        else
+          HARDHAT_SHOW_VERSION=1
+        fi
         ;;
       --)
         stop_flag_parsing=1
@@ -342,17 +450,36 @@ hardhat_run_command() {
       hardhat_run_language_command
       ;;
     menu)
-      hardhat_log_warn "menu command is not implemented yet."
-      hardhat_log_info "Use 'hardhat help' to see available commands."
+      local menu_arg="${HARDHAT_ARGS[1]:-}"
+      case "${menu_arg}" in
+        "" )
+          hardhat_log_warn "menu command is not implemented yet."
+          hardhat_log_info "Use 'hardhat help' to see available commands."
+          ;;
+        -h|--help|help)
+          hardhat_help_for_command menu
+          ;;
+        *)
+          if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+            hardhat_log_error "Argumento no valido para menu: ${menu_arg}"
+            hardhat_log_info "Usa 'hardhat menu --help' para ver uso."
+          else
+            hardhat_log_error "Invalid argument for menu: ${menu_arg}"
+            hardhat_log_info "Use 'hardhat menu --help' for usage."
+          fi
+          return 1
+          ;;
+      esac
       ;;
     help)
-      hardhat_usage
+      hardhat_help_for_command "${HARDHAT_ARGS[1]:-}" "${HARDHAT_ARGS[2]:-}"
       ;;
     version)
       printf '%s\n' "${HARDHAT_VERSION}"
       ;;
     *)
       hardhat_log_error "Unknown command: ${HARDHAT_COMMAND}"
+      hardhat_log_info "Use 'hardhat help' for usage."
       hardhat_usage
       return 1
       ;;

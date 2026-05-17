@@ -12,7 +12,6 @@ Nota de estado:
 
 ## Prioridad 2
 - Agregar salida JSON opcional para resumen de `firewall apply`.
-- Completar ayuda especifica por comando y subcomando en todos los modulos.
 - Normalizar catalogo de mensajes para consistencia total.
 - Mejorar resiliencia del parser ante variaciones de salida de UFW.
 
