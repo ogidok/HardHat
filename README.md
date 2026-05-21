@@ -21,9 +21,9 @@ HardHat es una herramienta CLI para Arch Linux, escrita en Bash, enfocada en aud
 MVP/preview funcional. Lo implementado ya se puede usar desde linea de comandos para validacion tecnica y pruebas controladas.
 
 Importante:
-- no hay rollback automatico;
-- si se aplican cambios, la restauracion es manual con backups;
-- si no se pueden crear backups, no se aplican cambios.
+- no hay reversion automatica;
+- si se aplican cambios, la restauracion es manual con respaldos;
+- si no se pueden crear respaldos, no se aplican cambios.
 
 ## Compatibilidad oficial del MVP
 
@@ -77,7 +77,7 @@ Notas:
 
 ### `hardhat audit`
 
-Ejecuta una auditoria baseline y devuelve:
+Ejecuta una auditoria de linea base y devuelve:
 - resumen;
 - score;
 - severidad general;
@@ -127,7 +127,7 @@ Si UFW no esta instalado:
 
 ### `hardhat firewall apply`
 
-Aplica baseline segura de UFW con flujo guiado y seguro:
+Aplica linea base segura de UFW con flujo guiado y seguro:
 1. valida entorno y compatibilidad;
 2. audita estado actual;
 3. si UFW no esta instalado, informa riesgo y ofrece instalarlo con pacman;
@@ -135,8 +135,8 @@ Aplica baseline segura de UFW con flujo guiado y seguro:
 5. en `--dry-run` no modifica nada;
 6. pide confirmacion explicita (o usa `--yes`);
 7. si hace falta, instala UFW con pacman;
-8. aplica politica de backup segun contexto (ver notas de seguridad);
-9. aplica politicas baseline;
+8. aplica politica de respaldo segun contexto (ver notas de seguridad);
+9. aplica politicas de linea base;
 10. valida estado final;
 11. registra evento de aplicacion en log.
 
@@ -145,22 +145,22 @@ Comportamiento de salida con `--json` en `firewall apply`:
 - `stderr` conserva advertencias/errores operativos del flujo.
 - El JSON incluye `metadata`, `apply`, `firewall`, `summary`, `notes` y `recommendations`.
 
-Politica baseline:
+Politica de linea base:
 - `deny incoming`
 - `allow outgoing`
 
-Si `sshd` esta activo, intenta detectar puerto SSH y agrega regla allow cuando hace falta para reducir riesgo de lockout.
+Si `sshd` esta activo, intenta detectar puerto SSH y agrega regla de permiso cuando hace falta para reducir riesgo de bloqueo de acceso.
 
 Cuando UFW no esta instalado:
 - HardHat avisa que no hay firewall soportado para el MVP.
-- HardHat indica que el sistema puede estar expuesto sin baseline.
+- HardHat indica que el sistema puede estar expuesto sin linea base.
 - HardHat ofrece instalar UFW y continuar con la configuracion segura.
 
-Notas de seguridad para backup en `firewall apply`:
-- Caso A (UFW preexistente): backup obligatorio de configuracion existente antes de aplicar cambios.
-- Caso B (instalacion nueva de UFW): si aun no existen archivos de configuracion, HardHat no bloquea por backup imposible; si existen archivos tras instalar, los respalda antes de modificar.
-- Si existe configuracion y el backup falla, HardHat aborta.
-- No hay rollback automatico en el MVP.
+Notas de seguridad para respaldo en `firewall apply`:
+- Caso A (UFW preexistente): respaldo obligatorio de configuracion existente antes de aplicar cambios.
+- Caso B (instalacion nueva de UFW): si aun no existen archivos de configuracion, HardHat no bloquea por respaldo imposible; si existen archivos tras instalar, los respalda antes de modificar.
+- Si existe configuracion y el respaldo falla, HardHat aborta.
+- No hay reversion automatica en el MVP.
 
 ## Instalacion
 
