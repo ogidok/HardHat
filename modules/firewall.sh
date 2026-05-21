@@ -16,6 +16,7 @@ HARDHAT_FIREWALL_BACKEND_MISSING=0
 HARDHAT_FIREWALL_INSTALL_RECOMMENDED=0
 HARDHAT_FIREWALL_INSTALL_SUPPORTED=0
 HARDHAT_FIREWALL_INSTALL_METHOD="unknown"
+HARDHAT_FIREWALL_RULES_SOURCE="unknown"
 HARDHAT_FIREWALL_LOG_FILE="/var/log/hardhat.log"
 HARDHAT_FIREWALL_APPLY_DRY_RUN=0
 HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_BEFORE=0
@@ -27,9 +28,12 @@ HARDHAT_FIREWALL_APPLY_BACKUPS_CREATED_COUNT=0
 HARDHAT_FIREWALL_APPLY_ATTEMPTED=0
 HARDHAT_FIREWALL_APPLY_SUCCEEDED=0
 HARDHAT_FIREWALL_APPLY_VALIDATION_SUCCEEDED=0
+HARDHAT_FIREWALL_APPLY_VALIDATION_RESULT="unknown"
 HARDHAT_FIREWALL_APPLY_STATUS="unknown"
 HARDHAT_FIREWALL_APPLY_MESSAGE=""
 HARDHAT_FIREWALL_APPLY_NOTES=()
+HARDHAT_FIREWALL_APPLY_EXPECT_SSH_RULE=0
+HARDHAT_FIREWALL_APPLY_EXPECT_SSH_PORT="unknown"
 
 hardhat_module_firewall_usage() {
   if hardhat_firewall_is_spanish; then
@@ -226,6 +230,7 @@ hardhat_firewall_reset_state() {
   HARDHAT_FIREWALL_INSTALL_RECOMMENDED=0
   HARDHAT_FIREWALL_INSTALL_SUPPORTED=0
   HARDHAT_FIREWALL_INSTALL_METHOD="unknown"
+  HARDHAT_FIREWALL_RULES_SOURCE="unknown"
 }
 
 hardhat_firewall_apply_reset_state() {
@@ -239,9 +244,12 @@ hardhat_firewall_apply_reset_state() {
   HARDHAT_FIREWALL_APPLY_ATTEMPTED=0
   HARDHAT_FIREWALL_APPLY_SUCCEEDED=0
   HARDHAT_FIREWALL_APPLY_VALIDATION_SUCCEEDED=0
+  HARDHAT_FIREWALL_APPLY_VALIDATION_RESULT="unknown"
   HARDHAT_FIREWALL_APPLY_STATUS="unknown"
   HARDHAT_FIREWALL_APPLY_MESSAGE=""
   HARDHAT_FIREWALL_APPLY_NOTES=()
+  HARDHAT_FIREWALL_APPLY_EXPECT_SSH_RULE=0
+  HARDHAT_FIREWALL_APPLY_EXPECT_SSH_PORT="unknown"
 }
 
 hardhat_firewall_apply_add_note() {
@@ -367,6 +375,18 @@ hardhat_firewall_extract_rules() {
       HARDHAT_UFW_RULES+=("$(hardhat_trim "${cleaned}")")
     fi
   done <<<"${input}"
+}
+
+hardhat_firewall_has_allow_rule_for_port() {
+  local port="$1"
+
+  if [[ -z "${port}" || "${port}" == "unknown" ]]; then
+    return 1
+  fi
+
+  local rules_text
+  rules_text="$(printf '%s\n' "${HARDHAT_UFW_RULES[@]}")"
+  grep -qiE "(^|[[:space:]])${port}(/tcp)?[[:space:]].*(ALLOW)" <<<"${rules_text}"
 }
 
 hardhat_firewall_analyze_rules() {
@@ -900,15 +920,18 @@ hardhat_firewall_apply_actions() {
 
 hardhat_firewall_validate_post_apply() {
   hardhat_module_firewall_collect_audit
+  hardhat_firewall_detect_ssh_context
 
-  local ok=1
+  local has_failed=0
+  local has_warning=0
+
   if [[ "${HARDHAT_UFW_ACTIVE}" != "yes" ]]; then
     if hardhat_firewall_is_spanish; then
-      hardhat_log_warn "Validacion posterior a apply: UFW no aparece como activo."
+      hardhat_log_error "Validacion posterior a apply: UFW no aparece como activo."
     else
-      hardhat_log_warn "Post-apply validation: UFW is not reported as active."
+      hardhat_log_error "Post-apply validation: UFW is not reported as active."
     fi
-    ok=0
+    has_failed=1
   fi
 
   if [[ "${HARDHAT_UFW_DEFAULT_POLICY}" == "unknown" ]]; then
@@ -917,31 +940,83 @@ hardhat_firewall_validate_post_apply() {
     else
       hardhat_log_warn "Post-apply validation: could not read UFW default policy."
     fi
-    ok=0
+    has_warning=1
   elif ! grep -qiE '(deny|reject)[[:space:]]*\(incoming\)' <<<"${HARDHAT_UFW_DEFAULT_POLICY}"; then
     if hardhat_firewall_is_spanish; then
-      hardhat_log_warn "Validacion posterior a apply: la politica de entrada por defecto no es deny/reject."
+      hardhat_log_error "Validacion posterior a apply: la politica de entrada por defecto no es deny/reject."
     else
-      hardhat_log_warn "Post-apply validation: incoming default policy is not deny/reject."
+      hardhat_log_error "Post-apply validation: incoming default policy is not deny/reject."
     fi
-    ok=0
+    has_failed=1
   fi
 
-  if [[ "${ok}" -eq 1 ]]; then
+  if [[ "${HARDHAT_UFW_DEFAULT_POLICY}" == "unknown" ]]; then
     if hardhat_firewall_is_spanish; then
-      hardhat_log_success "Linea base de firewall aplicada y validada."
+      hardhat_log_warn "Validacion posterior a apply: no se pudo verificar con confianza la politica de salida por defecto (allow)."
     else
-      hardhat_log_success "Firewall baseline applied and validated."
+      hardhat_log_warn "Post-apply validation: could not confidently verify default outgoing policy (allow)."
     fi
-    return 0
+    has_warning=1
+  elif ! grep -qiE 'allow[[:space:]]*\(outgoing\)' <<<"${HARDHAT_UFW_DEFAULT_POLICY}"; then
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_error "Validacion posterior a apply: la politica de salida por defecto no es allow."
+    else
+      hardhat_log_error "Post-apply validation: outgoing default policy is not allow."
+    fi
+    has_failed=1
   fi
 
-  if hardhat_firewall_is_spanish; then
-    hardhat_log_warn "firewall apply finalizo con advertencias de validacion; revisa el estado manualmente."
-  else
-    hardhat_log_warn "Firewall apply completed with validation warnings; review status manually."
+  if [[ "${HARDHAT_FIREWALL_APPLY_EXPECT_SSH_RULE}" -eq 1 ]]; then
+    if [[ "${HARDHAT_FIREWALL_RULES_SOURCE}" == "unavailable" ]]; then
+      if hardhat_firewall_is_spanish; then
+        hardhat_log_warn "Validacion posterior a apply: no se pudieron leer reglas UFW para verificar regla SSH esperada."
+      else
+        hardhat_log_warn "Post-apply validation: UFW rules could not be read to verify expected SSH allow rule."
+      fi
+      has_warning=1
+    elif hardhat_firewall_has_allow_rule_for_port "${HARDHAT_FIREWALL_APPLY_EXPECT_SSH_PORT}"; then
+      if hardhat_firewall_is_spanish; then
+        hardhat_log_success "Validacion posterior a apply: regla SSH allow presente para ${HARDHAT_FIREWALL_APPLY_EXPECT_SSH_PORT}/tcp."
+      else
+        hardhat_log_success "Post-apply validation: SSH allow rule present for ${HARDHAT_FIREWALL_APPLY_EXPECT_SSH_PORT}/tcp."
+      fi
+    else
+      if hardhat_firewall_is_spanish; then
+        hardhat_log_error "Validacion posterior a apply: falta regla SSH allow esperada para ${HARDHAT_FIREWALL_APPLY_EXPECT_SSH_PORT}/tcp."
+      else
+        hardhat_log_error "Post-apply validation: expected SSH allow rule missing for ${HARDHAT_FIREWALL_APPLY_EXPECT_SSH_PORT}/tcp."
+      fi
+      has_failed=1
+    fi
   fi
-  return 1
+
+  if [[ "${has_failed}" -eq 1 ]]; then
+    HARDHAT_FIREWALL_APPLY_VALIDATION_RESULT="failed"
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_error "firewall apply no cumple baseline esperada; revisa y corrige estado final."
+    else
+      hardhat_log_error "Firewall apply does not meet expected baseline; review and remediate final state."
+    fi
+    return 2
+  fi
+
+  if [[ "${has_warning}" -eq 1 ]]; then
+    HARDHAT_FIREWALL_APPLY_VALIDATION_RESULT="warning"
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_warn "firewall apply finalizo con advertencias de validacion; revisa el estado manualmente."
+    else
+      hardhat_log_warn "Firewall apply completed with validation warnings; review status manually."
+    fi
+    return 1
+  fi
+
+  HARDHAT_FIREWALL_APPLY_VALIDATION_RESULT="success"
+  if hardhat_firewall_is_spanish; then
+    hardhat_log_success "Linea base de firewall aplicada y validada."
+  else
+    hardhat_log_success "Firewall baseline applied and validated."
+  fi
+  return 0
 }
 
 hardhat_module_firewall_collect_audit() {
@@ -1099,10 +1174,13 @@ hardhat_module_firewall_collect_audit() {
 
   local rules_output=""
   if rules_output="$(hardhat_firewall_run_ufw_capture status numbered)"; then
+    HARDHAT_FIREWALL_RULES_SOURCE="numbered"
     hardhat_firewall_extract_rules "${rules_output}"
   elif rules_output="$(hardhat_firewall_run_ufw_capture status)"; then
+    HARDHAT_FIREWALL_RULES_SOURCE="status"
     hardhat_firewall_extract_rules "${rules_output}"
   else
+    HARDHAT_FIREWALL_RULES_SOURCE="unavailable"
     if hardhat_firewall_is_spanish; then
       hardhat_firewall_add_note "Salida de reglas UFW no disponible."
     else
@@ -1349,6 +1427,10 @@ hardhat_module_firewall_apply() {
   fi
 
   hardhat_firewall_detect_ssh_context
+  if [[ "${HARDHAT_FIREWALL_SSH_ACTIVE}" -eq 1 ]] && [[ "${HARDHAT_FIREWALL_SSH_RULE_NEEDED}" -eq 1 ]]; then
+    HARDHAT_FIREWALL_APPLY_EXPECT_SSH_RULE=1
+    HARDHAT_FIREWALL_APPLY_EXPECT_SSH_PORT="${HARDHAT_FIREWALL_SSH_PORT}"
+  fi
   hardhat_firewall_build_apply_plan
   if [[ "${HARDHAT_OUTPUT_JSON:-0}" -ne 1 ]]; then
     hardhat_firewall_render_apply_plan
@@ -1470,6 +1552,7 @@ hardhat_module_firewall_apply() {
 
   HARDHAT_FIREWALL_APPLY_SUCCEEDED=1
 
+  local validate_rc=0
   if hardhat_firewall_validate_post_apply; then
     HARDHAT_FIREWALL_APPLY_VALIDATION_SUCCEEDED=1
     hardhat_firewall_write_log "success validated"
@@ -1483,14 +1566,25 @@ hardhat_module_firewall_apply() {
     hardhat_firewall_apply_finish "success" "firewall apply completed successfully" 0
     return $?
   fi
+  validate_rc=$?
 
-  hardhat_firewall_write_log "warning validation_failed"
+  if [[ "${validate_rc}" -eq 2 ]]; then
+    hardhat_firewall_write_log "failed validation_failed"
+  else
+    hardhat_firewall_write_log "warning validation_failed"
+  fi
   if hardhat_firewall_is_spanish; then
     hardhat_log_warn "Estado final: active=${HARDHAT_UFW_ACTIVE}, default_policy=${HARDHAT_UFW_DEFAULT_POLICY}."
   else
     hardhat_log_warn "Final state: active=${HARDHAT_UFW_ACTIVE}, default_policy=${HARDHAT_UFW_DEFAULT_POLICY}."
   fi
   HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
+  if [[ "${validate_rc}" -eq 2 ]]; then
+    hardhat_firewall_apply_add_note "Apply completed but post-apply validation found missing baseline conditions."
+    hardhat_firewall_apply_finish "failed" "firewall apply completed but baseline validation failed" 1
+    return $?
+  fi
+
   hardhat_firewall_apply_add_note "Apply completed but post-apply validation reported warnings."
   hardhat_firewall_apply_finish "warning" "firewall apply completed with validation warnings" 1
   return $?
