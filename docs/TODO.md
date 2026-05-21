@@ -7,6 +7,7 @@ Nota de estado:
   - `firewall audit`
   - `firewall apply`
   - `firewall apply --json` (resumen final)
+  - validacion post-apply reforzada (activo, defaults de entrada/salida y regla SSH esperada)
   - instalacion
   - `hardhat uninstall` (con wrapper de compatibilidad `uninstall.sh`)
   - salida JSON base
@@ -19,7 +20,6 @@ Nota de estado:
 ## Prioridad 1
 - Implementar flujo real de `menu`.
 - Mejorar deteccion de regla SSH en `firewall apply` (menos heuristica).
-- Mejorar validacion post-apply (verificar reglas esperadas, no solo activo/default).
 - Endurecer manejo de rutas interactivas con sudo/privilegios.
 
 ## Prioridad 2
