@@ -17,6 +17,19 @@ HARDHAT_FIREWALL_INSTALL_RECOMMENDED=0
 HARDHAT_FIREWALL_INSTALL_SUPPORTED=0
 HARDHAT_FIREWALL_INSTALL_METHOD="unknown"
 HARDHAT_FIREWALL_LOG_FILE="/var/log/hardhat.log"
+HARDHAT_FIREWALL_APPLY_DRY_RUN=0
+HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_BEFORE=0
+HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER=0
+HARDHAT_FIREWALL_APPLY_UFW_INSTALL_ATTEMPTED=0
+HARDHAT_FIREWALL_APPLY_UFW_INSTALL_SUCCEEDED=0
+HARDHAT_FIREWALL_APPLY_BACKUPS_REQUIRED=0
+HARDHAT_FIREWALL_APPLY_BACKUPS_CREATED_COUNT=0
+HARDHAT_FIREWALL_APPLY_ATTEMPTED=0
+HARDHAT_FIREWALL_APPLY_SUCCEEDED=0
+HARDHAT_FIREWALL_APPLY_VALIDATION_SUCCEEDED=0
+HARDHAT_FIREWALL_APPLY_STATUS="unknown"
+HARDHAT_FIREWALL_APPLY_MESSAGE=""
+HARDHAT_FIREWALL_APPLY_NOTES=()
 
 hardhat_module_firewall_usage() {
   if hardhat_firewall_is_spanish; then
@@ -120,6 +133,7 @@ Uso:
 
 Opciones:
   -h, --help          Muestra esta ayuda
+  --json              Emite resumen JSON final
   --dry-run           Simula sin aplicar cambios
   --yes               Omite confirmaciones
 
@@ -143,6 +157,7 @@ Usage:
 
 Options:
   -h, --help          Show this help
+  --json              Emit final JSON summary
   --dry-run           Simulate without applying changes
   --yes               Skip confirmations
 
@@ -175,6 +190,8 @@ hardhat_module_firewall_validate_subcommand_args() {
         return 2
         ;;
       apply:--dry-run|apply:--yes)
+        ;;
+      apply:--json)
         ;;
       *)
         if hardhat_firewall_is_spanish; then
@@ -209,6 +226,26 @@ hardhat_firewall_reset_state() {
   HARDHAT_FIREWALL_INSTALL_RECOMMENDED=0
   HARDHAT_FIREWALL_INSTALL_SUPPORTED=0
   HARDHAT_FIREWALL_INSTALL_METHOD="unknown"
+}
+
+hardhat_firewall_apply_reset_state() {
+  HARDHAT_FIREWALL_APPLY_DRY_RUN=0
+  HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_BEFORE=0
+  HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER=0
+  HARDHAT_FIREWALL_APPLY_UFW_INSTALL_ATTEMPTED=0
+  HARDHAT_FIREWALL_APPLY_UFW_INSTALL_SUCCEEDED=0
+  HARDHAT_FIREWALL_APPLY_BACKUPS_REQUIRED=0
+  HARDHAT_FIREWALL_APPLY_BACKUPS_CREATED_COUNT=0
+  HARDHAT_FIREWALL_APPLY_ATTEMPTED=0
+  HARDHAT_FIREWALL_APPLY_SUCCEEDED=0
+  HARDHAT_FIREWALL_APPLY_VALIDATION_SUCCEEDED=0
+  HARDHAT_FIREWALL_APPLY_STATUS="unknown"
+  HARDHAT_FIREWALL_APPLY_MESSAGE=""
+  HARDHAT_FIREWALL_APPLY_NOTES=()
+}
+
+hardhat_firewall_apply_add_note() {
+  HARDHAT_FIREWALL_APPLY_NOTES+=("$*")
 }
 
 hardhat_firewall_add_recommendation() {
@@ -390,6 +427,76 @@ hardhat_firewall_analyze_rules() {
 
 hardhat_firewall_generated_at_utc() {
   date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || printf 'unknown'
+}
+
+hardhat_firewall_apply_render_json() {
+  local generated_at
+  generated_at="$(hardhat_firewall_generated_at_utc)"
+
+  printf '{'
+  printf '"metadata":{'
+  printf '"tool":"hardhat",'
+  printf '"version":"%s",' "$(hardhat_json_escape "${HARDHAT_VERSION:-unknown}")"
+  printf '"command":"firewall apply",'
+  printf '"generated_at":'
+  hardhat_json_nullable_string "${generated_at}"
+  printf '},'
+
+  printf '"apply":{'
+  printf '"dry_run":%s,' "$( [[ "${HARDHAT_FIREWALL_APPLY_DRY_RUN}" -eq 1 ]] && printf true || printf false )"
+  printf '"ufw_installed_before":%s,' "$( [[ "${HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_BEFORE}" -eq 1 ]] && printf true || printf false )"
+  printf '"ufw_installed_after":%s,' "$( [[ "${HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER}" -eq 1 ]] && printf true || printf false )"
+  printf '"ufw_install_attempted":%s,' "$( [[ "${HARDHAT_FIREWALL_APPLY_UFW_INSTALL_ATTEMPTED}" -eq 1 ]] && printf true || printf false )"
+  printf '"ufw_install_succeeded":%s,' "$( [[ "${HARDHAT_FIREWALL_APPLY_UFW_INSTALL_SUCCEEDED}" -eq 1 ]] && printf true || printf false )"
+  printf '"backups_required":%s,' "$( [[ "${HARDHAT_FIREWALL_APPLY_BACKUPS_REQUIRED}" -eq 1 ]] && printf true || printf false )"
+  printf '"backups_created_count":%s,' "${HARDHAT_FIREWALL_APPLY_BACKUPS_CREATED_COUNT}"
+  printf '"apply_attempted":%s,' "$( [[ "${HARDHAT_FIREWALL_APPLY_ATTEMPTED}" -eq 1 ]] && printf true || printf false )"
+  printf '"apply_succeeded":%s,' "$( [[ "${HARDHAT_FIREWALL_APPLY_SUCCEEDED}" -eq 1 ]] && printf true || printf false )"
+  printf '"validation_succeeded":%s' "$( [[ "${HARDHAT_FIREWALL_APPLY_VALIDATION_SUCCEEDED}" -eq 1 ]] && printf true || printf false )"
+  printf '},'
+
+  printf '"firewall":{'
+  printf '"active":'
+  hardhat_json_nullable_string "${HARDHAT_UFW_ACTIVE}"
+  printf ','
+  printf '"default_policy":'
+  hardhat_json_nullable_string "${HARDHAT_UFW_DEFAULT_POLICY}"
+  printf ','
+  printf '"sshd_active":%s,' "$( [[ "${HARDHAT_FIREWALL_SSH_ACTIVE}" -eq 1 ]] && printf true || printf false )"
+  printf '"ssh_port":'
+  hardhat_json_nullable_string "${HARDHAT_FIREWALL_SSH_PORT}"
+  printf ','
+  printf '"ssh_rule_needed":%s' "$( [[ "${HARDHAT_FIREWALL_SSH_RULE_NEEDED}" -eq 1 ]] && printf true || printf false )"
+  printf '},'
+
+  printf '"summary":{'
+  printf '"status":"%s",' "$(hardhat_json_escape "${HARDHAT_FIREWALL_APPLY_STATUS}")"
+  printf '"message":"%s"' "$(hardhat_json_escape "${HARDHAT_FIREWALL_APPLY_MESSAGE}")"
+  printf '},'
+
+  printf '"notes":'
+  hardhat_json_print_string_array "${HARDHAT_FIREWALL_APPLY_NOTES[@]}"
+  printf ','
+
+  printf '"recommendations":'
+  hardhat_json_print_string_array "${HARDHAT_FIREWALL_RECOMMENDATIONS[@]}"
+  printf '}'
+  printf '\n'
+}
+
+hardhat_firewall_apply_finish() {
+  local status="$1"
+  local message="$2"
+  local exit_code="$3"
+
+  HARDHAT_FIREWALL_APPLY_STATUS="${status}"
+  HARDHAT_FIREWALL_APPLY_MESSAGE="${message}"
+
+  if [[ "${HARDHAT_OUTPUT_JSON:-0}" -eq 1 ]]; then
+    hardhat_firewall_apply_render_json
+  fi
+
+  return "${exit_code}"
 }
 
 hardhat_firewall_write_log() {
@@ -701,6 +808,8 @@ hardhat_firewall_create_backups_or_fail() {
   local existing_count=0
   local backup_count=0
 
+  HARDHAT_FIREWALL_APPLY_BACKUPS_CREATED_COUNT=0
+
   for source_file in "${candidates[@]}"; do
     if [[ ! -f "${source_file}" ]]; then
       continue
@@ -716,6 +825,7 @@ hardhat_firewall_create_backups_or_fail() {
       return 1
     fi
     backup_count=$((backup_count + 1))
+    HARDHAT_FIREWALL_APPLY_BACKUPS_CREATED_COUNT="${backup_count}"
   done
 
   if ((existing_count == 0)); then
@@ -1217,20 +1327,32 @@ hardhat_module_firewall_apply() {
   # It switches to 0 only when UFW was missing and installed in this run.
   local backup_require_existing_files=1
 
+  hardhat_firewall_apply_reset_state
+  HARDHAT_FIREWALL_APPLY_DRY_RUN="${HARDHAT_DRY_RUN:-0}"
+
   if ! hardhat_firewall_validate_environment; then
-    return 1
+    hardhat_firewall_apply_add_note "Environment validation failed."
+    hardhat_module_firewall_collect_audit || true
+    HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
+    hardhat_firewall_apply_finish "failed" "environment validation failed" 1
+    return $?
   fi
 
   hardhat_module_firewall_collect_audit
+  HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_BEFORE="${HARDHAT_UFW_INSTALLED}"
 
   if [[ "${HARDHAT_UFW_INSTALLED}" -ne 1 ]]; then
     requires_ufw_install=1
+    HARDHAT_FIREWALL_APPLY_UFW_INSTALL_ATTEMPTED=1
+    hardhat_firewall_apply_add_note "UFW was not installed before apply."
     hardhat_firewall_report_missing_backend
   fi
 
   hardhat_firewall_detect_ssh_context
   hardhat_firewall_build_apply_plan
-  hardhat_firewall_render_apply_plan
+  if [[ "${HARDHAT_OUTPUT_JSON:-0}" -ne 1 ]]; then
+    hardhat_firewall_render_apply_plan
+  fi
 
   if [[ "${HARDHAT_DRY_RUN:-0}" -eq 1 ]]; then
     if hardhat_firewall_is_spanish; then
@@ -1243,25 +1365,40 @@ hardhat_module_firewall_apply() {
     else
       hardhat_firewall_write_log "dry-run plan_reviewed"
     fi
-    return 0
+    HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
+    hardhat_firewall_apply_add_note "Dry-run completed; no changes were applied."
+    hardhat_firewall_apply_finish "dry-run" "dry-run completed" 0
+    return $?
   fi
 
   if [[ "${requires_ufw_install}" -eq 1 ]]; then
     if hardhat_firewall_is_spanish; then
       if ! hardhat_confirm_global "UFW no esta instalado. Instalar UFW con pacman y aplicar ahora la linea base de firewall?"; then
         hardhat_firewall_write_log "aborted missing_ufw_user_cancelled"
-        return 1
+        HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
+        hardhat_firewall_apply_add_note "User cancelled before UFW installation."
+        hardhat_firewall_apply_finish "aborted" "user cancelled before install" 1
+        return $?
       fi
     elif ! hardhat_confirm_global "UFW is missing. Install UFW with pacman and apply the firewall baseline now?"; then
       hardhat_firewall_write_log "aborted missing_ufw_user_cancelled"
-      return 1
+      HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
+      hardhat_firewall_apply_add_note "User cancelled before UFW installation."
+      hardhat_firewall_apply_finish "aborted" "user cancelled before install" 1
+      return $?
     fi
     preconfirmed_apply=1
 
     if ! hardhat_firewall_install_ufw; then
       hardhat_firewall_write_log "failed ufw_install"
-      return 1
+      hardhat_module_firewall_collect_audit || true
+      HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
+      hardhat_firewall_apply_add_note "UFW installation failed."
+      hardhat_firewall_apply_finish "failed" "ufw installation failed" 1
+      return $?
     fi
+
+    HARDHAT_FIREWALL_APPLY_UFW_INSTALL_SUCCEEDED=1
 
     hardhat_module_firewall_collect_audit
     if [[ "${HARDHAT_UFW_INSTALLED}" -ne 1 ]]; then
@@ -1271,7 +1408,10 @@ hardhat_module_firewall_apply() {
         hardhat_log_error "UFW still not detected after installation attempt; aborting apply."
       fi
       hardhat_firewall_write_log "failed ufw_not_detected_after_install"
-      return 1
+      HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
+      hardhat_firewall_apply_add_note "UFW still not detected after installation attempt."
+      hardhat_firewall_apply_finish "failed" "ufw not detected after install" 1
+      return $?
     fi
 
     if hardhat_firewall_is_spanish; then
@@ -1283,20 +1423,32 @@ hardhat_module_firewall_apply() {
     backup_require_existing_files=0
   fi
 
+  HARDHAT_FIREWALL_APPLY_BACKUPS_REQUIRED="${backup_require_existing_files}"
+
   if ! hardhat_firewall_create_backups_or_fail "${backup_require_existing_files}"; then
     hardhat_firewall_write_log "aborted backup_failed"
-    return 1
+    hardhat_module_firewall_collect_audit || true
+    HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
+    hardhat_firewall_apply_add_note "Backup stage failed."
+    hardhat_firewall_apply_finish "failed" "backup stage failed" 1
+    return $?
   fi
 
   if [[ "${preconfirmed_apply}" -ne 1 ]]; then
     if hardhat_firewall_is_spanish; then
       if ! hardhat_confirm_global "Continuar con firewall apply de linea base?"; then
         hardhat_firewall_write_log "aborted user_cancelled"
-        return 1
+        HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
+        hardhat_firewall_apply_add_note "User cancelled before apply actions."
+        hardhat_firewall_apply_finish "aborted" "user cancelled before apply" 1
+        return $?
       fi
     elif ! hardhat_confirm_global "Proceed with firewall baseline apply?"; then
       hardhat_firewall_write_log "aborted user_cancelled"
-      return 1
+      HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
+      hardhat_firewall_apply_add_note "User cancelled before apply actions."
+      hardhat_firewall_apply_finish "aborted" "user cancelled before apply" 1
+      return $?
     fi
   fi
 
@@ -1306,19 +1458,30 @@ hardhat_module_firewall_apply() {
     hardhat_log_warn "Automatic rollback is not available in this phase."
   fi
 
+  HARDHAT_FIREWALL_APPLY_ATTEMPTED=1
   if ! hardhat_firewall_apply_actions; then
     hardhat_firewall_write_log "failed apply_actions"
-    return 1
+    hardhat_module_firewall_collect_audit || true
+    HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
+    hardhat_firewall_apply_add_note "Apply actions failed."
+    hardhat_firewall_apply_finish "failed" "apply actions failed" 1
+    return $?
   fi
 
+  HARDHAT_FIREWALL_APPLY_SUCCEEDED=1
+
   if hardhat_firewall_validate_post_apply; then
+    HARDHAT_FIREWALL_APPLY_VALIDATION_SUCCEEDED=1
     hardhat_firewall_write_log "success validated"
     if hardhat_firewall_is_spanish; then
       hardhat_log_info "Estado final: active=${HARDHAT_UFW_ACTIVE}, default_policy=${HARDHAT_UFW_DEFAULT_POLICY}."
     else
       hardhat_log_info "Final state: active=${HARDHAT_UFW_ACTIVE}, default_policy=${HARDHAT_UFW_DEFAULT_POLICY}."
     fi
-    return 0
+    HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
+    hardhat_firewall_apply_add_note "Apply and validation completed successfully."
+    hardhat_firewall_apply_finish "success" "firewall apply completed successfully" 0
+    return $?
   fi
 
   hardhat_firewall_write_log "warning validation_failed"
@@ -1327,7 +1490,10 @@ hardhat_module_firewall_apply() {
   else
     hardhat_log_warn "Final state: active=${HARDHAT_UFW_ACTIVE}, default_policy=${HARDHAT_UFW_DEFAULT_POLICY}."
   fi
-  return 1
+  HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
+  hardhat_firewall_apply_add_note "Apply completed but post-apply validation reported warnings."
+  hardhat_firewall_apply_finish "warning" "firewall apply completed with validation warnings" 1
+  return $?
 }
 
 hardhat_module_firewall_run() {

@@ -46,6 +46,7 @@ hardhat firewall audit
 hardhat firewall audit --help
 hardhat firewall audit --json
 hardhat firewall apply
+hardhat firewall apply --json
 hardhat firewall apply --help
 hardhat firewall apply --dry-run
 hardhat uninstall
@@ -138,6 +139,11 @@ Aplica baseline segura de UFW con flujo guiado y seguro:
 9. aplica politicas baseline;
 10. valida estado final;
 11. registra evento de aplicacion en log.
+
+Comportamiento de salida con `--json` en `firewall apply`:
+- `stdout` contiene solo un JSON final valido con resumen de ejecucion.
+- `stderr` conserva advertencias/errores operativos del flujo.
+- El JSON incluye `metadata`, `apply`, `firewall`, `summary`, `notes` y `recommendations`.
 
 Politica baseline:
 - `deny incoming`
