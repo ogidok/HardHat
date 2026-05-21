@@ -9,6 +9,7 @@ Nota de estado:
   - `firewall apply --json` (resumen final)
   - validacion post-apply reforzada (activo, defaults de entrada/salida y regla SSH esperada)
   - catalogo de mensajes normalizado para mayor consistencia ES/EN
+  - parser de UFW mas resiliente ante variaciones comunes de salida
   - instalacion
   - `hardhat uninstall` (con wrapper de compatibilidad `uninstall.sh`)
   - salida JSON base
@@ -24,7 +25,6 @@ Nota de estado:
 - Endurecer manejo de rutas interactivas con sudo/privilegios.
 
 ## Prioridad 2
-- Mejorar resiliencia del parser ante variaciones de salida de UFW.
 - Hacer pasada final de consistencia entre ayuda, errores de uso, smoke tests y README para asegurar alineacion completa con la CLI real.
 
 ## Prioridad 3
