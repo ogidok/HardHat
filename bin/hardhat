@@ -392,7 +392,11 @@ hardhat_parse_global_flags() {
         if [[ "${seen_command}" -eq 1 ]]; then
           positionals+=("${arg}")
         else
-          hardhat_log_error "Unknown option: ${arg}"
+          if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+            hardhat_log_error "Opcion desconocida: ${arg}"
+          else
+            hardhat_log_error "Unknown option: ${arg}"
+          fi
           hardhat_usage
           exit 1
         fi
@@ -453,8 +457,13 @@ hardhat_run_command() {
       local menu_arg="${HARDHAT_ARGS[1]:-}"
       case "${menu_arg}" in
         "" )
-          hardhat_log_warn "menu command is not implemented yet."
-          hardhat_log_info "Use 'hardhat help' to see available commands."
+          if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+            hardhat_log_warn "El comando menu aun no esta implementado."
+            hardhat_log_info "Usa 'hardhat help' para ver comandos disponibles."
+          else
+            hardhat_log_warn "menu command is not implemented yet."
+            hardhat_log_info "Use 'hardhat help' to see available commands."
+          fi
           ;;
         -h|--help|help)
           hardhat_help_for_command menu
@@ -478,8 +487,13 @@ hardhat_run_command() {
       printf '%s\n' "${HARDHAT_VERSION}"
       ;;
     *)
-      hardhat_log_error "Unknown command: ${HARDHAT_COMMAND}"
-      hardhat_log_info "Use 'hardhat help' for usage."
+      if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+        hardhat_log_error "Comando desconocido: ${HARDHAT_COMMAND}"
+        hardhat_log_info "Usa 'hardhat help' para ver uso."
+      else
+        hardhat_log_error "Unknown command: ${HARDHAT_COMMAND}"
+        hardhat_log_info "Use 'hardhat help' for usage."
+      fi
       hardhat_usage
       return 1
       ;;

@@ -234,7 +234,7 @@ hardhat_audit_render_human() {
     done
 
     if ((findings_count == 0)); then
-      printf '\nNo se detectaron hallazgos en esta auditoria baseline.\n'
+      printf '\nNo se detectaron hallazgos en esta auditoria de linea base.\n'
       return 0
     fi
 

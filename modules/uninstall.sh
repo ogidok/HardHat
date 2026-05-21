@@ -191,7 +191,11 @@ hardhat_module_uninstall_parse_args() {
   HARDHAT_UNINSTALL_TARGET_BIN="${HARDHAT_UNINSTALL_BIN_DIR}/hardhat"
 
   if [[ -z "${HARDHAT_UNINSTALL_INSTALL_ROOT}" ]] || [[ -z "${HARDHAT_UNINSTALL_BIN_DIR}" ]]; then
-    hardhat_log_error "install-root and bin-dir must be non-empty paths."
+    if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+      hardhat_log_error "install-root y bin-dir deben ser rutas no vacias."
+    else
+      hardhat_log_error "install-root and bin-dir must be non-empty paths."
+    fi
     return 1
   fi
 

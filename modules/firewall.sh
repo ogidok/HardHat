@@ -44,8 +44,8 @@ Uso:
   hardhat firewall <subcomando> [opciones]
 
 Subcomandos:
-  audit               Audita estado y baseline de UFW
-  apply               Aplica baseline de UFW (cambios en sistema)
+  audit               Audita estado y linea base de UFW
+  apply               Aplica linea base de UFW (cambios en sistema)
   help                Muestra esta ayuda
 
 Opciones globales frecuentes:
@@ -60,7 +60,7 @@ Ejemplos:
   hardhat firewall apply --yes
 
 Nota:
-  Si UFW no esta instalado, apply puede guiar su instalacion antes de aplicar la linea base.
+  Si UFW no esta instalado, firewall apply puede guiar su instalacion antes de aplicar la linea base.
 EOF
     return 0
   fi
@@ -130,7 +130,7 @@ EOF
 hardhat_module_firewall_apply_usage() {
   if hardhat_firewall_is_spanish; then
     cat <<'EOF'
-HardHat firewall apply - Aplicacion de baseline
+HardHat firewall apply - Aplicacion de linea base
 
 Uso:
   hardhat firewall apply [opciones]
@@ -148,7 +148,7 @@ Ejemplos:
 Notas:
   - Puede requerir privilegios elevados para modificar UFW.
   - Si UFW no existe, puede ofrecer instalacion guiada.
-  - No hay rollback automatico en esta fase.
+  - No hay reversion automatica en esta fase.
 EOF
     return 0
   fi
@@ -413,9 +413,9 @@ hardhat_firewall_analyze_rules() {
       hardhat_firewall_add_finding \
         "firewall.ufw.allow_anywhere" \
         "medium" \
-        "Regla allow amplia detectada" \
+        "Regla de permiso amplia detectada" \
         "Al menos una regla UFW permite trafico entrante desde Anywhere sin restriccion clara de origen." \
-        "Restringe reglas allow a rangos de origen confiables y solo puertos necesarios."
+        "Restringe reglas de permiso a rangos de origen confiables y solo puertos necesarios."
     else
       hardhat_firewall_add_finding \
         "firewall.ufw.allow_anywhere" \
@@ -587,15 +587,15 @@ hardhat_firewall_detect_ssh_context() {
     if grep -qiE "${HARDHAT_FIREWALL_SSH_PORT}(/tcp)?[[:space:]].*(ALLOW)" <<<"${rules_text}"; then
       HARDHAT_FIREWALL_SSH_RULE_NEEDED=0
       if hardhat_firewall_is_spanish; then
-        hardhat_firewall_add_note "Parece existir una regla allow para el puerto SSH ${HARDHAT_FIREWALL_SSH_PORT}."
+        hardhat_firewall_add_note "Parece existir una regla de permiso para el puerto SSH ${HARDHAT_FIREWALL_SSH_PORT}."
       else
         hardhat_firewall_add_note "An allow rule for SSH port ${HARDHAT_FIREWALL_SSH_PORT} appears to exist."
       fi
     else
       HARDHAT_FIREWALL_SSH_RULE_NEEDED=1
       if hardhat_firewall_is_spanish; then
-        hardhat_firewall_add_note "No se encontro una regla allow explicita para el puerto SSH ${HARDHAT_FIREWALL_SSH_PORT}."
-        hardhat_firewall_add_recommendation "Permite el puerto SSH ${HARDHAT_FIREWALL_SSH_PORT}/tcp antes de habilitar defaults estrictos."
+        hardhat_firewall_add_note "No se encontro una regla de permiso explicita para el puerto SSH ${HARDHAT_FIREWALL_SSH_PORT}."
+        hardhat_firewall_add_recommendation "Permite el puerto SSH ${HARDHAT_FIREWALL_SSH_PORT}/tcp antes de habilitar politicas estrictas por defecto."
       else
         hardhat_firewall_add_note "No explicit allow rule found for SSH port ${HARDHAT_FIREWALL_SSH_PORT}."
         hardhat_firewall_add_recommendation "Allow SSH port ${HARDHAT_FIREWALL_SSH_PORT}/tcp before enabling strict defaults."
@@ -725,7 +725,7 @@ hardhat_firewall_build_apply_plan() {
 
   if [[ "${HARDHAT_FIREWALL_SSH_ACTIVE}" -eq 1 ]] && [[ "${HARDHAT_FIREWALL_SSH_RULE_NEEDED}" -eq 1 ]]; then
     if [[ "${use_es}" -eq 1 ]]; then
-      HARDHAT_FIREWALL_PLAN+=("Agregar regla allow de UFW para SSH en el puerto ${HARDHAT_FIREWALL_SSH_PORT}/tcp.")
+      HARDHAT_FIREWALL_PLAN+=("Agregar regla de permiso de UFW para SSH en el puerto ${HARDHAT_FIREWALL_SSH_PORT}/tcp.")
     else
       HARDHAT_FIREWALL_PLAN+=("Add UFW allow rule for SSH on port ${HARDHAT_FIREWALL_SSH_PORT}/tcp.")
     fi
@@ -739,7 +739,7 @@ hardhat_firewall_build_apply_plan() {
     fi
   else
     if [[ "${use_es}" -eq 1 ]]; then
-      HARDHAT_FIREWALL_PLAN+=("UFW ya esta activo; refrescar defaults de linea base sin deshabilitar firewall.")
+      HARDHAT_FIREWALL_PLAN+=("UFW ya esta activo; refrescar politicas por defecto de la linea base sin deshabilitar firewall.")
     else
       HARDHAT_FIREWALL_PLAN+=("UFW already active; refresh baseline defaults without disabling firewall.")
     fi
@@ -780,9 +780,9 @@ hardhat_firewall_render_apply_plan() {
 
     printf '\nAvisos de seguridad:\n'
     printf -- '- Los archivos de configuracion existentes de UFW se respaldan antes de aplicar cambios de politica.\n'
-    printf -- '- En una instalacion inicial de UFW, apply continua si aun no existen archivos de configuracion de UFW.\n'
-    printf -- '- Si un backup requerido falla, HardHat no aplica cambios de politica.\n'
-    printf -- '- No hay rollback automatico en esta fase.\n'
+    printf -- '- En una instalacion inicial de UFW, firewall apply continua si aun no existen archivos de configuracion de UFW.\n'
+    printf -- '- Si un respaldo requerido falla, HardHat no aplica cambios de politica.\n'
+    printf -- '- No hay reversion automatica en esta fase.\n'
     return 0
   fi
 
@@ -838,7 +838,7 @@ hardhat_firewall_create_backups_or_fail() {
 
     if ! hardhat_backup_file "${source_file}" "${backup_dir}"; then
       if hardhat_firewall_is_spanish; then
-        hardhat_log_error "Fallo el backup de ${source_file}; abortando apply."
+        hardhat_log_error "Fallo el respaldo de ${source_file}; abortando firewall apply."
       else
         hardhat_log_error "Backup failed for ${source_file}; aborting apply."
       fi
@@ -859,7 +859,7 @@ hardhat_firewall_create_backups_or_fail() {
     fi
 
     if hardhat_firewall_is_spanish; then
-      hardhat_log_warn "No se encontraron archivos de configuracion de UFW para respaldar despues de la instalacion. Continuando con apply inicial de linea base."
+      hardhat_log_warn "No se encontraron archivos de configuracion de UFW para respaldar despues de la instalacion. Continuando con aplicacion inicial de linea base."
     else
       hardhat_log_warn "No UFW configuration files found to back up after installation. Continuing with initial baseline apply."
     fi
@@ -896,7 +896,7 @@ hardhat_firewall_apply_actions() {
   if [[ "${HARDHAT_FIREWALL_SSH_ACTIVE}" -eq 1 ]] && [[ "${HARDHAT_FIREWALL_SSH_RULE_NEEDED}" -eq 1 ]]; then
     if ! hardhat_sudo_run ufw allow "${HARDHAT_FIREWALL_SSH_PORT}/tcp"; then
       if hardhat_firewall_is_spanish; then
-        hardhat_log_error "Fallo al agregar regla allow de SSH para el puerto ${HARDHAT_FIREWALL_SSH_PORT}/tcp."
+        hardhat_log_error "Fallo al agregar regla de permiso de SSH para el puerto ${HARDHAT_FIREWALL_SSH_PORT}/tcp."
       else
         hardhat_log_error "Failed to add SSH allow rule for port ${HARDHAT_FIREWALL_SSH_PORT}/tcp."
       fi
@@ -927,7 +927,7 @@ hardhat_firewall_validate_post_apply() {
 
   if [[ "${HARDHAT_UFW_ACTIVE}" != "yes" ]]; then
     if hardhat_firewall_is_spanish; then
-      hardhat_log_error "Validacion posterior a apply: UFW no aparece como activo."
+      hardhat_log_error "Validacion posterior a firewall apply: UFW no aparece como activo."
     else
       hardhat_log_error "Post-apply validation: UFW is not reported as active."
     fi
@@ -936,14 +936,14 @@ hardhat_firewall_validate_post_apply() {
 
   if [[ "${HARDHAT_UFW_DEFAULT_POLICY}" == "unknown" ]]; then
     if hardhat_firewall_is_spanish; then
-      hardhat_log_warn "Validacion posterior a apply: no se pudo leer la politica por defecto de UFW."
+      hardhat_log_warn "Validacion posterior a firewall apply: no se pudo leer la politica por defecto de UFW."
     else
       hardhat_log_warn "Post-apply validation: could not read UFW default policy."
     fi
     has_warning=1
   elif ! grep -qiE '(deny|reject)[[:space:]]*\(incoming\)' <<<"${HARDHAT_UFW_DEFAULT_POLICY}"; then
     if hardhat_firewall_is_spanish; then
-      hardhat_log_error "Validacion posterior a apply: la politica de entrada por defecto no es deny/reject."
+      hardhat_log_error "Validacion posterior a firewall apply: la politica de entrada por defecto no es deny/reject."
     else
       hardhat_log_error "Post-apply validation: incoming default policy is not deny/reject."
     fi
@@ -952,14 +952,14 @@ hardhat_firewall_validate_post_apply() {
 
   if [[ "${HARDHAT_UFW_DEFAULT_POLICY}" == "unknown" ]]; then
     if hardhat_firewall_is_spanish; then
-      hardhat_log_warn "Validacion posterior a apply: no se pudo verificar con confianza la politica de salida por defecto (allow)."
+      hardhat_log_warn "Validacion posterior a firewall apply: no se pudo verificar con confianza la politica de salida por defecto (allow)."
     else
       hardhat_log_warn "Post-apply validation: could not confidently verify default outgoing policy (allow)."
     fi
     has_warning=1
   elif ! grep -qiE 'allow[[:space:]]*\(outgoing\)' <<<"${HARDHAT_UFW_DEFAULT_POLICY}"; then
     if hardhat_firewall_is_spanish; then
-      hardhat_log_error "Validacion posterior a apply: la politica de salida por defecto no es allow."
+      hardhat_log_error "Validacion posterior a firewall apply: la politica de salida por defecto no es allow."
     else
       hardhat_log_error "Post-apply validation: outgoing default policy is not allow."
     fi
@@ -969,20 +969,20 @@ hardhat_firewall_validate_post_apply() {
   if [[ "${HARDHAT_FIREWALL_APPLY_EXPECT_SSH_RULE}" -eq 1 ]]; then
     if [[ "${HARDHAT_FIREWALL_RULES_SOURCE}" == "unavailable" ]]; then
       if hardhat_firewall_is_spanish; then
-        hardhat_log_warn "Validacion posterior a apply: no se pudieron leer reglas UFW para verificar regla SSH esperada."
+        hardhat_log_warn "Validacion posterior a firewall apply: no se pudieron leer reglas UFW para verificar la regla SSH esperada."
       else
         hardhat_log_warn "Post-apply validation: UFW rules could not be read to verify expected SSH allow rule."
       fi
       has_warning=1
     elif hardhat_firewall_has_allow_rule_for_port "${HARDHAT_FIREWALL_APPLY_EXPECT_SSH_PORT}"; then
       if hardhat_firewall_is_spanish; then
-        hardhat_log_success "Validacion posterior a apply: regla SSH allow presente para ${HARDHAT_FIREWALL_APPLY_EXPECT_SSH_PORT}/tcp."
+        hardhat_log_success "Validacion posterior a firewall apply: regla SSH de permiso presente para ${HARDHAT_FIREWALL_APPLY_EXPECT_SSH_PORT}/tcp."
       else
         hardhat_log_success "Post-apply validation: SSH allow rule present for ${HARDHAT_FIREWALL_APPLY_EXPECT_SSH_PORT}/tcp."
       fi
     else
       if hardhat_firewall_is_spanish; then
-        hardhat_log_error "Validacion posterior a apply: falta regla SSH allow esperada para ${HARDHAT_FIREWALL_APPLY_EXPECT_SSH_PORT}/tcp."
+        hardhat_log_error "Validacion posterior a firewall apply: falta la regla SSH de permiso esperada para ${HARDHAT_FIREWALL_APPLY_EXPECT_SSH_PORT}/tcp."
       else
         hardhat_log_error "Post-apply validation: expected SSH allow rule missing for ${HARDHAT_FIREWALL_APPLY_EXPECT_SSH_PORT}/tcp."
       fi
@@ -993,7 +993,7 @@ hardhat_firewall_validate_post_apply() {
   if [[ "${has_failed}" -eq 1 ]]; then
     HARDHAT_FIREWALL_APPLY_VALIDATION_RESULT="failed"
     if hardhat_firewall_is_spanish; then
-      hardhat_log_error "firewall apply no cumple baseline esperada; revisa y corrige estado final."
+      hardhat_log_error "firewall apply no cumple la linea base esperada; revisa y corrige el estado final."
     else
       hardhat_log_error "Firewall apply does not meet expected baseline; review and remediate final state."
     fi
@@ -1003,7 +1003,7 @@ hardhat_firewall_validate_post_apply() {
   if [[ "${has_warning}" -eq 1 ]]; then
     HARDHAT_FIREWALL_APPLY_VALIDATION_RESULT="warning"
     if hardhat_firewall_is_spanish; then
-      hardhat_log_warn "firewall apply finalizo con advertencias de validacion; revisa el estado manualmente."
+      hardhat_log_warn "firewall apply finalizo con advertencias de validacion; revisa el estado de forma manual."
     else
       hardhat_log_warn "Firewall apply completed with validation warnings; review status manually."
     fi
