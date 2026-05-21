@@ -1101,7 +1101,7 @@ hardhat_module_firewall_collect_audit() {
         "high" \
         "UFW inactivo" \
         "El firewall esta instalado pero no esta aplicando reglas de filtrado." \
-        "Habilita UFW y aplica la linea base (deny incoming, allow outgoing)."
+        "Habilita UFW y aplica la linea base (denegar entrada, permitir salida)."
     else
       hardhat_firewall_add_note "UFW is installed but inactive."
       hardhat_firewall_add_finding \
