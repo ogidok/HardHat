@@ -351,30 +351,99 @@ hardhat_firewall_run_ufw_capture() {
 hardhat_firewall_extract_default_policy() {
   local verbose_output="$1"
   local line
-  line="$(awk 'tolower($0) ~ /^default:/ {print; exit}' <<<"${verbose_output}")"
+
+  # Prefer the canonical UFW line when present, tolerating leading spaces.
+  line="$(awk 'tolower($0) ~ /^[[:space:]]*default[[:space:]]*:/ {print; exit}' <<<"${verbose_output}")"
+
+  # Some outputs can label this as "Default policy:".
+  if [[ -z "${line}" ]]; then
+    line="$(awk 'tolower($0) ~ /^[[:space:]]*default[[:space:]]+policy[[:space:]]*:/ {print; exit}' <<<"${verbose_output}")"
+  fi
+
+  # Fallback: if there is no explicit default line but incoming/outgoing policy
+  # appears in a single sentence, keep that line for downstream checks.
+  if [[ -z "${line}" ]]; then
+    line="$(awk 'tolower($0) ~ /incoming/ && tolower($0) ~ /outgoing/ {print; exit}' <<<"${verbose_output}")"
+  fi
+
   if [[ -z "${line}" ]]; then
     printf 'unknown'
     return 0
   fi
 
-  line="$(sed -E 's/^[Dd]efault:[[:space:]]*//' <<<"${line}")"
+  line="$(sed -E 's/^[[:space:]]*[Dd]efault([[:space:]]+[Pp]olicy)?[[:space:]]*:[[:space:]]*//' <<<"${line}")"
   printf '%s' "$(hardhat_trim "${line}")"
+}
+
+hardhat_firewall_default_has_incoming_deny_reject() {
+  local default_policy="$1"
+  local text
+
+  text="$(tr '[:upper:]' '[:lower:]' <<<"${default_policy}")"
+
+  grep -qiE '(deny|reject)[[:space:]]*\([[:space:]]*incoming[[:space:]]*\)' <<<"${text}" \
+    || grep -qiE 'incoming[^[:alpha:]]*(deny|reject)' <<<"${text}" \
+    || grep -qiE '(deny|reject)[^[:alpha:]]*incoming' <<<"${text}"
+}
+
+hardhat_firewall_default_has_outgoing_allow() {
+  local default_policy="$1"
+  local text
+
+  text="$(tr '[:upper:]' '[:lower:]' <<<"${default_policy}")"
+
+  grep -qiE 'allow[[:space:]]*\([[:space:]]*outgoing[[:space:]]*\)' <<<"${text}" \
+    || grep -qiE 'outgoing[^[:alpha:]]*allow' <<<"${text}" \
+    || grep -qiE 'allow[^[:alpha:]]*outgoing' <<<"${text}"
 }
 
 hardhat_firewall_extract_rules() {
   local input="$1"
-  local line cleaned
+  local line cleaned trimmed
   while IFS= read -r line; do
-    [[ -z "$(hardhat_trim "${line}")" ]] && continue
-    if grep -qiE '^(status:|to[[:space:]]+action[[:space:]]+from|--)' <<<"${line}"; then
+    # Strip basic ANSI escapes in case output is colorized by environment.
+    line="$(sed -E 's/\x1b\[[0-9;]*[A-Za-z]//g' <<<"${line}")"
+    trimmed="$(hardhat_trim "${line}")"
+
+    [[ -z "${trimmed}" ]] && continue
+    if grep -qiE '^(status:|estado:|to[[:space:]]+action[[:space:]]+from|--+)' <<<"${trimmed}"; then
       continue
     fi
 
-    cleaned="$(sed -E 's/^\[[[:space:]]*[0-9]+\][[:space:]]*//' <<<"${line}")"
+    cleaned="$(sed -E 's/^\[[[:space:]]*[0-9]+\][[:space:]]*//' <<<"${trimmed}")"
+    cleaned="$(sed -E 's/^[[:space:]]*[0-9]+[.)][[:space:]]*//' <<<"${cleaned}")"
     if grep -qiE '(ALLOW|DENY|REJECT)' <<<"${cleaned}"; then
       HARDHAT_UFW_RULES+=("$(hardhat_trim "${cleaned}")")
     fi
   done <<<"${input}"
+}
+
+hardhat_firewall_extract_active_state() {
+  local status_output="$1"
+  local text
+
+  text="$(tr '[:upper:]' '[:lower:]' <<<"${status_output}")"
+
+  # Check inactive first so it never matches the substring inside "inactive".
+  if grep -qiE '(^|[[:space:]])(status|estado)[[:space:]]*:[[:space:]]*inactive([^[:alpha:]]|$)' <<<"${text}"; then
+    printf 'no'
+    return 0
+  fi
+  if grep -qiE '(^|[[:space:]])(status|estado)[[:space:]]*:[[:space:]]*inactivo([^[:alpha:]]|$)' <<<"${text}"; then
+    printf 'no'
+    return 0
+  fi
+
+  if grep -qiE '(^|[[:space:]])(status|estado)[[:space:]]*:[[:space:]]*active([^[:alpha:]]|$)' <<<"${text}"; then
+    printf 'yes'
+    return 0
+  fi
+  if grep -qiE '(^|[[:space:]])(status|estado)[[:space:]]*:[[:space:]]*activo([^[:alpha:]]|$)' <<<"${text}"; then
+    printf 'yes'
+    return 0
+  fi
+
+  printf 'unknown'
 }
 
 hardhat_firewall_has_allow_rule_for_port() {
@@ -386,7 +455,10 @@ hardhat_firewall_has_allow_rule_for_port() {
 
   local rules_text
   rules_text="$(printf '%s\n' "${HARDHAT_UFW_RULES[@]}")"
-  grep -qiE "(^|[[:space:]])${port}(/tcp)?[[:space:]].*(ALLOW)" <<<"${rules_text}"
+
+  # Accept common UFW renderings with optional protocol and direction segment.
+  grep -qiE "(^|[[:space:]])${port}(/tcp)?([[:space:]]|$).*\bALLOW\b" <<<"${rules_text}" \
+    || grep -qiE "\bALLOW\b.*(^|[[:space:]])${port}(/tcp)?([[:space:]]|$)" <<<"${rules_text}"
 }
 
 hardhat_firewall_analyze_rules() {
@@ -582,9 +654,7 @@ hardhat_firewall_detect_ssh_context() {
       hardhat_firewall_add_note "sshd is active. Detected SSH port: ${HARDHAT_FIREWALL_SSH_PORT}."
     fi
 
-    local rules_text
-    rules_text="$(printf '%s\n' "${HARDHAT_UFW_RULES[@]}")"
-    if grep -qiE "${HARDHAT_FIREWALL_SSH_PORT}(/tcp)?[[:space:]].*(ALLOW)" <<<"${rules_text}"; then
+    if hardhat_firewall_has_allow_rule_for_port "${HARDHAT_FIREWALL_SSH_PORT}"; then
       HARDHAT_FIREWALL_SSH_RULE_NEEDED=0
       if hardhat_firewall_is_spanish; then
         hardhat_firewall_add_note "Parece existir una regla de permiso para el puerto SSH ${HARDHAT_FIREWALL_SSH_PORT}."
@@ -941,7 +1011,7 @@ hardhat_firewall_validate_post_apply() {
       hardhat_log_warn "Post-apply validation: could not read UFW default policy."
     fi
     has_warning=1
-  elif ! grep -qiE '(deny|reject)[[:space:]]*\(incoming\)' <<<"${HARDHAT_UFW_DEFAULT_POLICY}"; then
+  elif ! hardhat_firewall_default_has_incoming_deny_reject "${HARDHAT_UFW_DEFAULT_POLICY}"; then
     if hardhat_firewall_is_spanish; then
       hardhat_log_error "Validacion posterior a firewall apply: la politica de entrada por defecto no es deny/reject."
     else
@@ -957,7 +1027,7 @@ hardhat_firewall_validate_post_apply() {
       hardhat_log_warn "Post-apply validation: could not confidently verify default outgoing policy (allow)."
     fi
     has_warning=1
-  elif ! grep -qiE 'allow[[:space:]]*\(outgoing\)' <<<"${HARDHAT_UFW_DEFAULT_POLICY}"; then
+  elif ! hardhat_firewall_default_has_outgoing_allow "${HARDHAT_UFW_DEFAULT_POLICY}"; then
     if hardhat_firewall_is_spanish; then
       hardhat_log_error "Validacion posterior a firewall apply: la politica de salida por defecto no es allow."
     else
@@ -1085,14 +1155,17 @@ hardhat_module_firewall_collect_audit() {
     return 0
   fi
 
-  if grep -qiE 'status:[[:space:]]*active' <<<"${status_output}"; then
+  local ufw_active_state="unknown"
+  ufw_active_state="$(hardhat_firewall_extract_active_state "${status_output}")"
+
+  if [[ "${ufw_active_state}" == "yes" ]]; then
     HARDHAT_UFW_ACTIVE="yes"
     if hardhat_firewall_is_spanish; then
       hardhat_firewall_add_note "UFW esta activo."
     else
       hardhat_firewall_add_note "UFW is active."
     fi
-  elif grep -qiE 'status:[[:space:]]*inactive' <<<"${status_output}"; then
+  elif [[ "${ufw_active_state}" == "no" ]]; then
     HARDHAT_UFW_ACTIVE="no"
     if hardhat_firewall_is_spanish; then
       hardhat_firewall_add_note "UFW esta instalado pero inactivo."
@@ -1146,7 +1219,7 @@ hardhat_module_firewall_collect_audit() {
       else
         hardhat_firewall_add_note "UFW default policy: ${HARDHAT_UFW_DEFAULT_POLICY}."
       fi
-      if ! grep -qiE '(deny|reject)[[:space:]]*\(incoming\)' <<<"${HARDHAT_UFW_DEFAULT_POLICY}"; then
+      if ! hardhat_firewall_default_has_incoming_deny_reject "${HARDHAT_UFW_DEFAULT_POLICY}"; then
         if hardhat_firewall_is_spanish; then
           hardhat_firewall_add_finding \
             "firewall.ufw.default_incoming" \
