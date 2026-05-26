@@ -20,6 +20,7 @@ Nota de estado:
   - ayuda global y ayuda especifica principal de la CLI
   - pasada final de consistencia entre ayuda, errores de uso, smoke tests y README
   - estrategia base de tests definida (smoke CLI + integracion segura + unitarios shell)
+  - documentacion de troubleshooting y modelo de permisos expandida
   - documentacion base del proyecto
   - smoke tests iniciales para help/uninstall
 - `accsi.txt` se mantiene temporalmente en la raiz como asset/splash usado por el proyecto; su reubicacion puede evaluarse mas adelante y no es un pendiente prioritario actual.
@@ -32,5 +33,4 @@ Nota de estado:
 
 ## Prioridad 3
 - Agregar PKGBUILD para empaquetado en Arch.
-- Expandir documentacion de troubleshooting y modelo de permisos.
 - Expandir cobertura de tests sobre escenarios operativos avanzados (sin perder seguridad ni simplicidad).

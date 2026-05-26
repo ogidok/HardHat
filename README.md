@@ -75,6 +75,45 @@ Notas:
 --version
 ```
 
+## Modelo de permisos (operativo)
+
+Objetivo del modelo actual:
+- minimizar ejecuciones privilegiadas innecesarias;
+- permitir diagnostico/auditoria sin cambios del sistema;
+- exigir root/sudo solo cuando hay escritura real en rutas del sistema.
+
+Comandos que normalmente funcionan sin root/sudo:
+- `hardhat help`, `hardhat version`, `hardhat language show`, `hardhat language set`;
+- `hardhat audit` y `hardhat firewall audit` (pueden reportar visibilidad parcial si no pueden leer estado/reglas de UFW);
+- `hardhat menu --help`.
+
+Comandos/modos que pueden requerir privilegios:
+- `hardhat firewall apply` (aplica politicas UFW, puede instalar UFW y escribir log operativo);
+- `hardhat uninstall` fuera de `--dry-run` cuando afecta rutas de sistema;
+- `./install.sh` fuera de `--dry-run` para escribir en `/opt`, `/usr/local/bin` y `/etc`.
+
+Comportamiento de `--dry-run` en flujos sensibles:
+- `hardhat firewall apply --dry-run`: no aplica cambios de firewall, no instala paquetes y no exige root/sudo para simular plan;
+- `hardhat uninstall --dry-run`: muestra plan y acciones simuladas sin borrar archivos;
+- `./install.sh --dry-run`: muestra plan y operaciones simuladas de escritura/enlace.
+
+Comportamiento de `--yes`:
+- omite prompts de confirmacion interactiva;
+- no desactiva validaciones de seguridad ni requisitos tecnicos del flujo;
+- util para ejecucion no interactiva controlada (idealmente junto a `--dry-run` en validaciones).
+
+Si sudo no esta disponible:
+- cualquier accion privilegiada real falla con error explicito;
+- modos de solo lectura o simulacion (`--dry-run`) siguen siendo la via recomendada para diagnostico.
+
+Rutas de sistema relevantes hoy:
+- runtime: `/opt/hardhat`;
+- comando: `/usr/local/bin/hardhat`;
+- config global: `/etc/hardhat/config`;
+- config de usuario: `~/.config/hardhat/config`;
+- backups de firewall apply: `/var/backups/hardhat/firewall`;
+- log de firewall apply: `/var/log/hardhat.log`.
+
 ## Que hace hoy el MVP
 
 ### `hardhat menu`
@@ -280,6 +319,18 @@ Opciones de `hardhat uninstall`:
 --lang <en|es>
 ```
 
+## Troubleshooting rapido
+
+Guia corta para incidencias frecuentes:
+- `hardhat menu` sin TTY: falla por diseno en stdin/stdout no interactivos; usa comandos directos o abre una terminal interactiva.
+- sudo/root ausente en acciones privilegiadas: ejecuta en `--dry-run` para validar plan y luego repite con root/sudo disponible.
+- UFW no instalado: usa `hardhat firewall apply` para flujo guiado de instalacion/configuracion en Arch.
+- salida JSON inesperada: en `--json`, espera JSON en stdout y mensajes operativos en stderr.
+- instalacion/desinstalacion parcial: reintenta con `--dry-run` primero para validar rutas/plan y luego ejecuta el flujo real.
+
+Documentacion detallada:
+- `docs/TROUBLESHOOTING.md`
+
 ## Estructura actual del proyecto
 
 ```text
@@ -289,6 +340,7 @@ Opciones de `hardhat uninstall`:
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   ├── MVP.md
+│   ├── TROUBLESHOOTING.md
 │   └── TODO.md
 ├── install.sh
 ├── uninstall.sh
@@ -310,6 +362,12 @@ Opciones de `hardhat uninstall`:
 │   ├── services.sh
 │   ├── ssh_audit.sh
 │   └── updates.sh
+├── tests/
+│   ├── help_usage_smoke.sh
+│   ├── uninstall_subcommand_smoke.sh
+│   ├── integration_safe_cli.sh
+│   ├── unit_helpers.sh
+│   └── run_tests.sh
 ├── .editorconfig
 ├── .gitignore
 ├── README.md
@@ -387,6 +445,7 @@ Nota:
 
 - `docs/MVP.md`: alcance y estado del MVP.
 - `docs/ARCHITECTURE.md`: arquitectura y flujo tecnico.
+- `docs/TROUBLESHOOTING.md`: troubleshooting operativo y permisos.
 - `docs/TODO.md`: pendientes priorizados de implementacion.
 
 
