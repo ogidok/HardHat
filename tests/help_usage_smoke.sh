@@ -51,6 +51,15 @@ assert_contains "${TMP_DIR}/global_help_short.out" "HardHat"
 assert_success help_firewall_apply "${BIN}" help firewall apply
 assert_contains "${TMP_DIR}/help_firewall_apply.out" "firewall apply|Baseline apply|Aplicacion de baseline"
 
+assert_success help_firewall "${BIN}" help firewall
+assert_contains "${TMP_DIR}/help_firewall.out" "hardhat firewall"
+
+assert_success help_menu "${BIN}" help menu
+assert_contains "${TMP_DIR}/help_menu.out" "hardhat menu"
+
+assert_success menu_help "${BIN}" menu --help
+assert_contains "${TMP_DIR}/menu_help.out" "hardhat menu"
+
 assert_success audit_help "${BIN}" audit --help
 assert_contains "${TMP_DIR}/audit_help.out" "hardhat audit"
 
@@ -78,5 +87,11 @@ assert_contains "${TMP_DIR}/invalid_audit_arg.out" "audit --help|for usage|para 
 
 assert_failure invalid_firewall_apply_arg "${BIN}" firewall apply --bogus
 assert_contains "${TMP_DIR}/invalid_firewall_apply_arg.out" "firewall apply --help|for usage|para ver uso"
+
+assert_failure invalid_menu_arg "${BIN}" menu --bogus
+assert_contains "${TMP_DIR}/invalid_menu_arg.out" "menu --help|for usage|para ver uso"
+
+assert_failure menu_without_tty sh -c "printf '7\\n' | \"${BIN}\" menu"
+assert_contains "${TMP_DIR}/menu_without_tty.out" "TTY|terminal"
 
 echo "[ok] help and usage smoke passed"

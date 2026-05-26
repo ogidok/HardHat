@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-HARDHAT_VERSION="1.0.3"
+HARDHAT_VERSION="1.0.4"
 
 hardhat_resolve_script_path() {
   local source_path="${BASH_SOURCE[0]}"
@@ -214,12 +214,18 @@ hardhat_help_for_command() {
         printf 'Uso:\n'
         printf '  hardhat menu\n\n'
         printf 'Descripcion:\n'
-        printf '  Abre un menu interactivo con accesos rapidos a comandos del MVP.\n'
+        printf '  Abre un menu interactivo con accesos rapidos a comandos del MVP.\n\n'
+        printf 'Notas:\n'
+        printf '  - Requiere terminal TTY interactiva (stdin/stdout).\n'
+        printf '  - No es compatible con --json.\n'
       else
         printf 'Usage:\n'
         printf '  hardhat menu\n\n'
         printf 'Description:\n'
-        printf '  Open an interactive menu with quick access to MVP commands.\n'
+        printf '  Open an interactive menu with quick access to MVP commands.\n\n'
+        printf 'Notes:\n'
+        printf '  - Requires an interactive TTY terminal (stdin/stdout).\n'
+        printf '  - Not compatible with --json.\n'
       fi
       ;;
     version)

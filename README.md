@@ -38,6 +38,7 @@ En el futuro puede evaluarse soporte para otras distribuciones, pero el MVP actu
 hardhat help
 hardhat help firewall
 hardhat help firewall apply
+hardhat help menu
 hardhat version
 hardhat audit
 hardhat audit --help
@@ -54,6 +55,7 @@ hardhat uninstall --help
 hardhat uninstall --dry-run --yes
 hardhat language --help
 hardhat menu
+hardhat menu --help
 ```
 
 Notas:
@@ -337,6 +339,12 @@ hardhat uninstall --dry-run --yes --install-root /tmp/hh-test/root --bin-dir /tm
 tests/help_usage_smoke.sh
 tests/uninstall_subcommand_smoke.sh
 ```
+
+Cobertura principal actual de smoke:
+- ayudas globales y por subcomando (`help`, `--help`, `help firewall`, `help firewall apply`, `help menu`, `menu --help`);
+- errores de uso para argumentos invalidos en comandos principales;
+- validacion de restricciones de `menu` en modo no interactivo (TTY);
+- flujo seguro de `uninstall` en `--dry-run`.
 
 Ejecutar:
 
