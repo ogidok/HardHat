@@ -10,6 +10,7 @@ Nota de estado:
   - validacion post-apply reforzada (activo, defaults de entrada/salida y regla SSH esperada)
   - catalogo de mensajes normalizado para mayor consistencia ES/EN
   - parser de UFW mas resiliente ante variaciones comunes de salida
+  - deteccion de regla SSH en `firewall apply` mas confiable (menos heuristica)
   - instalacion
   - `hardhat uninstall` (con wrapper de compatibilidad `uninstall.sh`)
   - salida JSON base
@@ -21,7 +22,6 @@ Nota de estado:
 
 ## Prioridad 1
 - Implementar flujo real de `menu`.
-- Mejorar deteccion de regla SSH en `firewall apply` (menos heuristica).
 - Endurecer manejo de rutas interactivas con sudo/privilegios.
 
 ## Prioridad 2
