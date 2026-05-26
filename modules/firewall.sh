@@ -448,17 +448,36 @@ hardhat_firewall_extract_active_state() {
 
 hardhat_firewall_has_allow_rule_for_port() {
   local port="$1"
+  local rule
+  local normalized
 
   if [[ -z "${port}" || "${port}" == "unknown" ]]; then
     return 1
   fi
 
-  local rules_text
-  rules_text="$(printf '%s\n' "${HARDHAT_UFW_RULES[@]}")"
+  for rule in "${HARDHAT_UFW_RULES[@]}"; do
+    normalized="$(tr '[:upper:]' '[:lower:]' <<<"${rule}")"
 
-  # Accept common UFW renderings with optional protocol and direction segment.
-  grep -qiE "(^|[[:space:]])${port}(/tcp)?([[:space:]]|$).*\bALLOW\b" <<<"${rules_text}" \
-    || grep -qiE "\bALLOW\b.*(^|[[:space:]])${port}(/tcp)?([[:space:]]|$)" <<<"${rules_text}"
+    if ! grep -qiE '\ballow\b' <<<"${normalized}"; then
+      continue
+    fi
+
+    # Ignore outbound-only allow rules when evaluating lockout protection.
+    if grep -qiE '\bout\b' <<<"${normalized}" && ! grep -qiE '\bin\b' <<<"${normalized}"; then
+      continue
+    fi
+
+    # Accept named OpenSSH/SSH rules as equivalent protection for inbound SSH.
+    if grep -qiE '\bopenssh\b|\bssh\b' <<<"${normalized}"; then
+      return 0
+    fi
+
+    if grep -qiE "(^|[[:space:]])${port}(/tcp)?([[:space:]]|$)" <<<"${normalized}"; then
+      return 0
+    fi
+  done
+
+  return 1
 }
 
 hardhat_firewall_analyze_rules() {
@@ -601,16 +620,29 @@ hardhat_firewall_write_log() {
 }
 
 hardhat_firewall_is_sshd_active() {
-  if ! command -v systemctl >/dev/null 2>&1; then
-    return 1
+  # Prefer systemd service state when available, but fall back to process checks.
+  if command -v systemctl >/dev/null 2>&1; then
+    if systemctl is-active --quiet sshd; then
+      return 0
+    fi
+    if systemctl is-active --quiet ssh; then
+      return 0
+    fi
   fi
-  systemctl is-active --quiet sshd
+
+  if command -v pgrep >/dev/null 2>&1 && pgrep -x sshd >/dev/null 2>&1; then
+    return 0
+  fi
+
+  return 1
 }
 
 hardhat_firewall_detect_ssh_port() {
   local config_files=()
   local file
   local line
+  local line_nocomment
+  local in_match=0
   local value=""
 
   if [[ -f /etc/ssh/sshd_config ]]; then
@@ -624,9 +656,25 @@ hardhat_firewall_detect_ssh_port() {
   fi
 
   for file in "${config_files[@]}"; do
+    in_match=0
     while IFS= read -r line; do
       [[ "${line}" =~ ^[[:space:]]*# ]] && continue
-      if [[ "${line}" =~ ^[[:space:]]*Port[[:space:]]+([0-9]+) ]]; then
+
+      # Remove inline comments to avoid parsing commented tail content.
+      line_nocomment="${line%%#*}"
+      line_nocomment="$(hardhat_trim "${line_nocomment}")"
+      [[ -z "${line_nocomment}" ]] && continue
+
+      # Ignore directives inside Match blocks; they are conditional.
+      if [[ "${line_nocomment}" =~ ^[Mm]atch[[:space:]]+ ]]; then
+        in_match=1
+        continue
+      fi
+      if [[ "${in_match}" -eq 1 ]]; then
+        continue
+      fi
+
+      if [[ "${line_nocomment}" =~ ^[Pp]ort[[:space:]]+([0-9]+)$ ]]; then
         value="${BASH_REMATCH[1]}"
       fi
     done <"${file}"
@@ -904,6 +952,7 @@ hardhat_firewall_create_backups_or_fail() {
     if [[ ! -f "${source_file}" ]]; then
       continue
     fi
+
     existing_count=$((existing_count + 1))
 
     if ! hardhat_backup_file "${source_file}" "${backup_dir}"; then
@@ -914,6 +963,7 @@ hardhat_firewall_create_backups_or_fail() {
       fi
       return 1
     fi
+
     backup_count=$((backup_count + 1))
     HARDHAT_FIREWALL_APPLY_BACKUPS_CREATED_COUNT="${backup_count}"
   done
