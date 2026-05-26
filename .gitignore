@@ -2,6 +2,18 @@
 *.log
 tmp/
 
+# Arch packaging / makepkg artifacts
+pkg/
+src/
+*.pkg.tar.*
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
+.BUILDINFO
+.MTREE
+.PKGINFO
+
 # Common editor/OS noise
 .DS_Store
 *.swp
