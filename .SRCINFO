@@ -1,0 +1,12 @@
+pkgbase = hardhat
+	pkgdesc = Arch Linux Bash CLI for baseline security auditing and guided UFW hardening
+	pkgver = 1.0.7
+	pkgrel = 1
+	arch = x86_64
+	arch = aarch64
+	license = MIT
+	depends = bash
+	optdepends = ufw: firewall backend used by firewall audit/apply
+	optdepends = sudo: run privileged actions when not executing as root
+
+pkgname = hardhat

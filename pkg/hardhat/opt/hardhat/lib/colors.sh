@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+HARDHAT_COLOR_RESET=''
+HARDHAT_COLOR_RED=''
+HARDHAT_COLOR_GREEN=''
+HARDHAT_COLOR_YELLOW=''
+HARDHAT_COLOR_BLUE=''
+
+hardhat_init_colors() {
+  if [[ "${HARDHAT_NO_COLOR:-0}" -eq 1 ]] || [[ ! -t 1 ]]; then
+    return
+  fi
+
+  HARDHAT_COLOR_RESET='\033[0m'
+  HARDHAT_COLOR_RED='\033[31m'
+  HARDHAT_COLOR_GREEN='\033[32m'
+  HARDHAT_COLOR_YELLOW='\033[33m'
+  HARDHAT_COLOR_BLUE='\033[34m'
+}
