@@ -333,25 +333,52 @@ Smoke test sugerido para uninstall:
 hardhat uninstall --dry-run --yes --install-root /tmp/hh-test/root --bin-dir /tmp/hh-test/bin --purge-config
 ```
 
-## Tests (estructura base)
+## Tests (estrategia inicial)
+
+HardHat mantiene una estrategia simple, sin framework externo:
+- smoke CLI: validacion rapida de ayuda/uso y rutas criticas seguras;
+- integracion segura: flujos reales del CLI priorizando `--dry-run` y JSON;
+- unitarios shell: helpers deterministas de `lib/`.
+
+Estructura actual:
 
 ```bash
 tests/help_usage_smoke.sh
 tests/uninstall_subcommand_smoke.sh
+tests/integration_safe_cli.sh
+tests/unit_helpers.sh
+tests/run_tests.sh
 ```
 
-Cobertura principal actual de smoke:
-- ayudas globales y por subcomando (`help`, `--help`, `help firewall`, `help firewall apply`, `help menu`, `menu --help`);
-- errores de uso para argumentos invalidos en comandos principales;
-- validacion de restricciones de `menu` en modo no interactivo (TTY);
-- flujo seguro de `uninstall` en `--dry-run`.
+Cobertura principal:
+- help/usage global y por comando (`help`, `--help`, `help firewall`, `help firewall apply`, `help menu`, `menu --help`);
+- escenarios basicos de `menu` no interactivo (restriccion TTY + argumentos invalidos);
+- `uninstall --dry-run --yes` con rutas temporales;
+- `firewall apply --dry-run --yes`;
+- salida JSON basica en `audit --json`, `firewall audit --json`, `firewall apply --dry-run --yes --json`;
+- unit tests para helpers deterministas (`hardhat_trim`, validadores y join simple).
 
-Ejecutar:
+Ejecucion:
 
 ```bash
+# Todo
+bash tests/run_tests.sh
+
+# Por tipo
+bash tests/run_tests.sh smoke
+bash tests/run_tests.sh integration
+bash tests/run_tests.sh unit
+
+# Scripts individuales
 bash tests/help_usage_smoke.sh
 bash tests/uninstall_subcommand_smoke.sh
+bash tests/integration_safe_cli.sh
+bash tests/unit_helpers.sh
 ```
+
+Notas:
+- La mayoria de pruebas evita cambios reales del sistema y prioriza `--dry-run`.
+- Algunas rutas operativas dependen de entorno Arch Linux; los tests de integracion segura pueden auto-saltarse fuera de Arch.
 
 Nota:
 - `shellcheck` y `shfmt` no son dependencias runtime de HardHat.
