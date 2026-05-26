@@ -738,6 +738,10 @@ hardhat_firewall_validate_environment() {
     return 1
   fi
 
+  if [[ "${HARDHAT_DRY_RUN:-0}" -eq 1 ]]; then
+    return 0
+  fi
+
   if ! hardhat_require_elevated_or_sudo; then
     return 1
   fi

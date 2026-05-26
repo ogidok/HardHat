@@ -17,6 +17,10 @@ hardhat_require_elevated_or_sudo() {
     return 0
   fi
 
-  hardhat_log_error "This action requires root privileges or sudo availability."
+  if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+    hardhat_log_error "Esta accion requiere privilegios root o disponibilidad de sudo."
+  else
+    hardhat_log_error "This action requires root privileges or sudo availability."
+  fi
   return 1
 }

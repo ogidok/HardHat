@@ -322,15 +322,15 @@ hardhat_module_uninstall_run() {
 
   hardhat_module_uninstall_show_plan
 
-  if ! hardhat_module_uninstall_confirm; then
-    return 1
-  fi
-
   if [[ "${HARDHAT_DRY_RUN:-0}" -ne 1 ]] && hardhat_module_uninstall_needs_system_privileges; then
     if ! hardhat_require_elevated_or_sudo; then
       hardhat_uninstall_msg sudo_required
       return 1
     fi
+  fi
+
+  if ! hardhat_module_uninstall_confirm; then
+    return 1
   fi
 
   hardhat_module_uninstall_remove_command_if_owned || return 1

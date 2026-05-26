@@ -133,6 +133,7 @@ Aplica linea base segura de UFW con flujo guiado y seguro:
 3. si UFW no esta instalado, informa riesgo y ofrece instalarlo con pacman;
 4. construye y muestra plan;
 5. en `--dry-run` no modifica nada;
+    en este modo no requiere sudo/root para simular el flujo.
 6. pide confirmacion explicita (o usa `--yes`);
 7. si hace falta, instala UFW con pacman;
 8. aplica politica de respaldo segun contexto (ver notas de seguridad);

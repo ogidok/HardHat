@@ -9,6 +9,14 @@ hardhat_sudo_run() {
   if [[ "${EUID}" -eq 0 ]]; then
     "$@"
   else
+    if ! command -v sudo >/dev/null 2>&1; then
+      if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
+        hardhat_log_error "sudo no esta disponible; no se puede ejecutar una accion privilegiada."
+      else
+        hardhat_log_error "sudo is not available; cannot run privileged action."
+      fi
+      return 1
+    fi
     sudo "$@"
   fi
 }

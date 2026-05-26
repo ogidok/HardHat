@@ -38,6 +38,7 @@ msg() {
       confirm_prompt) printf 'Continuar con la instalacion? [y/N]: ' ;;
       install_cancelled) printf 'Instalacion cancelada.\n' ;;
       sudo_required) printf 'sudo es necesario para instalar si no ejecutas como root.\n' ;;
+      sudo_precheck_failed) printf 'No se puede continuar: esta instalacion requiere root/sudo para escribir en rutas del sistema.\n' ;;
       dryrun_write) printf '[dry-run] escribir %s con HARDHAT_LANG=%s\n' "${GLOBAL_CONFIG_FILE}" "${APP_LANG}" ;;
       dryrun_write_user) printf '[dry-run] escribir %s con HARDHAT_LANG=%s\n' "${USER_CONFIG_FILE}" "${APP_LANG}" ;;
       dryrun_done) printf '\nDry-run completado. No se modificaron archivos.\n' ;;
@@ -73,6 +74,7 @@ msg() {
     confirm_prompt) printf 'Proceed with installation? [y/N]: ' ;;
     install_cancelled) printf 'Installation cancelled.\n' ;;
     sudo_required) printf 'sudo is required for installation when not running as root.\n' ;;
+    sudo_precheck_failed) printf 'Cannot continue: this installation requires root/sudo to write system paths.\n' ;;
     dryrun_write) printf '[dry-run] write %s with HARDHAT_LANG=%s\n' "${GLOBAL_CONFIG_FILE}" "${APP_LANG}" ;;
     dryrun_write_user) printf '[dry-run] write %s with HARDHAT_LANG=%s\n' "${USER_CONFIG_FILE}" "${APP_LANG}" ;;
     dryrun_done) printf '\nDry-run complete. No files were changed.\n' ;;
@@ -298,12 +300,12 @@ main() {
   select_language_if_needed
   show_plan
 
-  if ! confirm_plan; then
+  if [[ "${DRY_RUN}" -ne 1 ]] && need_sudo && ! command -v sudo >/dev/null 2>&1; then
+    msg sudo_precheck_failed >&2
     exit 1
   fi
 
-  if need_sudo && ! command -v sudo >/dev/null 2>&1; then
-    msg sudo_required >&2
+  if ! confirm_plan; then
     exit 1
   fi
 
