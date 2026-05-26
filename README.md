@@ -57,7 +57,7 @@ hardhat menu
 ```
 
 Notas:
-- `hardhat menu` existe como stub limpio (aun no implementado).
+- `hardhat menu` ofrece un flujo interactivo para acceder a comandos principales del MVP.
 - Las flags globales pueden ir antes o despues del comando.
 
 ## Flags globales disponibles
@@ -74,6 +74,24 @@ Notas:
 ```
 
 ## Que hace hoy el MVP
+
+### `hardhat menu`
+
+Abre un menu interactivo (TTY) como capa de conveniencia sobre comandos existentes.
+
+Opciones actuales:
+- ejecutar `audit`;
+- ejecutar `firewall audit`;
+- ejecutar `firewall apply`;
+- ejecutar `uninstall`;
+- ver idioma actual (`language show`);
+- cambiar idioma (`language set`);
+- salir.
+
+Notas:
+- no reemplaza validaciones ni confirmaciones de los flujos reales;
+- si se invoca con `--json`, falla de forma explicita por incompatibilidad con modo interactivo;
+- si no hay TTY interactiva, falla con mensaje claro.
 
 ### `hardhat audit`
 

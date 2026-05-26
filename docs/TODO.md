@@ -12,6 +12,7 @@ Nota de estado:
   - parser de UFW mas resiliente ante variaciones comunes de salida
   - deteccion de regla SSH en `firewall apply` mas confiable (menos heuristica)
   - manejo de rutas interactivas con sudo/privilegios endurecido
+  - flujo interactivo real para `menu`
   - instalacion
   - `hardhat uninstall` (con wrapper de compatibilidad `uninstall.sh`)
   - salida JSON base
@@ -22,7 +23,6 @@ Nota de estado:
 - `accsi.txt` se mantiene temporalmente en la raiz como asset/splash usado por el proyecto; su reubicacion puede evaluarse mas adelante y no es un pendiente prioritario actual.
 
 ## Prioridad 1
-- Implementar flujo real de `menu`.
 
 ## Prioridad 2
 - Hacer pasada final de consistencia entre ayuda, errores de uso, smoke tests y README para asegurar alineacion completa con la CLI real.
