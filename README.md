@@ -1,16 +1,4 @@
-
-```
-    )                      )              
- ( /(              (    ( /(           )  
- )\())    )  (     )\ ) )\())    )  ( /(  
-((_)\  ( /(  )(   (()/(((_)\  ( /(  )\()) 
- _((_) )(_))(()\   ((_))_((_) )(_))(_))/  
-| || |((_)_  ((_)  _| || || |((_)_ | |_   
-| __ |/ _` || '_|/ _` || __ |/ _` ||  _|  
-|_||_|\__,_||_|  \__,_||_||_|\__,_| \__|  
-                                         
-```
-<img width="946" height="591" alt="hardhat" src="https://github.com/user-attachments/assets/b2566fde-e075-4300-b562-acd7a97cc36c" />
+![img](https://github.com/user-attachments/assets/b2566fde-e075-4300-b562-acd7a97cc36c)
 
 
 # HardHat
