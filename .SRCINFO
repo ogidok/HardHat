@@ -1,7 +1,8 @@
 pkgbase = hardhat
 	pkgdesc = Arch Linux Bash CLI for baseline security auditing and guided UFW hardening
-	pkgver = 1.0.7
+	pkgver = 1.0.8
 	pkgrel = 1
+	url = https://github.com/hardhat-dev/hardhat
 	arch = x86_64
 	arch = aarch64
 	license = MIT

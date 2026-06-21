@@ -211,9 +211,15 @@ Notas de seguridad para respaldo en `firewall apply`:
 - Si existe configuracion y el respaldo falla, HardHat aborta.
 - No hay reversion automatica en el MVP.
 
-## Instalacion
+## Instalacion en Arch Linux
 
-Instalacion recomendada:
+HardHat mantiene enfoque Arch-first. Hoy hay dos rutas validas:
+- instalacion manual con `install.sh` (util durante desarrollo local);
+- instalacion empaquetada con `makepkg` + `pacman` (recomendada para flujo Arch).
+
+### Opcion A: instalacion manual (desarrollo/local)
+
+Instalacion manual recomendada:
 
 ```bash
 cd HardHat
@@ -241,7 +247,7 @@ Instalacion no interactiva con idioma explicito:
 ./install.sh --yes --lang es
 ```
 
-El instalador:
+El instalador manual:
 - valida estructura runtime (`bin/`, `lib/`, `modules/`);
 - muestra plan de instalacion;
 - pide confirmacion (salvo `--yes`);
@@ -250,7 +256,7 @@ El instalador:
 - guarda idioma global en `/etc/hardhat/config`.
 - guarda idioma del usuario actual en `~/.config/hardhat/config`.
 
-## Paquete Arch (PKGBUILD)
+### Opcion B: paquete Arch con PKGBUILD (makepkg)
 
 El repositorio incluye un `PKGBUILD` simple para empaquetado en Arch sin usar el instalador manual dentro del paquete.
 
@@ -267,6 +273,14 @@ Instalacion del paquete generado:
 sudo pacman -U ./hardhat-*.pkg.tar.*
 ```
 
+Prueba basica despues de instalar paquete:
+
+```bash
+hardhat --version
+hardhat help
+hardhat audit
+```
+
 Que instala el paquete:
 - runtime en `/opt/hardhat` (con `bin/`, `lib/`, `modules/`, `accsi.txt`);
 - comando gestionado por paquete en `/usr/bin/hardhat` (symlink a `/opt/hardhat/bin/hardhat`);
@@ -276,6 +290,7 @@ Notas importantes:
 - para instalacion empaquetada en Arch, se recomienda `pacman -S/-U` y desinstalar con `pacman -R hardhat`;
 - `install.sh` y `hardhat uninstall` siguen siendo validos como alternativa para instalaciones manuales fuera de flujo de paquete;
 - si usas `hardhat uninstall` sobre instalacion empaquetada, ajusta rutas explicitamente (por ejemplo `--bin-dir /usr/bin`) o usa preferentemente pacman para evitar inconsistencias.
+- el `PKGBUILD` actual esta orientado a empaquetado local desde este checkout (desarrollo); para un release formal faltaria fijar `source` versionado y checksums del tarball de release.
 
 ## Configurar idioma despues de instalar
 

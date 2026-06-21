@@ -1,9 +1,10 @@
 # Maintainer: HardHat Contributors
 
 pkgname=hardhat
-pkgver=1.0.7
+pkgver=1.0.8
 pkgrel=1
 pkgdesc="Arch Linux Bash CLI for baseline security auditing and guided UFW hardening"
+url="https://github.com/hardhat-dev/hardhat"
 arch=('x86_64' 'aarch64')
 license=('MIT')
 depends=('bash')
@@ -11,6 +12,8 @@ optdepends=(
   'ufw: firewall backend used by firewall audit/apply'
   'sudo: run privileged actions when not executing as root'
 )
+source=()
+sha256sums=()
 
 package() {
   local _runtime_dir="${pkgdir}/opt/hardhat"
