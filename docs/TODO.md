@@ -1,6 +1,6 @@
 # TODO (Post-MVP, Arch-first)
 
-Actualizado: 2026-06-28
+Actualizado: 2026-06-28 (ciclo JSON/exit-codes)
 
 Estado resumido:
 - Ya implementado: `audit`, `firewall audit`, `firewall apply`, `uninstall`, `menu`, ES/EN, salida JSON base, tests (smoke/integration/unit), `README` ampliado, troubleshooting, `PKGBUILD` base y `CHANGELOG`.
@@ -8,18 +8,17 @@ Estado resumido:
 ## Prioridad alta
 
 ### CLI / UX (consistencia)
-- Unificar semántica de flags globales y por comando (`--help`, `--json`, `--dry-run`, `--yes`).
-- Revisar y normalizar códigos de salida en errores de uso, validación y ejecución.
-- Homologar mensajes de error y sugerencias de recuperación entre comandos.
+- Cerrar inconsistencias residuales de flags/help en comandos no cubiertos por contrato JSON (principalmente `menu` y `language`).
+- Homologar mensajes de error y sugerencias de recuperación en rutas no JSON.
 
 ### Output / JSON (contrato estable)
-- Definir contrato mínimo v1 de JSON por comando (`audit`, `firewall audit`, `firewall apply`).
-- Garantizar consistencia `stdout`/`stderr` en modo JSON para éxito y error.
-- Documentar campos obligatorios y opcionales para evitar regresiones.
+- Congelar contrato JSON v1 documentado para `audit`, `firewall audit`, `firewall apply`, `uninstall`.
+- Documentar matriz de `status.result` + exit codes esperados por comando.
+- Añadir validación de tipos mínimos del contrato en tests (no solo presencia de campos).
 
 ### Testing (cobertura adicional)
-- Expandir smoke/integration para casos negativos críticos (flags inválidas, errores esperados, exit codes).
-- Agregar assertions de contrato JSON (campos clave y tipos básicos) en tests existentes.
+- Expandir integración para casos operativos reales de `firewall apply` (con y sin UFW instalado, en Arch).
+- Agregar casos de error operativo (`20`) y warning parcial (`10`) de forma determinista.
 - Ejecutar corrida regular en Arch real (entorno limpio y entorno con UFW ya presente).
 
 ## Prioridad media
@@ -45,8 +44,7 @@ Estado resumido:
 - Evaluar mejoras no críticas (`doctor`, exportes, completions) sin ampliar alcance de distro.
 
 ## Ahora
-- Cerrar consistencia de flags/help/exit codes.
-- Congelar contrato JSON v1 y cubrirlo con tests.
+- Cerrar validación de contrato JSON v1 en integración (tipos + resultados esperados).
 - Completar validación de empaquetado Arch en ciclo de prueba real.
 
 ## Después
