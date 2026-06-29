@@ -10,7 +10,7 @@ pkgbase = hardhat
 	optdepends = ufw: firewall backend used by firewall audit/apply
 	optdepends = sudo: run privileged actions when not executing as root
 	options = !debug
-	source = hardhat-1.0.8.tar.gz::https://github.com/ogidok/HardHat/archive/8f8cfb19e494183b61e9ec57e9a901b3f161baaf.tar.gz
-	sha256sums = e0972291547618718dd376fa11736264fa62260855c63e719ead755826dcae4d
+	source = hardhat-1.0.8.tar.gz::https://github.com/ogidok/HardHat/archive/refs/tags/v1.0.8.tar.gz
+	sha256sums = REPLACE_WITH_TAG_TARBALL_SHA256
 
 pkgname = hardhat

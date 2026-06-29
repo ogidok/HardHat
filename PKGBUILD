@@ -3,7 +3,7 @@
 pkgname=hardhat
 pkgver=1.0.8
 pkgrel=1
-_commit=8f8cfb19e494183b61e9ec57e9a901b3f161baaf
+_tag="v${pkgver}"
 pkgdesc="Arch Linux Bash CLI for baseline security auditing and guided UFW hardening"
 url="https://github.com/ogidok/HardHat"
 arch=('x86_64' 'aarch64')
@@ -14,11 +14,14 @@ optdepends=(
   'ufw: firewall backend used by firewall audit/apply'
   'sudo: run privileged actions when not executing as root'
 )
-source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/${_commit}.tar.gz")
-sha256sums=('e0972291547618718dd376fa11736264fa62260855c63e719ead755826dcae4d')
+source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/${_tag}.tar.gz")
+sha256sums=('REPLACE_WITH_TAG_TARBALL_SHA256')
 
 package() {
-  local _src_dir="${srcdir}/HardHat-${_commit}"
+  local _src_dir="${srcdir}/HardHat-${_tag}"
+  if [[ ! -d "${_src_dir}" ]]; then
+    _src_dir="${srcdir}/HardHat-${pkgver}"
+  fi
   local _runtime_dir="${pkgdir}/opt/hardhat"
   local _doc_dir="${pkgdir}/usr/share/doc/hardhat"
   local _license_dir="${pkgdir}/usr/share/licenses/hardhat"

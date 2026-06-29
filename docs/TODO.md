@@ -1,9 +1,9 @@
 # TODO (Roadmap Arch-first)
 
-Actualizado: 2026-06-29 (AUR-ready packaging reproducible)
+Actualizado: 2026-06-29 (packaging migrado a fuente por tag/release)
 
 Estado resumido:
-- Ya implementado: comandos MVP (`audit`, `firewall audit`, `firewall apply`, `uninstall`, `menu`, `language`), salida JSON base, contrato de exit codes MVP, suite de tests actual (smoke/integration/unit + edge cases), packaging Arch reproducible para AUR (`PKGBUILD` con source inmutable + `sha256sums` + `.SRCINFO`) y documentacion operativa principal.
+- Ya implementado: comandos MVP (`audit`, `firewall audit`, `firewall apply`, `uninstall`, `menu`, `language`), salida JSON base, contrato de exit codes MVP, suite de tests actual (smoke/integration/unit + edge cases), packaging Arch preparado para AUR con fuente por tag/release (`v${pkgver}`) y documentacion operativa principal.
 
 ## Prioridad alta (bloqueadores de primera release estable)
 
@@ -18,8 +18,9 @@ Estado resumido:
 - Registrar resultados de validacion (comandos ejecutados y estado) en el ciclo de release.
 
 ### 3) Publicacion AUR de la primera version estable
-- Publicar tag/release final de version en el repo principal y, si aplica, migrar `source` del paquete al tarball de tag.
-- Confirmar coherencia estricta entre `pkgver`, `bin/hardhat` (`HARDHAT_VERSION`), `CHANGELOG.md` y `.SRCINFO` en el commit final de publicacion.
+- Publicar tag/release final de version en el repo principal (si aun no existe).
+- Recalcular checksum real del tarball del tag y actualizar `PKGBUILD`.
+- Confirmar coherencia estricta entre `pkgver`, `bin/hardhat` (`HARDHAT_VERSION`), `CHANGELOG.md`, `.SRCINFO` y referencia de tag (`v${pkgver}`) en el commit final de publicacion.
 - Preparar commit final del repo AUR (`PKGBUILD` + `.SRCINFO`) y push a remoto AUR.
 
 ## Prioridad media (post-release temprana)

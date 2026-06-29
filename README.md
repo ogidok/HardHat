@@ -313,7 +313,8 @@ Notas importantes:
 - para instalacion empaquetada en Arch, se recomienda `pacman -S/-U` y desinstalar con `pacman -R hardhat`;
 - `install.sh` y `hardhat uninstall` siguen siendo validos como alternativa para instalaciones manuales fuera de flujo de paquete;
 - si usas `hardhat uninstall` sobre instalacion empaquetada, ajusta rutas explicitamente (por ejemplo `--bin-dir /usr/bin`) o usa preferentemente pacman para evitar inconsistencias.
-- el `PKGBUILD` usa fuente remota inmutable (`source`) y `sha256sums` reales para build reproducible.
+- el `PKGBUILD` esta preparado para usar tarball versionado por tag/release (`v${pkgver}`) como fuente de build.
+- si el tag de la version aun no existe en GitHub, primero crea el tag/release y luego actualiza `sha256sums` con el hash real del tarball.
 - en desarrollo local, valida cambios con tests; para empaquetado publica los archivos de paquete (`PKGBUILD` + `.SRCINFO`) y usa `makepkg`.
 
 ## Release readiness (Arch-first)
