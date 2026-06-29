@@ -1,9 +1,6 @@
 # TODO (Roadmap Arch-first)
 
-Actualizado: 2026-06-29 (packaging migrado a fuente por tag/release)
-
-Estado resumido:
-- Ya implementado: comandos MVP (`audit`, `firewall audit`, `firewall apply`, `uninstall`, `menu`, `language`), salida JSON base, contrato de exit codes MVP, suite de tests actual (smoke/integration/unit + edge cases), packaging Arch preparado para AUR con fuente por tag/release (`v${pkgver}`) y documentacion operativa principal.
+Actualizado: 2026-06-29 (limpieza pre-publicacion AUR)
 
 ## Prioridad alta (bloqueadores de primera release estable)
 
@@ -18,7 +15,6 @@ Estado resumido:
 - Registrar resultados de validacion (comandos ejecutados y estado) en el ciclo de release.
 
 ### 3) Publicacion AUR de la primera version estable
-- Confirmar coherencia estricta entre `pkgver`, `bin/hardhat` (`HARDHAT_VERSION`), `CHANGELOG.md`, `.SRCINFO` y referencia de tag (`v${pkgver}`) en el commit final de publicacion.
 - Preparar commit final del repo AUR (`PKGBUILD` + `.SRCINFO`) y push a remoto AUR.
 
 ## Prioridad media (post-release temprana)

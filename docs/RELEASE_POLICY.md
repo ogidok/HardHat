@@ -15,7 +15,7 @@ Se considera lista una release estable cuando:
 
 Objetivo para la primera linea estable (v1.x):
 - Mantener estables nombres de comandos y flags globales documentados.
-- Mantener estables exit codes MVP: `0`, `2`, `10`, `20`, `30`.
+- Mantener estables exit codes actuales: `0`, `2`, `10`, `20`, `30`.
 - Mantener estable la envoltura JSON minima (`metadata`, `command`, `status`, `summary`, `notes`) en comandos que soportan JSON.
 
 Regla para cambios incompatibles:
@@ -35,7 +35,7 @@ No forma parte del compromiso de la primera release estable:
 - Soporte oficial multi-distro.
 - Backends de firewall alternativos (nftables/firewalld).
 - Rollback automatico de cambios de firewall.
-- Nuevas features no criticas fuera del MVP actual.
+- Nuevas features no criticas fuera del alcance actual.
 
 ## 5) Gate de release
 

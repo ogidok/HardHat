@@ -128,5 +128,5 @@ Que hacer:
 ## Limitaciones actuales
 
 - Sin rollback automatico en `firewall apply`.
-- Soporte oficial del MVP: Arch Linux + UFW.
+- Soporte oficial actual: Arch Linux + UFW.
 - Parte de validaciones operativas depende de herramientas del sistema (`ufw`, `pacman`, `sudo`).

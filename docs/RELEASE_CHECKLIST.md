@@ -36,8 +36,6 @@ Checklist minimo para aprobar una primera release estable Arch-first.
 - [ ] Revisar `docs/TODO.md` para que no arrastre tareas ya cerradas.
 
 ## 7) Publicacion AUR (pasos manuales finales)
-- [ ] Si aun no existe, crear tag/release de la version (`vX.Y.Z`) en el repo principal.
-- [ ] Recalcular checksum del tarball del tag/release y actualizar `PKGBUILD`.
 - [ ] Regenerar `.SRCINFO`: `makepkg --printsrcinfo > .SRCINFO`.
 - [ ] Commit de `PKGBUILD` + `.SRCINFO` en el repo AUR.
 - [ ] Push al remoto AUR.
@@ -45,4 +43,4 @@ Checklist minimo para aprobar una primera release estable Arch-first.
 ## Notas
 - Flujo recomendado para instalacion empaquetada: `pacman -U/-R`.
 - `install.sh` y `hardhat uninstall` se mantienen para instalaciones manuales/desarrollo.
-- `PKGBUILD` usa fuente por tag/release (`v${pkgver}`); aseguralo con checksum real antes del push AUR final.
+- `PKGBUILD` usa fuente por tag/release (`vX.Y.Z`) con checksum SHA256 para build reproducible.

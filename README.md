@@ -7,19 +7,19 @@ HardHat es una herramienta CLI para Arch Linux, escrita en Bash, enfocada en aud
 
 ## Estado del proyecto
 
-MVP/preview funcional. Lo implementado ya se puede usar desde linea de comandos para validacion tecnica y pruebas controladas.
+Estado actual: release estable Arch-first (`1.0.8`) para uso operativo y empaquetado en Arch Linux.
 
 Importante:
 - no hay reversion automatica;
 - si se aplican cambios, la restauracion es manual con respaldos;
 - si no se pueden crear respaldos, no se aplican cambios.
 
-## Compatibilidad oficial del MVP
+## Compatibilidad oficial
 
 - Arch Linux
 - backend de firewall: UFW
 
-En el futuro puede evaluarse soporte para otras distribuciones, pero el MVP actual solo soporta Arch Linux.
+El soporte oficial actual se limita a Arch Linux con backend UFW.
 
 ## Comandos disponibles
 
@@ -48,7 +48,7 @@ hardhat menu --help
 ```
 
 Notas:
-- `hardhat menu` ofrece un flujo interactivo para acceder a comandos principales del MVP.
+- `hardhat menu` ofrece un flujo interactivo para acceder a comandos principales.
 - admite salida rapida con `7`, `q`, `Q` o `exit`.
 - Las flags globales pueden ir antes o despues del comando.
 
@@ -104,7 +104,7 @@ Rutas de sistema relevantes hoy:
 - backups de firewall apply: `/var/backups/hardhat/firewall`;
 - log de firewall apply: `/var/log/hardhat.log`.
 
-## Que hace hoy el MVP
+## Superficie actual del CLI
 
 ### `hardhat menu`
 
@@ -150,7 +150,7 @@ Comportamiento de salida con `--json`:
 - no se imprime banner ASCII ni logs informativos `[INFO]`.
 - advertencias o errores relevantes pueden emitirse por `stderr`.
 
-Contrato JSON minimo (MVP):
+Contrato JSON minimo:
 - `metadata`
 - `command`
 - `status`
@@ -179,7 +179,7 @@ Comportamiento de salida con `--json`:
 - advertencias o errores relevantes pueden emitirse por `stderr`.
 
 Si UFW no esta instalado:
-- HardHat informa que no hay firewall soportado/configurado para este MVP.
+- HardHat informa que no hay firewall soportado/configurado.
 - HardHat marca esta condicion como riesgo por aumento de exposicion.
 - HardHat recomienda instalar y configurar UFW con `hardhat firewall apply`.
 
@@ -211,7 +211,7 @@ Politica de linea base:
 Si `sshd` esta activo, intenta detectar puerto SSH y agrega regla de permiso cuando hace falta para reducir riesgo de bloqueo de acceso.
 
 Cuando UFW no esta instalado:
-- HardHat avisa que no hay firewall soportado para el MVP.
+- HardHat avisa que no hay firewall soportado.
 - HardHat indica que el sistema puede estar expuesto sin linea base.
 - HardHat ofrece instalar UFW y continuar con la configuracion segura.
 
@@ -219,7 +219,7 @@ Notas de seguridad para respaldo en `firewall apply`:
 - Caso A (UFW preexistente): respaldo obligatorio de configuracion existente antes de aplicar cambios.
 - Caso B (instalacion nueva de UFW): si aun no existen archivos de configuracion, HardHat no bloquea por respaldo imposible; si existen archivos tras instalar, los respalda antes de modificar.
 - Si existe configuracion y el respaldo falla, HardHat aborta.
-- No hay reversion automatica en el MVP.
+- No hay reversion automatica.
 
 ## Instalacion en Arch Linux
 
@@ -313,8 +313,7 @@ Notas importantes:
 - para instalacion empaquetada en Arch, se recomienda `pacman -S/-U` y desinstalar con `pacman -R hardhat`;
 - `install.sh` y `hardhat uninstall` siguen siendo validos como alternativa para instalaciones manuales fuera de flujo de paquete;
 - si usas `hardhat uninstall` sobre instalacion empaquetada, ajusta rutas explicitamente (por ejemplo `--bin-dir /usr/bin`) o usa preferentemente pacman para evitar inconsistencias.
-- el `PKGBUILD` esta preparado para usar tarball versionado por tag/release (`v${pkgver}`) como fuente de build.
-- si el tag de la version aun no existe en GitHub, primero crea el tag/release y luego actualiza `sha256sums` con el hash real del tarball.
+- el `PKGBUILD` usa tarball versionado por tag/release (`vX.Y.Z`) y checksum SHA256 para build reproducible.
 - en desarrollo local, valida cambios con tests; para empaquetado publica los archivos de paquete (`PKGBUILD` + `.SRCINFO`) y usa `makepkg`.
 
 ## Release readiness (Arch-first)
@@ -504,7 +503,7 @@ Cobertura principal:
 - salida JSON basica en `uninstall --dry-run --yes --json`;
 - unit tests para helpers deterministas (`hardhat_trim`, validadores y join simple).
 
-Contrato de exit codes (MVP):
+Contrato de exit codes:
 - `0`: exito
 - `2`: error de uso/argumentos
 - `10`: warning parcial
@@ -548,7 +547,7 @@ Nota:
 
 ## Documentacion complementaria
 
-- `docs/MVP.md`: alcance y estado del MVP.
+- `docs/MVP.md`: alcance funcional actual y limites.
 - `docs/ARCHITECTURE.md`: arquitectura y flujo tecnico.
 - `docs/RELEASE_POLICY.md`: criterio minimo de estabilidad, compatibilidad CLI/JSON y alcance oficial.
 - `docs/RELEASE_CHECKLIST.md`: checklist minimo para primera release Arch-first.

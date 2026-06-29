@@ -3,7 +3,7 @@
 ## Objetivo
 Entregar una primera iteracion estable de una CLI de seguridad para Arch Linux, con auditoria util y aplicacion controlada de baseline de UFW.
 
-Estado de release actual: MVP / preview publico.
+Estado de release actual: estable Arch-first (`1.0.8`).
 
 ## Implementado en el MVP actual
 - Guardia de compatibilidad para Arch Linux en comandos operativos.
@@ -14,7 +14,7 @@ Estado de release actual: MVP / preview publico.
   - `hardhat firewall audit` (con salida JSON y estado explicito de backend esperado/ausente)
   - `hardhat firewall apply` (con plan, instalacion guiada de UFW si falta, backup contextual, confirmacion y validacion)
   - `hardhat uninstall` (con plan, confirmacion, `--dry-run`, `--yes` e idempotencia)
-  - `hardhat menu` (stub)
+  - `hardhat menu` (flujo interactivo)
 - Checks baseline:
   - estado y politicas de UFW
   - puertos en escucha
@@ -28,13 +28,13 @@ Estado de release actual: MVP / preview publico.
 - En `--json`, advertencias o errores relevantes pueden emitirse por `stderr`.
 - Instalador para exponer `hardhat` como comando del sistema.
 - Wrapper de compatibilidad `uninstall.sh` (deprecado) que delega en `hardhat uninstall`.
+- Estrategia de pruebas shell activa (smoke, edge cases, integracion segura y unitarios).
+- Packaging Arch/AUR con `PKGBUILD` + `.SRCINFO` sobre tarball versionado por tag.
 
 ## No implementado todavia
 - Soporte multi-distro.
 - Backends nftables/iptables.
 - Rollback automatico.
-- Comportamiento real del menu interactivo.
-- Tests automatizados.
 - Escaneo profundo de CVEs o integracion con herramientas pesadas.
 
 ## Compromisos de seguridad del MVP
