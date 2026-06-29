@@ -275,6 +275,12 @@ makepkg --printsrcinfo > .SRCINFO
 makepkg -f
 ```
 
+Dependencias tipicas para construir paquete en Arch:
+
+```bash
+sudo pacman -S --needed base-devel
+```
+
 Instalacion del paquete generado:
 
 ```bash
@@ -287,6 +293,13 @@ Prueba basica despues de instalar paquete:
 hardhat --version
 hardhat help
 hardhat audit
+hardhat --json firewall apply --dry-run --yes
+```
+
+Desinstalacion recomendada para instalacion empaquetada:
+
+```bash
+sudo pacman -R hardhat
 ```
 
 Que instala el paquete:
@@ -299,6 +312,16 @@ Notas importantes:
 - `install.sh` y `hardhat uninstall` siguen siendo validos como alternativa para instalaciones manuales fuera de flujo de paquete;
 - si usas `hardhat uninstall` sobre instalacion empaquetada, ajusta rutas explicitamente (por ejemplo `--bin-dir /usr/bin`) o usa preferentemente pacman para evitar inconsistencias.
 - el `PKGBUILD` actual esta orientado a empaquetado local desde este checkout (desarrollo); para un release formal faltaria fijar `source` versionado y checksums del tarball de release.
+
+## Release readiness (Arch-first)
+
+Checklist minimo de release:
+
+```bash
+docs/RELEASE_CHECKLIST.md
+```
+
+El objetivo es asegurar coherencia entre version CLI, PKGBUILD/.SRCINFO, tests y validacion de instalacion/desinstalacion con `pacman`.
 
 ## Configurar idioma despues de instalar
 
@@ -387,6 +410,7 @@ Documentacion detallada:
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   ├── MVP.md
+│   ├── RELEASE_CHECKLIST.md
 │   ├── TROUBLESHOOTING.md
 │   └── TODO.md
 ├── install.sh
@@ -519,6 +543,7 @@ Nota:
 
 - `docs/MVP.md`: alcance y estado del MVP.
 - `docs/ARCHITECTURE.md`: arquitectura y flujo tecnico.
+- `docs/RELEASE_CHECKLIST.md`: checklist minimo para primera release Arch-first.
 - `docs/TROUBLESHOOTING.md`: troubleshooting operativo y permisos.
 - `docs/TODO.md`: pendientes priorizados de implementacion.
 
