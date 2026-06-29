@@ -412,9 +412,12 @@ Documentacion detallada:
 │   └── updates.sh
 ├── tests/
 │   ├── help_usage_smoke.sh
+│   ├── cli_edge_cases_smoke.sh
+│   ├── smoke_core_commands.sh
 │   ├── uninstall_subcommand_smoke.sh
 │   ├── integration_safe_cli.sh
 │   ├── unit_helpers.sh
+│   ├── run_all.sh
 │   └── run_tests.sh
 ├── .editorconfig
 ├── .gitignore
@@ -450,6 +453,7 @@ Estructura actual:
 
 ```bash
 tests/help_usage_smoke.sh
+tests/cli_edge_cases_smoke.sh
 tests/smoke_core_commands.sh
 tests/uninstall_subcommand_smoke.sh
 tests/integration_safe_cli.sh
@@ -460,9 +464,11 @@ tests/run_tests.sh
 
 Cobertura principal:
 - help/usage global y por comando (`help`, `--help`, `help firewall`, `help firewall apply`, `help menu`, `menu --help`);
-- escenarios basicos de `menu` no interactivo (restriccion TTY + argumentos invalidos);
+- escenarios de borde de UX/CLI: flags invalidas, subayudas, menu sin TTY, menu incompatible con `--json`;
 - `uninstall --dry-run --yes` con rutas temporales;
+- combinaciones seguras de `uninstall` (incluyendo cancelacion y errores de uso en JSON/no-JSON);
 - `firewall apply --dry-run --yes`;
+- variantes de `firewall apply --dry-run` (JSON, argumentos invalidos y estructura de estado);
 - salida JSON basica en `audit --json`, `firewall audit --json`, `firewall apply --dry-run --yes --json`;
 - salida JSON basica en `uninstall --dry-run --yes --json`;
 - unit tests para helpers deterministas (`hardhat_trim`, validadores y join simple).
@@ -493,6 +499,8 @@ bash tests/run_tests.sh unit
 
 # Scripts individuales
 bash tests/help_usage_smoke.sh
+bash tests/cli_edge_cases_smoke.sh
+bash tests/smoke_core_commands.sh
 bash tests/uninstall_subcommand_smoke.sh
 bash tests/integration_safe_cli.sh
 bash tests/unit_helpers.sh
@@ -501,7 +509,8 @@ bash tests/unit_helpers.sh
 Notas:
 - La mayoria de pruebas evita cambios reales del sistema y prioriza `--dry-run`.
 - Algunas rutas operativas dependen de entorno Arch Linux; los tests de integracion segura pueden auto-saltarse fuera de Arch.
-- `tests/smoke_core_commands.sh` verifica comandos core (`help`, `audit`, `firewall audit`, `firewall apply --dry-run`, `uninstall --dry-run`) y valida JSON parseable en `audit`, `firewall audit` y `firewall apply --dry-run --json`.
+- `tests/smoke_core_commands.sh` valida comandos core + contrato JSON/exit codes base.
+- `tests/cli_edge_cases_smoke.sh` valida comportamiento observable de UX: ayudas/subayudas, flags invalidas, cancelaciones seguras, menu sin TTY y separacion stdout/stderr en modo JSON.
 
 Nota:
 - `shellcheck` y `shfmt` no son dependencias runtime de HardHat.

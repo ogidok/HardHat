@@ -293,7 +293,7 @@ hardhat_run_language_command() {
           hardhat_log_error "The 'show' subcommand does not accept extra arguments."
         fi
         hardhat_language_usage
-        return 1
+        return "${HARDHAT_EXIT_USAGE}"
       fi
       if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
         printf 'Idioma actual: %s\n' "${HARDHAT_LANG}"
@@ -309,7 +309,7 @@ hardhat_run_language_command() {
           hardhat_log_error "Missing language value (en|es)."
         fi
         hardhat_language_usage
-        return 1
+        return "${HARDHAT_EXIT_USAGE}"
       fi
 
       if ! hardhat_validate_language_code "${lang_value}"; then
@@ -318,7 +318,7 @@ hardhat_run_language_command() {
         else
           hardhat_log_error "Unsupported language: ${lang_value}. Use en or es."
         fi
-        return 1
+        return "${HARDHAT_EXIT_USAGE}"
       fi
 
       if ! hardhat_language_set_user "${lang_value}"; then
@@ -327,7 +327,7 @@ hardhat_run_language_command() {
         else
           hardhat_log_error "Unable to write user language config."
         fi
-        return 1
+        return "${HARDHAT_EXIT_OPERATIONAL}"
       fi
 
       HARDHAT_LANG="${lang_value}"
@@ -344,7 +344,7 @@ hardhat_run_language_command() {
         hardhat_log_error "Unknown language subcommand: ${subcommand}"
       fi
       hardhat_language_usage
-      return 1
+      return "${HARDHAT_EXIT_USAGE}"
       ;;
   esac
 }
@@ -466,7 +466,7 @@ hardhat_run_menu_command() {
         hardhat_log_error "Invalid argument for menu: ${menu_arg}"
         hardhat_log_info "Use 'hardhat menu --help' for usage."
       fi
-      return 1
+      return "${HARDHAT_EXIT_USAGE}"
       ;;
   esac
 
@@ -476,11 +476,11 @@ hardhat_run_menu_command() {
     else
       hardhat_log_error "Interactive menu is not compatible with --json."
     fi
-    return 1
+    return "${HARDHAT_EXIT_USAGE}"
   fi
 
   if ! hardhat_menu_needs_tty; then
-    return 1
+    return "${HARDHAT_EXIT_OPERATIONAL}"
   fi
 
   while true; do
@@ -590,7 +590,7 @@ hardhat_parse_global_flags() {
             hardhat_log_error "Unknown option: ${arg}"
           fi
           hardhat_usage
-          exit 1
+          exit "${HARDHAT_EXIT_USAGE}"
         fi
         ;;
       *)
@@ -663,7 +663,7 @@ hardhat_run_command() {
         hardhat_log_info "Use 'hardhat help' for usage."
       fi
       hardhat_usage
-      return 1
+      return "${HARDHAT_EXIT_USAGE}"
       ;;
   esac
 }
