@@ -434,9 +434,11 @@ Estructura actual:
 
 ```bash
 tests/help_usage_smoke.sh
+tests/smoke_core_commands.sh
 tests/uninstall_subcommand_smoke.sh
 tests/integration_safe_cli.sh
 tests/unit_helpers.sh
+tests/run_all.sh
 tests/run_tests.sh
 ```
 
@@ -452,6 +454,12 @@ Ejecucion:
 
 ```bash
 # Todo
+bash tests/run_all.sh
+bash tests/run_all.sh smoke
+bash tests/run_all.sh integration
+bash tests/run_all.sh unit
+
+# Compatibilidad (wrapper)
 bash tests/run_tests.sh
 
 # Por tipo
@@ -469,6 +477,7 @@ bash tests/unit_helpers.sh
 Notas:
 - La mayoria de pruebas evita cambios reales del sistema y prioriza `--dry-run`.
 - Algunas rutas operativas dependen de entorno Arch Linux; los tests de integracion segura pueden auto-saltarse fuera de Arch.
+- `tests/smoke_core_commands.sh` verifica comandos core (`help`, `audit`, `firewall audit`, `firewall apply --dry-run`, `uninstall --dry-run`) y valida JSON parseable en `audit`, `firewall audit` y `firewall apply --dry-run --json`.
 
 Nota:
 - `shellcheck` y `shfmt` no son dependencias runtime de HardHat.
