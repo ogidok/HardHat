@@ -32,9 +32,6 @@ hardhat version
 hardhat audit
 hardhat audit --help
 hardhat audit --json
-hardhat doctor
-hardhat doctor --help
-hardhat doctor --json
 hardhat firewall audit
 hardhat firewall audit --help
 hardhat firewall audit --json
@@ -158,28 +155,6 @@ Contrato JSON minimo (MVP):
 - `summary`
 - `notes`
 - `findings` y `recommendations` cuando aplica
-
-### `hardhat doctor`
-
-Ejecuta diagnostico general seguro y de solo lectura para validar estado del entorno.
-
-Checks minimos actuales:
-- compatibilidad de plataforma Arch-first;
-- herramientas relevantes (`bash`, `pacman`, `sudo`, `ufw`);
-- presencia e integridad basica de runtime/binario/configuracion de HardHat cuando aplica;
-- contexto operativo (`TTY`, privilegios/sudo).
-
-Salida:
-- humana por defecto con resumen, estado por check, notas y recomendaciones;
-- JSON con envoltura consistente (`metadata`, `command`, `status`, `summary`, `notes`) y seccion `checks`.
-
-Comportamiento de salida con `--json`:
-- `stdout` contiene solo JSON valido.
-- diagnosticos operativos quedan en `stderr`.
-
-Notas:
-- `doctor` no modifica estado del sistema;
-- si el entorno no es compatible o faltan componentes, reporta warning con recomendaciones accionables.
 
 ### `hardhat firewall audit`
 
@@ -464,7 +439,6 @@ Documentacion detallada:
 ├── tests/
 │   ├── help_usage_smoke.sh
 │   ├── cli_edge_cases_smoke.sh
-│   ├── doctor_smoke.sh
 │   ├── smoke_core_commands.sh
 │   ├── uninstall_subcommand_smoke.sh
 │   ├── integration_safe_cli.sh
@@ -518,7 +492,6 @@ Cobertura principal:
 - help/usage global y por comando (`help`, `--help`, `help firewall`, `help firewall apply`, `help menu`, `menu --help`);
 - escenarios de borde de UX/CLI: flags invalidas, subayudas, menu sin TTY, menu incompatible con `--json`;
 - `uninstall --dry-run --yes` con rutas temporales;
-- `doctor` (help, salida humana y salida JSON parseable);
 - combinaciones seguras de `uninstall` (incluyendo cancelacion y errores de uso en JSON/no-JSON);
 - `firewall apply --dry-run --yes`;
 - variantes de `firewall apply --dry-run` (JSON, argumentos invalidos y estructura de estado);

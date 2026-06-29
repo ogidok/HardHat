@@ -13,7 +13,6 @@
   - deteccion de regla SSH en `firewall apply` mas confiable (menos heuristica)
   - manejo de rutas interactivas con sudo/privilegios endurecido
   - flujo interactivo real para `menu`
-  - nuevo comando `doctor` (diagnostico general seguro, solo lectura)
   - instalacion
   - `hardhat uninstall` (con wrapper de compatibilidad `uninstall.sh`)
   - salida JSON base
@@ -28,6 +27,5 @@
   - roadmap pendiente limpiado y priorizado en `docs/TODO.md`
   - politica minima de release en `docs/RELEASE_POLICY.md`
   - checklist de release reforzado con gates de shellcheck/shfmt/tests/PKGBUILD en `docs/RELEASE_CHECKLIST.md`
-  - tests smoke para `doctor` y cobertura de help/usage/json del nuevo comando
   - smoke tests iniciales para help/uninstall
 - `accsi.txt` se mantiene temporalmente en la raiz como asset/splash usado por el proyecto; su reubicacion puede evaluarse mas adelante y no es un pendiente prioritario actual.

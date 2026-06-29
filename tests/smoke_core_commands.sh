@@ -116,9 +116,6 @@ assert_contains "${TMP_DIR}/help_core.out" "HardHat"
 assert_success audit_core "${BIN}" audit
 assert_contains "${TMP_DIR}/audit_core.out" "Audit|Auditoria|Score|Resumen"
 
-assert_success doctor_core "${BIN}" doctor
-assert_contains "${TMP_DIR}/doctor_core.out" "Doctor|diagnostico|diagnostic|Checks"
-
 assert_success firewall_audit_core "${BIN}" firewall audit
 assert_contains "${TMP_DIR}/firewall_audit_core.out" "firewall|UFW|Firewall"
 
@@ -140,21 +137,6 @@ assert_json_parseable "${TMP_DIR}/audit_json.out"
 assert_json_contract_minimal "${TMP_DIR}/audit_json.out"
 if [[ -s "${TMP_DIR}/audit_json.err" ]]; then
   assert_contains "${TMP_DIR}/audit_json.err" '^\[|ERROR|WARN|INFO|OK'
-fi
-
-"${BIN}" doctor --json >"${TMP_DIR}/doctor_json.out" 2>"${TMP_DIR}/doctor_json.err" || doctor_json_rc=$?
-doctor_json_rc="${doctor_json_rc:-0}"
-if [[ "${doctor_json_rc}" -ne 0 ]] && [[ "${doctor_json_rc}" -ne 10 ]]; then
-  echo "[fail] doctor --json should exit 0 or 10, got ${doctor_json_rc}" >&2
-  cat "${TMP_DIR}/doctor_json.out" >&2 || true
-  cat "${TMP_DIR}/doctor_json.err" >&2 || true
-  exit 1
-fi
-assert_json_parseable "${TMP_DIR}/doctor_json.out"
-assert_json_contract_minimal "${TMP_DIR}/doctor_json.out"
-assert_contains "${TMP_DIR}/doctor_json.out" '"checks"'
-if [[ -s "${TMP_DIR}/doctor_json.err" ]]; then
-  assert_contains "${TMP_DIR}/doctor_json.err" '^\[|ERROR|WARN|INFO|OK'
 fi
 
 "${BIN}" firewall audit --json >"${TMP_DIR}/firewall_audit_json.out" 2>"${TMP_DIR}/firewall_audit_json.err"

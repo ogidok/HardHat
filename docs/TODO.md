@@ -35,4 +35,4 @@ Estado resumido:
 - Soporte oficial multi-distro.
 - Backends firewall alternativos (nftables/firewalld).
 - Politica de rollback automatico.
-- Features no criticas (exportes, completions).
+- Features no criticas (`doctor`, exportes, completions).

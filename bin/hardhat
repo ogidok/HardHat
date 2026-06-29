@@ -49,7 +49,6 @@ source "${ROOT_DIR}/modules/updates.sh"
 source "${ROOT_DIR}/modules/firewall.sh"
 source "${ROOT_DIR}/modules/audit.sh"
 source "${ROOT_DIR}/modules/uninstall.sh"
-source "${ROOT_DIR}/modules/doctor.sh"
 
 hardhat_usage() {
   if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
@@ -67,7 +66,6 @@ Comandos:
   audit               Ejecuta auditoria de seguridad de linea base
   firewall audit      Audita estado de UFW y politica de linea base
   firewall apply      Aplica linea base de UFW (guiado; instala UFW si falta)
-  doctor              Ejecuta diagnostico general seguro del entorno
   uninstall           Desinstala HardHat de forma segura
   language show       Muestra idioma actual
   language set <id>   Configura idioma (en|es)
@@ -87,8 +85,6 @@ Opciones globales:
 Ejemplos:
   hardhat audit
   hardhat audit --json
-  hardhat doctor
-  hardhat doctor --json
   hardhat firewall audit
   hardhat firewall apply --dry-run
   hardhat uninstall --dry-run --yes
@@ -111,7 +107,6 @@ Commands:
   audit               Run baseline security audit
   firewall audit      Audit UFW status and baseline policy
   firewall apply      Apply UFW baseline policy (guided; installs UFW if missing)
-  doctor              Run safe general environment diagnostics
   uninstall           Uninstall HardHat safely
   language show       Show current language
   language set <id>   Set language (en|es)
@@ -131,8 +126,6 @@ Global options:
 Examples:
   hardhat audit
   hardhat audit --json
-  hardhat doctor
-  hardhat doctor --json
   hardhat firewall audit
   hardhat firewall apply --dry-run
   hardhat uninstall --dry-run --yes
@@ -212,9 +205,6 @@ hardhat_help_for_command() {
       ;;
     uninstall)
       hardhat_module_uninstall_usage
-      ;;
-    doctor)
-      hardhat_module_doctor_usage
       ;;
     language)
       hardhat_language_usage
@@ -651,9 +641,6 @@ hardhat_run_command() {
       ;;
     uninstall)
       hardhat_module_uninstall_run "${HARDHAT_ARGS[@]:1}"
-      ;;
-    doctor)
-      hardhat_module_doctor_run "${HARDHAT_ARGS[@]:1}"
       ;;
     language)
       hardhat_run_language_command
