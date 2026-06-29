@@ -15,7 +15,7 @@ optdepends=(
   'sudo: run privileged actions when not executing as root'
 )
 source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/${_tag}.tar.gz")
-sha256sums=('REPLACE_WITH_TAG_TARBALL_SHA256')
+sha256sums=('bb9e4af5d81266e2c622dc308b23ce3811f88e48a0a39151cf8dbdc4818698d8')
 
 package() {
   local _src_dir="${srcdir}/HardHat-${_tag}"
