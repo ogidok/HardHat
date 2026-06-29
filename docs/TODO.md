@@ -1,15 +1,11 @@
 # TODO (Post-MVP, Arch-first)
 
-Actualizado: 2026-06-28 (ciclo JSON/exit-codes)
+Actualizado: 2026-06-28 (ciclo JSON/exit-codes + cobertura CLI observable)
 
 Estado resumido:
-- Ya implementado: `audit`, `firewall audit`, `firewall apply`, `uninstall`, `menu`, ES/EN, salida JSON base, tests (smoke/integration/unit), `README` ampliado, troubleshooting, `PKGBUILD` base y `CHANGELOG`.
+- Ya implementado: `audit`, `firewall audit`, `firewall apply`, `uninstall`, `menu`, ES/EN, salida JSON base, tests (smoke/integration/unit + edge cases de CLI), `README` ampliado, troubleshooting, `PKGBUILD` base y `CHANGELOG`.
 
 ## Prioridad alta
-
-### CLI / UX (consistencia)
-- Cerrar inconsistencias residuales de flags/help en comandos no cubiertos por contrato JSON (principalmente `menu` y `language`).
-- Homologar mensajes de error y sugerencias de recuperación en rutas no JSON.
 
 ### Output / JSON (contrato estable)
 - Congelar contrato JSON v1 documentado para `audit`, `firewall audit`, `firewall apply`, `uninstall`.
