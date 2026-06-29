@@ -148,6 +148,14 @@ Comportamiento de salida con `--json`:
 - no se imprime banner ASCII ni logs informativos `[INFO]`.
 - advertencias o errores relevantes pueden emitirse por `stderr`.
 
+Contrato JSON minimo (MVP):
+- `metadata`
+- `command`
+- `status`
+- `summary`
+- `notes`
+- `findings` y `recommendations` cuando aplica
+
 ### `hardhat firewall audit`
 
 Audita especificamente UFW:
@@ -192,7 +200,7 @@ Aplica linea base segura de UFW con flujo guiado y seguro:
 Comportamiento de salida con `--json` en `firewall apply`:
 - `stdout` contiene solo un JSON final valido con resumen de ejecucion.
 - `stderr` conserva advertencias/errores operativos del flujo.
-- El JSON incluye `metadata`, `apply`, `firewall`, `summary`, `notes` y `recommendations`.
+- El JSON incluye `metadata`, `command`, `status`, `apply`, `firewall`, `summary`, `notes` y `recommendations`.
 
 Politica de linea base:
 - `deny incoming`
@@ -329,6 +337,14 @@ Simulacion de desinstalacion:
 hardhat uninstall --dry-run --yes
 ```
 
+Salida JSON de desinstalacion:
+
+```bash
+hardhat --json uninstall --dry-run --yes
+```
+
+En modo JSON, `uninstall` entrega contrato minimo consistente en `stdout` (`metadata`, `command`, `status`, `summary`, `notes`) y usa `stderr` para diagnosticos.
+
 Eliminar tambien configuracion global y de usuario:
 
 ```bash
@@ -448,7 +464,15 @@ Cobertura principal:
 - `uninstall --dry-run --yes` con rutas temporales;
 - `firewall apply --dry-run --yes`;
 - salida JSON basica en `audit --json`, `firewall audit --json`, `firewall apply --dry-run --yes --json`;
+- salida JSON basica en `uninstall --dry-run --yes --json`;
 - unit tests para helpers deterministas (`hardhat_trim`, validadores y join simple).
+
+Contrato de exit codes (MVP):
+- `0`: exito
+- `2`: error de uso/argumentos
+- `10`: warning parcial
+- `20`: error operativo
+- `30`: cancelacion/abort por usuario
 
 Ejecucion:
 
