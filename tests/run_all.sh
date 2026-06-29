@@ -28,6 +28,7 @@ SMOKE_TESTS=(
   "tests/help_usage_smoke.sh"
   "tests/smoke_core_commands.sh"
   "tests/cli_edge_cases_smoke.sh"
+  "tests/doctor_smoke.sh"
   "tests/uninstall_subcommand_smoke.sh"
 )
 

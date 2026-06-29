@@ -96,6 +96,9 @@ assert_contains "${TMP_DIR}/firewall_help.out" "hardhat firewall"
 assert_exit_code 2 "${TMP_DIR}/global_invalid.out" "${TMP_DIR}/global_invalid.err" "${BIN}" --bogus
 assert_contains "${TMP_DIR}/global_invalid.err" "Unknown option|Opcion desconocida"
 
+assert_exit_code 2 "${TMP_DIR}/doctor_invalid.out" "${TMP_DIR}/doctor_invalid.err" "${BIN}" doctor --bogus
+assert_contains "${TMP_DIR}/doctor_invalid.err" "doctor --help|for usage|para ver uso"
+
 # language show with extra args should be usage error (2).
 assert_exit_code 2 "${TMP_DIR}/lang_show_extra.out" "${TMP_DIR}/lang_show_extra.err" "${BIN}" language show extra
 assert_contains "${TMP_DIR}/lang_show_extra.err" "show"

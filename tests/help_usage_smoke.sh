@@ -63,6 +63,9 @@ assert_contains "${TMP_DIR}/menu_help.out" "hardhat menu"
 assert_success audit_help "${BIN}" audit --help
 assert_contains "${TMP_DIR}/audit_help.out" "hardhat audit"
 
+assert_success doctor_help "${BIN}" doctor --help
+assert_contains "${TMP_DIR}/doctor_help.out" "hardhat doctor"
+
 assert_success firewall_help "${BIN}" firewall --help
 assert_contains "${TMP_DIR}/firewall_help.out" "hardhat firewall"
 
