@@ -1,25 +1,27 @@
 # TODO
 
+_Actualizado: 2026-06-28_
+
 ## Prioridad alta
 
 ### Testing
-- [ ] Definir estrategia de tests simple en Bash
-- [ ] Crear `tests/run_all.sh`
-- [ ] Agregar smoke tests para:
-  - [ ] `hardhat help`
-  - [ ] `hardhat audit`
-  - [ ] `hardhat firewall audit`
-  - [ ] `hardhat firewall apply --dry-run`
-  - [ ] `hardhat uninstall --dry-run`
-- [ ] Verificar que `--json` produzca salida parseable en comandos principales
-- [ ] Documentar cómo correr tests
+- [x] Definir estrategia de tests simple en Bash
+- [x] Crear `tests/run_all.sh`
+- [x] Agregar smoke tests para:
+  - [x] `hardhat help`
+  - [x] `hardhat audit`
+  - [x] `hardhat firewall audit`
+  - [x] `hardhat firewall apply --dry-run`
+  - [x] `hardhat uninstall --dry-run`
+- [x] Verificar que `--json` produzca salida parseable en comandos principales
+- [x] Documentar cómo correr tests
 
 ### CLI / UX
-- [ ] Unificar help/usage principal y de subcomandos
+- [x] Unificar help/usage principal y de subcomandos
 - [ ] Revisar consistencia de nombres de flags
 - [ ] Revisar mensajes de error para inputs inválidos
 - [ ] Asegurar códigos de salida coherentes
-- [ ] Agregar ejemplos de uso a comandos principales
+- [x] Agregar ejemplos de uso a comandos principales
 
 ### Output / JSON
 - [ ] Definir esquema mínimo estable para `--json`
@@ -45,17 +47,17 @@
 ## Prioridad media
 
 ### Arch Linux first
-- [ ] Documentar alcance oficial: soporte enfocado en Arch Linux
+- [x] Documentar alcance oficial: soporte enfocado en Arch Linux
 - [ ] Validar flujos en Arch limpio
 - [ ] Validar flujos en Arch con paquetes ya presentes
 - [ ] Revisar integración con `pacman`
-- [ ] Crear `PKGBUILD`
+- [x] Crear `PKGBUILD`
 - [ ] Probar instalación desde `PKGBUILD`
 
 ### Documentación
-- [ ] Mejorar `README.md` con quickstart
+- [x] Mejorar `README.md` con quickstart
 - [ ] Agregar sección de filosofía y alcance del proyecto
-- [ ] Documentar ejemplos reales de `audit`, `firewall audit`, `firewall apply`
+- [x] Documentar ejemplos reales de `audit`, `firewall audit`, `firewall apply`
 - [ ] Agregar tabla de comandos y flags
 - [ ] Documentar limitaciones actuales
 
@@ -96,7 +98,7 @@
 
 ### Release / mantenimiento
 - [ ] Definir versión inicial estable
-- [ ] Agregar changelog
+- [x] Agregar changelog
 - [ ] Definir política de compatibilidad CLI
 - [ ] Checklist de release
 - [ ] Licencia y metadatos finales
