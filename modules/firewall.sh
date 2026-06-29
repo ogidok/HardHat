@@ -31,6 +31,7 @@ HARDHAT_FIREWALL_APPLY_VALIDATION_SUCCEEDED=0
 HARDHAT_FIREWALL_APPLY_VALIDATION_RESULT="unknown"
 HARDHAT_FIREWALL_APPLY_STATUS="unknown"
 HARDHAT_FIREWALL_APPLY_MESSAGE=""
+HARDHAT_FIREWALL_APPLY_EXIT_CODE=0
 HARDHAT_FIREWALL_APPLY_NOTES=()
 HARDHAT_FIREWALL_APPLY_EXPECT_SSH_RULE=0
 HARDHAT_FIREWALL_APPLY_EXPECT_SSH_PORT="unknown"
@@ -247,6 +248,7 @@ hardhat_firewall_apply_reset_state() {
   HARDHAT_FIREWALL_APPLY_VALIDATION_RESULT="unknown"
   HARDHAT_FIREWALL_APPLY_STATUS="unknown"
   HARDHAT_FIREWALL_APPLY_MESSAGE=""
+  HARDHAT_FIREWALL_APPLY_EXIT_CODE=0
   HARDHAT_FIREWALL_APPLY_NOTES=()
   HARDHAT_FIREWALL_APPLY_EXPECT_SSH_RULE=0
   HARDHAT_FIREWALL_APPLY_EXPECT_SSH_PORT="unknown"
@@ -545,13 +547,11 @@ hardhat_firewall_apply_render_json() {
   generated_at="$(hardhat_firewall_generated_at_utc)"
 
   printf '{'
-  printf '"metadata":{'
-  printf '"tool":"hardhat",'
-  printf '"version":"%s",' "$(hardhat_json_escape "${HARDHAT_VERSION:-unknown}")"
+  hardhat_json_print_metadata "firewall apply" "${generated_at}"
+  printf ','
   printf '"command":"firewall apply",'
-  printf '"generated_at":'
-  hardhat_json_nullable_string "${generated_at}"
-  printf '},'
+  hardhat_json_print_status "${HARDHAT_FIREWALL_APPLY_STATUS}" "${HARDHAT_FIREWALL_APPLY_EXIT_CODE}" "${HARDHAT_FIREWALL_APPLY_MESSAGE}"
+  printf ','
 
   printf '"apply":{'
   printf '"dry_run":%s,' "$( [[ "${HARDHAT_FIREWALL_APPLY_DRY_RUN}" -eq 1 ]] && printf true || printf false )"
@@ -602,12 +602,34 @@ hardhat_firewall_apply_finish() {
 
   HARDHAT_FIREWALL_APPLY_STATUS="${status}"
   HARDHAT_FIREWALL_APPLY_MESSAGE="${message}"
+  HARDHAT_FIREWALL_APPLY_EXIT_CODE="${exit_code}"
 
   if [[ "${HARDHAT_OUTPUT_JSON:-0}" -eq 1 ]]; then
     hardhat_firewall_apply_render_json
   fi
 
   return "${exit_code}"
+}
+
+hardhat_firewall_render_json_error() {
+  local command="$1"
+  local message="$2"
+  local exit_code="${3:-${HARDHAT_EXIT_USAGE}}"
+  local generated_at
+
+  generated_at="$(hardhat_json_generated_at_utc)"
+  printf '{'
+  hardhat_json_print_metadata "${command}" "${generated_at}"
+  printf ','
+  printf '"command":"%s",' "$(hardhat_json_escape "${command}")"
+  hardhat_json_print_status "usage_error" "${exit_code}" "${message}"
+  printf ','
+  printf '"summary":null,'
+  printf '"notes":[],'
+  printf '"findings":[],'
+  printf '"recommendations":[]'
+  printf '}'
+  printf '\n'
 }
 
 hardhat_firewall_write_log() {
@@ -1452,13 +1474,11 @@ hardhat_module_firewall_render_json() {
   generated_at="$(hardhat_firewall_generated_at_utc)"
 
   printf '{'
-  printf '"metadata":{'
-  printf '"tool":"hardhat",'
-  printf '"version":"%s",' "$(hardhat_json_escape "${HARDHAT_VERSION:-unknown}")"
+  hardhat_json_print_metadata "firewall audit" "${generated_at}"
+  printf ','
   printf '"command":"firewall audit",'
-  printf '"generated_at":'
-  hardhat_json_nullable_string "${generated_at}"
-  printf '},'
+  hardhat_json_print_status "success" "${HARDHAT_EXIT_SUCCESS}" "firewall audit completed"
+  printf ','
 
   printf '"firewall":{'
   printf '"backend":"ufw",'
@@ -1519,10 +1539,11 @@ hardhat_module_firewall_audit() {
 
   if [[ "${HARDHAT_OUTPUT_JSON:-0}" -eq 1 ]]; then
     hardhat_module_firewall_render_json
-    return 0
+    return "${HARDHAT_EXIT_SUCCESS}"
   fi
 
   hardhat_module_firewall_render_human
+  return "${HARDHAT_EXIT_SUCCESS}"
 }
 
 hardhat_module_firewall_apply() {
@@ -1539,7 +1560,7 @@ hardhat_module_firewall_apply() {
     hardhat_firewall_apply_add_note "Environment validation failed."
     hardhat_module_firewall_collect_audit || true
     HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
-    hardhat_firewall_apply_finish "failed" "environment validation failed" 1
+    hardhat_firewall_apply_finish "failed" "environment validation failed" "${HARDHAT_EXIT_OPERATIONAL}"
     return $?
   fi
 
@@ -1586,14 +1607,14 @@ hardhat_module_firewall_apply() {
         hardhat_firewall_write_log "aborted missing_ufw_user_cancelled"
         HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
         hardhat_firewall_apply_add_note "User cancelled before UFW installation."
-        hardhat_firewall_apply_finish "aborted" "user cancelled before install" 1
+        hardhat_firewall_apply_finish "aborted" "user cancelled before install" "${HARDHAT_EXIT_ABORTED}"
         return $?
       fi
     elif ! hardhat_confirm_global "UFW is missing. Install UFW with pacman and apply the firewall baseline now?"; then
       hardhat_firewall_write_log "aborted missing_ufw_user_cancelled"
       HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
       hardhat_firewall_apply_add_note "User cancelled before UFW installation."
-      hardhat_firewall_apply_finish "aborted" "user cancelled before install" 1
+      hardhat_firewall_apply_finish "aborted" "user cancelled before install" "${HARDHAT_EXIT_ABORTED}"
       return $?
     fi
     preconfirmed_apply=1
@@ -1603,7 +1624,7 @@ hardhat_module_firewall_apply() {
       hardhat_module_firewall_collect_audit || true
       HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
       hardhat_firewall_apply_add_note "UFW installation failed."
-      hardhat_firewall_apply_finish "failed" "ufw installation failed" 1
+      hardhat_firewall_apply_finish "failed" "ufw installation failed" "${HARDHAT_EXIT_OPERATIONAL}"
       return $?
     fi
 
@@ -1619,7 +1640,7 @@ hardhat_module_firewall_apply() {
       hardhat_firewall_write_log "failed ufw_not_detected_after_install"
       HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
       hardhat_firewall_apply_add_note "UFW still not detected after installation attempt."
-      hardhat_firewall_apply_finish "failed" "ufw not detected after install" 1
+      hardhat_firewall_apply_finish "failed" "ufw not detected after install" "${HARDHAT_EXIT_OPERATIONAL}"
       return $?
     fi
 
@@ -1639,7 +1660,7 @@ hardhat_module_firewall_apply() {
     hardhat_module_firewall_collect_audit || true
     HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
     hardhat_firewall_apply_add_note "Backup stage failed."
-    hardhat_firewall_apply_finish "failed" "backup stage failed" 1
+    hardhat_firewall_apply_finish "failed" "backup stage failed" "${HARDHAT_EXIT_OPERATIONAL}"
     return $?
   fi
 
@@ -1649,14 +1670,14 @@ hardhat_module_firewall_apply() {
         hardhat_firewall_write_log "aborted user_cancelled"
         HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
         hardhat_firewall_apply_add_note "User cancelled before apply actions."
-        hardhat_firewall_apply_finish "aborted" "user cancelled before apply" 1
+        hardhat_firewall_apply_finish "aborted" "user cancelled before apply" "${HARDHAT_EXIT_ABORTED}"
         return $?
       fi
     elif ! hardhat_confirm_global "Proceed with firewall baseline apply?"; then
       hardhat_firewall_write_log "aborted user_cancelled"
       HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
       hardhat_firewall_apply_add_note "User cancelled before apply actions."
-      hardhat_firewall_apply_finish "aborted" "user cancelled before apply" 1
+      hardhat_firewall_apply_finish "aborted" "user cancelled before apply" "${HARDHAT_EXIT_ABORTED}"
       return $?
     fi
   fi
@@ -1673,7 +1694,7 @@ hardhat_module_firewall_apply() {
     hardhat_module_firewall_collect_audit || true
     HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
     hardhat_firewall_apply_add_note "Apply actions failed."
-    hardhat_firewall_apply_finish "failed" "apply actions failed" 1
+    hardhat_firewall_apply_finish "failed" "apply actions failed" "${HARDHAT_EXIT_OPERATIONAL}"
     return $?
   fi
 
@@ -1690,7 +1711,7 @@ hardhat_module_firewall_apply() {
     fi
     HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
     hardhat_firewall_apply_add_note "Apply and validation completed successfully."
-    hardhat_firewall_apply_finish "success" "firewall apply completed successfully" 0
+    hardhat_firewall_apply_finish "success" "firewall apply completed successfully" "${HARDHAT_EXIT_SUCCESS}"
     return $?
   fi
   validate_rc=$?
@@ -1708,12 +1729,12 @@ hardhat_module_firewall_apply() {
   HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
   if [[ "${validate_rc}" -eq 2 ]]; then
     hardhat_firewall_apply_add_note "Apply completed but post-apply validation found missing baseline conditions."
-    hardhat_firewall_apply_finish "failed" "firewall apply completed but baseline validation failed" 1
+    hardhat_firewall_apply_finish "failed" "firewall apply completed but baseline validation failed" "${HARDHAT_EXIT_OPERATIONAL}"
     return $?
   fi
 
   hardhat_firewall_apply_add_note "Apply completed but post-apply validation reported warnings."
-  hardhat_firewall_apply_finish "warning" "firewall apply completed with validation warnings" 1
+  hardhat_firewall_apply_finish "warning" "firewall apply completed with validation warnings" "${HARDHAT_EXIT_WARNING}"
   return $?
 }
 
@@ -1728,22 +1749,30 @@ hardhat_module_firewall_run() {
     audit)
       hardhat_module_firewall_validate_subcommand_args audit "${@:2}" || validate_status=$?
       if [[ "${validate_status}" -eq 2 ]]; then
-        return 0
+        return "${HARDHAT_EXIT_SUCCESS}"
       fi
       if [[ "${validate_status}" -ne 0 ]]; then
-        hardhat_module_firewall_audit_usage
-        return 1
+        if hardhat_is_json_mode; then
+          hardhat_firewall_render_json_error "firewall audit" "invalid firewall audit arguments" "${HARDHAT_EXIT_USAGE}"
+        else
+          hardhat_module_firewall_audit_usage
+        fi
+        return "${HARDHAT_EXIT_USAGE}"
       fi
       hardhat_module_firewall_audit
       ;;
     apply)
       hardhat_module_firewall_validate_subcommand_args apply "${@:2}" || validate_status=$?
       if [[ "${validate_status}" -eq 2 ]]; then
-        return 0
+        return "${HARDHAT_EXIT_SUCCESS}"
       fi
       if [[ "${validate_status}" -ne 0 ]]; then
-        hardhat_module_firewall_apply_usage
-        return 1
+        if hardhat_is_json_mode; then
+          hardhat_firewall_render_json_error "firewall apply" "invalid firewall apply arguments" "${HARDHAT_EXIT_USAGE}"
+        else
+          hardhat_module_firewall_apply_usage
+        fi
+        return "${HARDHAT_EXIT_USAGE}"
       fi
       hardhat_module_firewall_apply
       ;;
@@ -1755,8 +1784,12 @@ hardhat_module_firewall_run() {
         hardhat_log_error "Unknown firewall subcommand: ${subcommand}"
         hardhat_log_info "Use 'hardhat firewall help' to see available subcommands."
       fi
-      hardhat_module_firewall_usage
-      return 1
+      if hardhat_is_json_mode; then
+        hardhat_firewall_render_json_error "firewall" "unknown firewall subcommand: ${subcommand}" "${HARDHAT_EXIT_USAGE}"
+      else
+        hardhat_module_firewall_usage
+      fi
+      return "${HARDHAT_EXIT_USAGE}"
       ;;
   esac
 }

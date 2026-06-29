@@ -303,13 +303,11 @@ hardhat_audit_render_json() {
   generated_at="$(hardhat_audit_generated_at_utc)"
 
   printf '{'
-  printf '"metadata":{'
-  printf '"tool":"hardhat",'
-  printf '"version":"%s",' "$(hardhat_json_escape "${HARDHAT_VERSION:-unknown}")"
+  hardhat_json_print_metadata "audit" "${generated_at}"
+  printf ','
   printf '"command":"audit",'
-  printf '"generated_at":'
-  hardhat_json_nullable_string "${generated_at}"
-  printf '},'
+  hardhat_json_print_status "success" "${HARDHAT_EXIT_SUCCESS}" "audit completed"
+  printf ','
 
   printf '"system":{'
   printf '"distro":'
@@ -352,15 +350,41 @@ hardhat_audit_render_json() {
   printf '\n'
 }
 
+hardhat_audit_render_json_error() {
+  local result="$1"
+  local exit_code="$2"
+  local message="$3"
+  local generated_at
+
+  generated_at="$(hardhat_json_generated_at_utc)"
+
+  printf '{'
+  hardhat_json_print_metadata "audit" "${generated_at}"
+  printf ','
+  printf '"command":"audit",'
+  hardhat_json_print_status "${result}" "${exit_code}" "${message}"
+  printf ','
+  printf '"summary":null,'
+  printf '"notes":[],'
+  printf '"findings":[],'
+  printf '"recommendations":[]'
+  printf '}'
+  printf '\n'
+}
+
 hardhat_module_audit_run() {
   local validate_status=0
   hardhat_module_audit_validate_args "$@" || validate_status=$?
   if [[ "${validate_status}" -eq 2 ]]; then
-    return 0
+    return "${HARDHAT_EXIT_SUCCESS}"
   fi
   if [[ "${validate_status}" -ne 0 ]]; then
-    hardhat_module_audit_usage
-    return 1
+    if hardhat_is_json_mode; then
+      hardhat_audit_render_json_error "usage_error" "${HARDHAT_EXIT_USAGE}" "invalid audit arguments"
+    else
+      hardhat_module_audit_usage
+    fi
+    return "${HARDHAT_EXIT_USAGE}"
   fi
 
   hardhat_audit_reset_state
@@ -370,8 +394,9 @@ hardhat_module_audit_run() {
 
   if [[ "${HARDHAT_OUTPUT_JSON:-0}" -eq 1 ]]; then
     hardhat_audit_render_json
-    return 0
+    return "${HARDHAT_EXIT_SUCCESS}"
   fi
 
   hardhat_audit_render_human
+  return "${HARDHAT_EXIT_SUCCESS}"
 }

@@ -69,6 +69,36 @@ assert_json_parseable() {
   fi
 }
 
+assert_json_contract_minimal() {
+  local file="$1"
+  assert_contains "${file}" '"metadata"'
+  assert_contains "${file}" '"command"'
+  assert_contains "${file}" '"status"'
+  assert_contains "${file}" '"summary"'
+  assert_contains "${file}" '"notes"'
+  assert_contains "${file}" '"recommendations"'
+}
+
+assert_exit_code() {
+  local expected="$1"
+  shift
+  local out_file="$1"
+  shift
+  local err_file="$1"
+  shift
+  local rc=0
+
+  "$@" >"${out_file}" 2>"${err_file}" || rc=$?
+  if [[ "${rc}" -ne "${expected}" ]]; then
+    echo "[fail] Expected exit code ${expected}, got ${rc}: $*" >&2
+    echo "[fail] stdout:" >&2
+    cat "${out_file}" >&2 || true
+    echo "[fail] stderr:" >&2
+    cat "${err_file}" >&2 || true
+    exit 1
+  fi
+}
+
 if [[ -f /etc/os-release ]]; then
   # shellcheck disable=SC1091
   source /etc/os-release
@@ -104,18 +134,43 @@ assert_contains "${TMP_DIR}/uninstall_dryrun_core.out" "Dry-run|dry-run|Desinsta
 # JSON parseability checks for main operational commands.
 "${BIN}" audit --json >"${TMP_DIR}/audit_json.out" 2>"${TMP_DIR}/audit_json.err"
 assert_json_parseable "${TMP_DIR}/audit_json.out"
+assert_json_contract_minimal "${TMP_DIR}/audit_json.out"
+if [[ -s "${TMP_DIR}/audit_json.err" ]]; then
+  assert_contains "${TMP_DIR}/audit_json.err" '^\[|ERROR|WARN|INFO|OK'
+fi
 
 "${BIN}" firewall audit --json >"${TMP_DIR}/firewall_audit_json.out" 2>"${TMP_DIR}/firewall_audit_json.err"
 assert_json_parseable "${TMP_DIR}/firewall_audit_json.out"
+assert_json_contract_minimal "${TMP_DIR}/firewall_audit_json.out"
+if [[ -s "${TMP_DIR}/firewall_audit_json.err" ]]; then
+  assert_contains "${TMP_DIR}/firewall_audit_json.err" '^\[|ERROR|WARN|INFO|OK'
+fi
 
 "${BIN}" --json firewall apply --dry-run --yes >"${TMP_DIR}/firewall_apply_json.out" 2>"${TMP_DIR}/firewall_apply_json.err"
 assert_json_parseable "${TMP_DIR}/firewall_apply_json.out"
-
-# uninstall currently does not define a JSON contract; keep behavior visible in test logs.
-if "${BIN}" --json uninstall --dry-run --yes --install-root "${TEST_ROOT}" --bin-dir "${TEST_BIN_DIR}" >"${TMP_DIR}/uninstall_json.out" 2>"${TMP_DIR}/uninstall_json.err"; then
-  echo "[info] uninstall --json returned success; JSON contract is still undefined"
-else
-  echo "[info] uninstall --json is currently unsupported (expected in current roadmap state)"
+assert_json_contract_minimal "${TMP_DIR}/firewall_apply_json.out"
+if [[ -s "${TMP_DIR}/firewall_apply_json.err" ]]; then
+  assert_contains "${TMP_DIR}/firewall_apply_json.err" '^\[|ERROR|WARN|INFO|OK'
 fi
+
+"${BIN}" --json uninstall --dry-run --yes --install-root "${TEST_ROOT}" --bin-dir "${TEST_BIN_DIR}" >"${TMP_DIR}/uninstall_json.out" 2>"${TMP_DIR}/uninstall_json.err"
+assert_json_parseable "${TMP_DIR}/uninstall_json.out"
+assert_json_contract_minimal "${TMP_DIR}/uninstall_json.out"
+if [[ -s "${TMP_DIR}/uninstall_json.err" ]]; then
+  assert_contains "${TMP_DIR}/uninstall_json.err" '^\[|ERROR|WARN|INFO|OK'
+fi
+
+# Exit code contract checks.
+assert_exit_code 2 "${TMP_DIR}/audit_usage.out" "${TMP_DIR}/audit_usage.err" "${BIN}" --json audit --bogus
+assert_json_parseable "${TMP_DIR}/audit_usage.out"
+assert_contains "${TMP_DIR}/audit_usage.out" '"result":"usage_error"'
+
+assert_exit_code 2 "${TMP_DIR}/fw_usage.out" "${TMP_DIR}/fw_usage.err" "${BIN}" --json firewall nope
+assert_json_parseable "${TMP_DIR}/fw_usage.out"
+assert_contains "${TMP_DIR}/fw_usage.out" '"result":"usage_error"'
+
+assert_exit_code 30 "${TMP_DIR}/uninstall_abort.out" "${TMP_DIR}/uninstall_abort.err" sh -c "printf 'n\n' | \"${BIN}\" --json uninstall --install-root \"${TEST_ROOT}\" --bin-dir \"${TEST_BIN_DIR}\""
+assert_json_parseable "${TMP_DIR}/uninstall_abort.out"
+assert_contains "${TMP_DIR}/uninstall_abort.out" '"result":"aborted"'
 
 echo "[ok] core commands smoke passed"

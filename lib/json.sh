@@ -39,3 +39,32 @@ hardhat_json_print_string_array() {
   done
   printf ']'
 }
+
+hardhat_json_generated_at_utc() {
+  date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || printf 'unknown'
+}
+
+hardhat_json_print_metadata() {
+  local command="$1"
+  local generated_at="$2"
+
+  printf '"metadata":{'
+  printf '"tool":"hardhat",'
+  printf '"version":"%s",' "$(hardhat_json_escape "${HARDHAT_VERSION:-unknown}")"
+  printf '"command":"%s",' "$(hardhat_json_escape "${command}")"
+  printf '"generated_at":'
+  hardhat_json_nullable_string "${generated_at}"
+  printf '}'
+}
+
+hardhat_json_print_status() {
+  local result="$1"
+  local exit_code="$2"
+  local message="$3"
+
+  printf '"status":{'
+  printf '"result":"%s",' "$(hardhat_json_escape "${result}")"
+  printf '"exit_code":%s,' "${exit_code}"
+  printf '"message":"%s"' "$(hardhat_json_escape "${message}")"
+  printf '}'
+}

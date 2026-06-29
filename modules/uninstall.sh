@@ -8,6 +8,10 @@ HARDHAT_UNINSTALL_GLOBAL_CONFIG_FILE="/etc/hardhat/config"
 HARDHAT_UNINSTALL_USER_CONFIG_DIR="${HOME}/.config/hardhat"
 HARDHAT_UNINSTALL_USER_CONFIG_FILE="${HOME}/.config/hardhat/config"
 HARDHAT_UNINSTALL_PURGE_CONFIG=0
+HARDHAT_UNINSTALL_STATUS="unknown"
+HARDHAT_UNINSTALL_STATUS_MESSAGE=""
+HARDHAT_UNINSTALL_EXIT_CODE=0
+HARDHAT_UNINSTALL_NOTES=()
 
 hardhat_uninstall_msg() {
   local key="$1"
@@ -126,6 +130,51 @@ hardhat_module_uninstall_usage() {
   hardhat_uninstall_msg usage
 }
 
+hardhat_uninstall_add_note() {
+  HARDHAT_UNINSTALL_NOTES+=("$*")
+}
+
+hardhat_uninstall_render_json() {
+  local generated_at
+  generated_at="$(hardhat_json_generated_at_utc)"
+
+  printf '{'
+  hardhat_json_print_metadata "uninstall" "${generated_at}"
+  printf ','
+  printf '"command":"uninstall",'
+  hardhat_json_print_status "${HARDHAT_UNINSTALL_STATUS}" "${HARDHAT_UNINSTALL_EXIT_CODE}" "${HARDHAT_UNINSTALL_STATUS_MESSAGE}"
+  printf ','
+  printf '"summary":{'
+  printf '"dry_run":%s,' "$( [[ "${HARDHAT_DRY_RUN:-0}" -eq 1 ]] && printf true || printf false )"
+  printf '"purge_config":%s,' "$( [[ "${HARDHAT_UNINSTALL_PURGE_CONFIG}" -eq 1 ]] && printf true || printf false )"
+  printf '"install_root":"%s",' "$(hardhat_json_escape "${HARDHAT_UNINSTALL_INSTALL_ROOT}")"
+  printf '"bin_path":"%s"' "$(hardhat_json_escape "${HARDHAT_UNINSTALL_TARGET_BIN}")"
+  printf '},'
+  printf '"notes":'
+  hardhat_json_print_string_array "${HARDHAT_UNINSTALL_NOTES[@]}"
+  printf ','
+  printf '"findings":[],'
+  printf '"recommendations":[]'
+  printf '}'
+  printf '\n'
+}
+
+hardhat_uninstall_finish() {
+  local status="$1"
+  local message="$2"
+  local exit_code="$3"
+
+  HARDHAT_UNINSTALL_STATUS="${status}"
+  HARDHAT_UNINSTALL_STATUS_MESSAGE="${message}"
+  HARDHAT_UNINSTALL_EXIT_CODE="${exit_code}"
+
+  if hardhat_is_json_mode; then
+    hardhat_uninstall_render_json
+  fi
+
+  return "${exit_code}"
+}
+
 hardhat_module_uninstall_parse_args() {
   local -a args=("$@")
   local i=0
@@ -203,6 +252,10 @@ hardhat_module_uninstall_parse_args() {
 }
 
 hardhat_module_uninstall_show_plan() {
+  if hardhat_is_json_mode; then
+    return 0
+  fi
+
   hardhat_uninstall_msg plan_title
   hardhat_uninstall_msg plan_runtime
   hardhat_uninstall_msg plan_command
@@ -222,7 +275,10 @@ hardhat_module_uninstall_show_plan() {
 
 hardhat_module_uninstall_confirm() {
   if [[ "${HARDHAT_ASSUME_YES:-0}" -eq 1 ]]; then
-    hardhat_uninstall_msg confirm_skipped
+    if ! hardhat_is_json_mode; then
+      hardhat_uninstall_msg confirm_skipped
+    fi
+    hardhat_uninstall_add_note "Confirmation skipped by --yes."
     return 0
   fi
 
@@ -234,7 +290,10 @@ hardhat_module_uninstall_confirm() {
       return 0
       ;;
     *)
-      hardhat_uninstall_msg cancelled
+      if ! hardhat_is_json_mode; then
+        hardhat_uninstall_msg cancelled
+      fi
+      hardhat_uninstall_add_note "Uninstall cancelled by user."
       return 1
       ;;
   esac
@@ -249,7 +308,10 @@ hardhat_module_uninstall_needs_system_privileges() {
 
 hardhat_module_uninstall_remove_command_if_owned() {
   if [[ ! -e "${HARDHAT_UNINSTALL_TARGET_BIN}" ]]; then
-    hardhat_uninstall_msg skip_missing "${HARDHAT_UNINSTALL_TARGET_BIN}"
+    if ! hardhat_is_json_mode; then
+      hardhat_uninstall_msg skip_missing "${HARDHAT_UNINSTALL_TARGET_BIN}"
+    fi
+    hardhat_uninstall_add_note "Command path missing: ${HARDHAT_UNINSTALL_TARGET_BIN}."
     return 0
   fi
 
@@ -258,35 +320,56 @@ hardhat_module_uninstall_remove_command_if_owned() {
     resolved="$(readlink -f "${HARDHAT_UNINSTALL_TARGET_BIN}" 2>/dev/null || true)"
     if [[ "${resolved}" == "${HARDHAT_UNINSTALL_INSTALL_ROOT}/bin/hardhat" ]]; then
       hardhat_sudo_run rm -f "${HARDHAT_UNINSTALL_TARGET_BIN}" || return 1
-      hardhat_uninstall_msg removed_bin
+      if ! hardhat_is_json_mode; then
+        hardhat_uninstall_msg removed_bin
+      fi
+      hardhat_uninstall_add_note "Removed command: ${HARDHAT_UNINSTALL_TARGET_BIN}."
       return 0
     fi
   fi
 
-  hardhat_uninstall_msg skip_bin
+  if ! hardhat_is_json_mode; then
+    hardhat_uninstall_msg skip_bin
+  fi
+  hardhat_uninstall_add_note "Skipped command removal (path not owned by HardHat runtime)."
   return 0
 }
 
 hardhat_module_uninstall_remove_runtime() {
   if [[ -d "${HARDHAT_UNINSTALL_INSTALL_ROOT}" ]]; then
     hardhat_sudo_run rm -rf "${HARDHAT_UNINSTALL_INSTALL_ROOT}" || return 1
-    hardhat_uninstall_msg removed_root
+    if ! hardhat_is_json_mode; then
+      hardhat_uninstall_msg removed_root
+    fi
+    hardhat_uninstall_add_note "Removed runtime: ${HARDHAT_UNINSTALL_INSTALL_ROOT}."
   else
-    hardhat_uninstall_msg skip_missing "${HARDHAT_UNINSTALL_INSTALL_ROOT}"
+    if ! hardhat_is_json_mode; then
+      hardhat_uninstall_msg skip_missing "${HARDHAT_UNINSTALL_INSTALL_ROOT}"
+    fi
+    hardhat_uninstall_add_note "Runtime path missing: ${HARDHAT_UNINSTALL_INSTALL_ROOT}."
   fi
 }
 
 hardhat_module_uninstall_purge_config_if_requested() {
   if [[ "${HARDHAT_UNINSTALL_PURGE_CONFIG}" -ne 1 ]]; then
-    hardhat_uninstall_msg kept_cfg
+    if ! hardhat_is_json_mode; then
+      hardhat_uninstall_msg kept_cfg
+    fi
+    hardhat_uninstall_add_note "Configuration kept."
     return 0
   fi
 
   if [[ -f "${HARDHAT_UNINSTALL_GLOBAL_CONFIG_FILE}" ]]; then
     hardhat_sudo_run rm -f "${HARDHAT_UNINSTALL_GLOBAL_CONFIG_FILE}" || return 1
-    hardhat_uninstall_msg removed_cfg_global
+    if ! hardhat_is_json_mode; then
+      hardhat_uninstall_msg removed_cfg_global
+    fi
+    hardhat_uninstall_add_note "Removed global config: ${HARDHAT_UNINSTALL_GLOBAL_CONFIG_FILE}."
   else
-    hardhat_uninstall_msg skip_missing "${HARDHAT_UNINSTALL_GLOBAL_CONFIG_FILE}"
+    if ! hardhat_is_json_mode; then
+      hardhat_uninstall_msg skip_missing "${HARDHAT_UNINSTALL_GLOBAL_CONFIG_FILE}"
+    fi
+    hardhat_uninstall_add_note "Global config missing: ${HARDHAT_UNINSTALL_GLOBAL_CONFIG_FILE}."
   fi
 
   if [[ -d "${HARDHAT_UNINSTALL_GLOBAL_CONFIG_DIR}" ]]; then
@@ -297,9 +380,15 @@ hardhat_module_uninstall_purge_config_if_requested() {
 
   if [[ -f "${HARDHAT_UNINSTALL_USER_CONFIG_FILE}" ]]; then
     rm -f "${HARDHAT_UNINSTALL_USER_CONFIG_FILE}"
-    hardhat_uninstall_msg removed_cfg_user
+    if ! hardhat_is_json_mode; then
+      hardhat_uninstall_msg removed_cfg_user
+    fi
+    hardhat_uninstall_add_note "Removed user config: ${HARDHAT_UNINSTALL_USER_CONFIG_FILE}."
   else
-    hardhat_uninstall_msg skip_missing "${HARDHAT_UNINSTALL_USER_CONFIG_FILE}"
+    if ! hardhat_is_json_mode; then
+      hardhat_uninstall_msg skip_missing "${HARDHAT_UNINSTALL_USER_CONFIG_FILE}"
+    fi
+    hardhat_uninstall_add_note "User config missing: ${HARDHAT_UNINSTALL_USER_CONFIG_FILE}."
   fi
 
   if [[ -d "${HARDHAT_UNINSTALL_USER_CONFIG_DIR}" ]]; then
@@ -311,36 +400,67 @@ hardhat_module_uninstall_purge_config_if_requested() {
 
 hardhat_module_uninstall_run() {
   local parse_status=0
+  HARDHAT_UNINSTALL_NOTES=()
+
   hardhat_module_uninstall_parse_args "$@" || parse_status=$?
   if [[ "${parse_status}" -eq 2 ]]; then
-    return 0
+    return "${HARDHAT_EXIT_SUCCESS}"
   fi
   if [[ "${parse_status}" -ne 0 ]]; then
+    if hardhat_is_json_mode; then
+      hardhat_uninstall_finish "usage_error" "invalid uninstall arguments" "${HARDHAT_EXIT_USAGE}"
+      return $?
+    fi
     hardhat_module_uninstall_usage
-    return 1
+    return "${HARDHAT_EXIT_USAGE}"
   fi
+
+  hardhat_uninstall_add_note "Prepared uninstall plan."
 
   hardhat_module_uninstall_show_plan
 
   if [[ "${HARDHAT_DRY_RUN:-0}" -ne 1 ]] && hardhat_module_uninstall_needs_system_privileges; then
     if ! hardhat_require_elevated_or_sudo; then
-      hardhat_uninstall_msg sudo_required
-      return 1
+      if ! hardhat_is_json_mode; then
+        hardhat_uninstall_msg sudo_required
+      fi
+      hardhat_uninstall_add_note "Missing required privileges for system paths."
+      hardhat_uninstall_finish "failed" "missing required privileges" "${HARDHAT_EXIT_OPERATIONAL}"
+      return $?
     fi
   fi
 
   if ! hardhat_module_uninstall_confirm; then
-    return 1
+    hardhat_uninstall_finish "aborted" "user cancelled uninstall" "${HARDHAT_EXIT_ABORTED}"
+    return $?
   fi
 
-  hardhat_module_uninstall_remove_command_if_owned || return 1
-  hardhat_module_uninstall_remove_runtime || return 1
-  hardhat_module_uninstall_purge_config_if_requested || return 1
+  hardhat_module_uninstall_remove_command_if_owned || {
+    hardhat_uninstall_finish "failed" "failed to remove command path" "${HARDHAT_EXIT_OPERATIONAL}"
+    return $?
+  }
+  hardhat_module_uninstall_remove_runtime || {
+    hardhat_uninstall_finish "failed" "failed to remove runtime path" "${HARDHAT_EXIT_OPERATIONAL}"
+    return $?
+  }
+  hardhat_module_uninstall_purge_config_if_requested || {
+    hardhat_uninstall_finish "failed" "failed while processing configuration cleanup" "${HARDHAT_EXIT_OPERATIONAL}"
+    return $?
+  }
 
   if [[ "${HARDHAT_DRY_RUN:-0}" -eq 1 ]]; then
-    hardhat_uninstall_msg dryrun_done
-    return 0
+    if ! hardhat_is_json_mode; then
+      hardhat_uninstall_msg dryrun_done
+    fi
+    hardhat_uninstall_add_note "Dry-run completed; no files were changed."
+    hardhat_uninstall_finish "dry-run" "dry-run completed" "${HARDHAT_EXIT_SUCCESS}"
+    return $?
   fi
 
-  hardhat_uninstall_msg done
+  if ! hardhat_is_json_mode; then
+    hardhat_uninstall_msg done
+  fi
+  hardhat_uninstall_add_note "Uninstall completed."
+  hardhat_uninstall_finish "success" "uninstall completed" "${HARDHAT_EXIT_SUCCESS}"
+  return $?
 }

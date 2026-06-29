@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
 
+# Exit-code contract for MVP CLI behavior.
+HARDHAT_EXIT_SUCCESS=0
+HARDHAT_EXIT_WARNING=10
+HARDHAT_EXIT_USAGE=2
+HARDHAT_EXIT_OPERATIONAL=20
+HARDHAT_EXIT_ABORTED=30
+
+hardhat_is_json_mode() {
+  [[ "${HARDHAT_OUTPUT_JSON:-0}" -eq 1 ]]
+}
+
 hardhat_require_command() {
   local cmd="$1"
   if ! command -v "${cmd}" >/dev/null 2>&1; then
