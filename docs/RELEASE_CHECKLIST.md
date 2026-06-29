@@ -1,37 +1,41 @@
 # Release Checklist (Arch-first)
 
-Checklist minimo para preparar una primera release de HardHat en Arch.
+Checklist minimo para aprobar una primera release estable Arch-first.
 
-## 1) Versionado
-- [ ] Confirmar version en `bin/hardhat` (`HARDHAT_VERSION`).
+## 1) Version y changelog
+- [ ] Confirmar `HARDHAT_VERSION` en `bin/hardhat`.
 - [ ] Alinear `pkgver` en `PKGBUILD`.
-- [ ] Regenerar `.SRCINFO` desde `PKGBUILD` actualizado.
+- [ ] Confirmar que `CHANGELOG.md` refleja los cambios del ciclo.
 
-## 2) Calidad minima
-- [ ] `bash -n bin/hardhat lib/*.sh modules/*.sh tests/*.sh`
-- [ ] `bash tests/run_all.sh`
-- [ ] Revisar que los smoke tests no requieran cambios reales del sistema.
+## 2) Calidad de shell y tests
+- [ ] Sintaxis: `bash -n bin/hardhat install.sh uninstall.sh lib/*.sh modules/*.sh tests/*.sh`
+- [ ] Lint: `shellcheck -x bin/hardhat install.sh uninstall.sh lib/*.sh modules/*.sh tests/*.sh`
+- [ ] Formato: `shfmt -i 2 -ci -sr -bn -d bin/hardhat install.sh uninstall.sh lib/*.sh modules/*.sh tests/*.sh`
+- [ ] Suite: `bash tests/run_all.sh`
 
-## 3) Empaquetado Arch
-- [ ] `makepkg --printsrcinfo > .SRCINFO`
-- [ ] `makepkg -f`
-- [ ] Instalar localmente: `sudo pacman -U ./hardhat-*.pkg.tar.*`
+## 3) Revision de UX/CLI observable
+- [ ] Verificar `hardhat help`, `hardhat help firewall`, `hardhat help firewall apply`, `hardhat help menu`.
+- [ ] Verificar errores de uso representativos (flags invalidas, comando desconocido) y exit code `2`.
+- [ ] Verificar que en modo JSON el `stdout` sea JSON valido y diagnosticos operativos queden en `stderr`.
 
-## 4) Verificacion post-instalacion
-- [ ] `hardhat --version`
-- [ ] `hardhat help`
-- [ ] `hardhat audit --json`
-- [ ] `hardhat --json firewall apply --dry-run --yes`
+## 4) PKGBUILD y metadata Arch
+- [ ] Validar sintaxis: `bash -n PKGBUILD`
+- [ ] Regenerar metadata: `makepkg --printsrcinfo > .SRCINFO`
+- [ ] Build local: `makepkg -f`
+- [ ] Verificar artefacto esperado: `makepkg --packagelist`
 
-## 5) Validacion de desinstalacion empaquetada
-- [ ] Desinstalar con paquete: `sudo pacman -R hardhat`
-- [ ] Verificar que `hardhat` ya no este en PATH.
+## 5) Validacion de instalacion/upgrade/remove
+- [ ] Instalar paquete: `sudo pacman -U ./hardhat-*.pkg.tar.*`
+- [ ] Reinstalar/upgrade sobre instalacion existente y verificar que no rompe comandos core.
+- [ ] Desinstalar con `sudo pacman -R hardhat`.
+- [ ] Verificar que `hardhat` ya no este en PATH tras remove.
 
-## 6) Documentacion
-- [ ] Verificar coherencia entre `README.md`, `PKGBUILD` y comportamiento CLI.
-- [ ] Actualizar `CHANGELOG.md` con los cambios del ciclo.
+## 6) Coherencia documental
+- [ ] Revisar `README.md` (comandos, limites, rutas y flujo Arch).
+- [ ] Revisar `docs/RELEASE_POLICY.md` (criterio de estabilidad y alcance oficial).
+- [ ] Revisar `docs/TODO.md` para que no arrastre tareas ya cerradas.
 
 ## Notas
-- El flujo recomendado para instalaciones empaquetadas es `pacman -U/-R`.
+- Flujo recomendado para instalacion empaquetada: `pacman -U/-R`.
 - `install.sh` y `hardhat uninstall` se mantienen para instalaciones manuales/desarrollo.
-- Para release formal faltara definir fuente versionada (`source`) y checksums de artefactos de release en `PKGBUILD`.
+- Para release formal se requiere `source` versionado y `sha256sums` reales en `PKGBUILD`.

@@ -315,13 +315,14 @@ Notas importantes:
 
 ## Release readiness (Arch-first)
 
-Checklist minimo de release:
+Politica y checklist minimo de release:
 
 ```bash
+docs/RELEASE_POLICY.md
 docs/RELEASE_CHECKLIST.md
 ```
 
-El objetivo es asegurar coherencia entre version CLI, PKGBUILD/.SRCINFO, tests y validacion de instalacion/desinstalacion con `pacman`.
+El objetivo es asegurar coherencia entre estabilidad CLI/JSON, versionado, PKGBUILD/.SRCINFO, tests y validacion de instalacion/desinstalacion con `pacman`.
 
 ## Configurar idioma despues de instalar
 
@@ -410,6 +411,7 @@ Documentacion detallada:
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   ├── MVP.md
+│   ├── RELEASE_POLICY.md
 │   ├── RELEASE_CHECKLIST.md
 │   ├── TROUBLESHOOTING.md
 │   └── TODO.md
@@ -543,6 +545,7 @@ Nota:
 
 - `docs/MVP.md`: alcance y estado del MVP.
 - `docs/ARCHITECTURE.md`: arquitectura y flujo tecnico.
+- `docs/RELEASE_POLICY.md`: criterio minimo de estabilidad, compatibilidad CLI/JSON y alcance oficial.
 - `docs/RELEASE_CHECKLIST.md`: checklist minimo para primera release Arch-first.
 - `docs/TROUBLESHOOTING.md`: troubleshooting operativo y permisos.
 - `docs/TODO.md`: pendientes priorizados de implementacion.
