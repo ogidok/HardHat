@@ -268,7 +268,7 @@ El instalador manual:
 
 ### Opcion B: paquete Arch con PKGBUILD (makepkg)
 
-El repositorio incluye un `PKGBUILD` simple para empaquetado en Arch sin usar el instalador manual dentro del paquete.
+El repositorio incluye un `PKGBUILD` orientado a flujo Arch/AUR reproducible, sin usar el instalador manual dentro del paquete.
 
 Flujo recomendado de construccion:
 
@@ -313,7 +313,8 @@ Notas importantes:
 - para instalacion empaquetada en Arch, se recomienda `pacman -S/-U` y desinstalar con `pacman -R hardhat`;
 - `install.sh` y `hardhat uninstall` siguen siendo validos como alternativa para instalaciones manuales fuera de flujo de paquete;
 - si usas `hardhat uninstall` sobre instalacion empaquetada, ajusta rutas explicitamente (por ejemplo `--bin-dir /usr/bin`) o usa preferentemente pacman para evitar inconsistencias.
-- el `PKGBUILD` actual esta orientado a empaquetado local desde este checkout (desarrollo); para un release formal faltaria fijar `source` versionado y checksums del tarball de release.
+- el `PKGBUILD` usa fuente remota inmutable (`source`) y `sha256sums` reales para build reproducible.
+- en desarrollo local, valida cambios con tests; para empaquetado publica los archivos de paquete (`PKGBUILD` + `.SRCINFO`) y usa `makepkg`.
 
 ## Release readiness (Arch-first)
 

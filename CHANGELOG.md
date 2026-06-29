@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Version objetivo actual
+- Version CLI (`HARDHAT_VERSION`): `1.0.8`
+- Version de paquete (`pkgver`): `1.0.8`
+- Estado: objetivo para primera publicacion estable Arch-first/AUR.
+
 ## Nota de estado
 - Este archivo registra el estado consolidado y los hitos relevantes ya implementados.
 - Ya implementado en el estado actual:
