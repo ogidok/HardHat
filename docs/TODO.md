@@ -1,9 +1,9 @@
 # TODO (Post-MVP, Arch-first)
 
-Actualizado: 2026-06-28 (ciclo JSON/exit-codes + cobertura CLI observable)
+Actualizado: 2026-06-28 (packaging/release-readiness Arch-first)
 
 Estado resumido:
-- Ya implementado: `audit`, `firewall audit`, `firewall apply`, `uninstall`, `menu`, ES/EN, salida JSON base, tests (smoke/integration/unit + edge cases de CLI), `README` ampliado, troubleshooting, `PKGBUILD` base y `CHANGELOG`.
+- Ya implementado: `audit`, `firewall audit`, `firewall apply`, `uninstall`, `menu`, ES/EN, salida JSON base, tests (smoke/integration/unit + edge cases de CLI), `README` ampliado, troubleshooting, `CHANGELOG`, `PKGBUILD` endurecido (ruta/licencia/docs/options) y checklist de release en `docs/RELEASE_CHECKLIST.md`.
 
 ## Prioridad alta
 
@@ -26,8 +26,8 @@ Estado resumido:
 
 ### Arch packaging y release readiness
 - Validar instalación/upgrade/remove con `makepkg` + `pacman -U/-R` en flujo real.
-- Alinear `PKGBUILD`/`.SRCINFO` con versión del CLI en cada iteración.
-- Definir checklist mínimo de release (versionado, tests, empaquetado, docs).
+- Ejecutar checklist de `docs/RELEASE_CHECKLIST.md` en entorno Arch limpio.
+- Definir `source` versionado y `sha256sums` para release formal (no solo build local desde checkout).
 
 ### Documentación operativa
 - Añadir tabla breve de comandos/flags en `README`.
@@ -41,8 +41,8 @@ Estado resumido:
 
 ## Ahora
 - Cerrar validación de contrato JSON v1 en integración (tipos + resultados esperados).
-- Completar validación de empaquetado Arch en ciclo de prueba real.
+- Completar validación de empaquetado Arch en ciclo de prueba real (`pacman -U/-R`, upgrade y verificación post-instalación).
 
 ## Después
-- Ejecutar release candidate Arch-first con checklist mínimo.
+- Ejecutar release candidate Arch-first con checklist mínimo ya definido.
 - Reabrir discusión multi-distro solo tras estabilidad de CLI, JSON y tests en Arch.
