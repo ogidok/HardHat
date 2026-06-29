@@ -18,8 +18,6 @@ Estado resumido:
 - Registrar resultados de validacion (comandos ejecutados y estado) en el ciclo de release.
 
 ### 3) Publicacion AUR de la primera version estable
-- Publicar tag/release final de version en el repo principal (si aun no existe).
-- Recalcular checksum real del tarball del tag y actualizar `PKGBUILD`.
 - Confirmar coherencia estricta entre `pkgver`, `bin/hardhat` (`HARDHAT_VERSION`), `CHANGELOG.md`, `.SRCINFO` y referencia de tag (`v${pkgver}`) en el commit final de publicacion.
 - Preparar commit final del repo AUR (`PKGBUILD` + `.SRCINFO`) y push a remoto AUR.
 
