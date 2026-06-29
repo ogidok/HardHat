@@ -49,6 +49,7 @@ hardhat menu --help
 
 Notas:
 - `hardhat menu` ofrece un flujo interactivo para acceder a comandos principales del MVP.
+- admite salida rapida con `7`, `q`, `Q` o `exit`.
 - Las flags globales pueden ir antes o despues del comando.
 
 ## Flags globales disponibles
@@ -122,6 +123,7 @@ Notas:
 - no reemplaza validaciones ni confirmaciones de los flujos reales;
 - si se invoca con `--json`, falla de forma explicita por incompatibilidad con modo interactivo;
 - si no hay TTY interactiva, falla con mensaje claro.
+- para automatizacion/no-TTY, se recomienda usar comandos directos (`audit`, `firewall`, `uninstall`).
 
 ### `hardhat audit`
 
@@ -343,7 +345,7 @@ La preferencia de usuario se guarda en `~/.config/hardhat/config` y tiene priori
 
 ## Desinstalacion
 
-Desinstalacion recomendada (via CLI):
+Desinstalacion recomendada (instalacion manual/desarrollo):
 
 ```bash
 hardhat uninstall
@@ -378,6 +380,7 @@ hardhat uninstall --yes --purge-config
 Nota:
 - Por seguridad, el desinstalador solo elimina `/usr/local/bin/hardhat` si apunta al runtime de HardHat esperado.
 - `uninstall.sh` se mantiene como wrapper temporal/deprecado para compatibilidad.
+- para instalaciones empaquetadas en Arch, la via recomendada sigue siendo `sudo pacman -R hardhat`.
 
 Opciones de `hardhat uninstall`:
 

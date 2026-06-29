@@ -27,12 +27,13 @@ Uso:
 
 Descripcion:
   Elimina runtime y comando de HardHat. Solo borra el comando si apunta al runtime esperado.
+  Este flujo esta orientado a instalaciones manuales/desarrollo.
 
 Opciones:
   -h, --help          Muestra esta ayuda
-  --yes                Omite confirmacion interactiva
-  --dry-run            Muestra acciones sin modificar archivos
-  --purge-config       Elimina configuracion global y de usuario
+  --yes               Omite confirmacion interactiva
+  --dry-run           Muestra acciones sin modificar archivos
+  --purge-config      Elimina configuracion global y de usuario
   --install-root PATH  Raiz runtime (default: /opt/hardhat)
   --bin-dir PATH       Directorio del comando (default: /usr/local/bin)
   --lang <en|es>       Sobrescribe idioma de mensajes
@@ -51,8 +52,8 @@ EOF
       action_bin) printf '  1) Eliminar enlace/comando si pertenece a HardHat\n' ;;
       action_root) printf '  2) Eliminar runtime\n' ;;
       action_cfg) printf '  3) Eliminar configuracion (opcional)\n' ;;
-      confirm_prompt) printf 'Continuar con la desinstalacion? [y/N]: ' ;;
-      confirm_skipped) printf 'Confirmacion omitida por --yes\n' ;;
+      confirm_prompt) printf 'Continuar con el plan de desinstalacion? [y/N]: ' ;;
+      confirm_skipped) printf 'Confirmacion omitida (--yes).\n' ;;
       cancelled) printf 'Desinstalacion cancelada.\n' ;;
       sudo_required) printf 'Se requiere sudo/root para eliminar rutas del sistema.\n' ;;
       skip_missing) printf 'No existe: %s\n' "$2" ;;
@@ -62,10 +63,10 @@ EOF
       removed_cfg_global) printf 'Config global eliminada: %s\n' "${HARDHAT_UNINSTALL_GLOBAL_CONFIG_FILE}" ;;
       removed_cfg_user) printf 'Config usuario eliminada: %s\n' "${HARDHAT_UNINSTALL_USER_CONFIG_FILE}" ;;
       kept_cfg) printf 'Configuracion conservada.\n' ;;
-      done) printf '\nDesinstalacion completada.\n' ;;
+      done) printf '\nDesinstalacion completada correctamente.\n' ;;
       dryrun_done) printf '\nDry-run completado. No se modificaron archivos.\n' ;;
       bad_lang) printf 'Idioma no soportado: %s (usa en o es).\n' "$2" ;;
-      unknown_opt) printf 'Opcion desconocida para uninstall: %s\n' "$2" ;;
+      unknown_opt) printf 'Opcion desconocida para uninstall: %s (usa --help).\n' "$2" ;;
       missing_value) printf 'Falta valor para: %s\n' "$2" ;;
       *) return 1 ;;
     esac
@@ -82,12 +83,13 @@ Usage:
 
 Description:
   Removes HardHat runtime and command. The command is removed only if it points to the expected runtime.
+  This flow is intended for manual/development installs.
 
 Options:
   -h, --help          Show this help
-  --yes                Skip interactive confirmation
-  --dry-run            Show actions without changing files
-  --purge-config       Remove global and user configuration
+  --yes               Skip interactive confirmation
+  --dry-run           Show actions without changing files
+  --purge-config      Remove global and user configuration
   --install-root PATH  Runtime root (default: /opt/hardhat)
   --bin-dir PATH       Command directory (default: /usr/local/bin)
   --lang <en|es>       Override message language
@@ -106,8 +108,8 @@ EOF
     action_bin) printf '  1) Remove command/symlink if owned by HardHat\n' ;;
     action_root) printf '  2) Remove runtime\n' ;;
     action_cfg) printf '  3) Remove configuration (optional)\n' ;;
-    confirm_prompt) printf 'Proceed with uninstall? [y/N]: ' ;;
-    confirm_skipped) printf 'Confirmation skipped by --yes\n' ;;
+    confirm_prompt) printf 'Proceed with uninstall plan? [y/N]: ' ;;
+    confirm_skipped) printf 'Confirmation skipped (--yes).\n' ;;
     cancelled) printf 'Uninstall cancelled.\n' ;;
     sudo_required) printf 'sudo/root is required to remove system paths.\n' ;;
     skip_missing) printf 'Missing: %s\n' "$2" ;;
@@ -117,10 +119,10 @@ EOF
     removed_cfg_global) printf 'Global config removed: %s\n' "${HARDHAT_UNINSTALL_GLOBAL_CONFIG_FILE}" ;;
     removed_cfg_user) printf 'User config removed: %s\n' "${HARDHAT_UNINSTALL_USER_CONFIG_FILE}" ;;
     kept_cfg) printf 'Configuration kept.\n' ;;
-    done) printf '\nUninstall complete.\n' ;;
+    done) printf '\nUninstall completed successfully.\n' ;;
     dryrun_done) printf '\nDry-run complete. No files were changed.\n' ;;
     bad_lang) printf 'Unsupported language: %s (use en or es).\n' "$2" ;;
-    unknown_opt) printf 'Unknown uninstall option: %s\n' "$2" ;;
+    unknown_opt) printf 'Unknown uninstall option: %s (use --help).\n' "$2" ;;
     missing_value) printf 'Missing value for: %s\n' "$2" ;;
     *) return 1 ;;
   esac

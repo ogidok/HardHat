@@ -61,7 +61,7 @@ Ejemplos:
   hardhat firewall apply --yes
 
 Nota:
-  Si UFW no esta instalado, firewall apply puede guiar su instalacion antes de aplicar la linea base.
+  Si UFW no esta instalado, hardhat firewall apply puede guiar su instalacion antes de aplicar la linea base.
 EOF
     return 0
   fi
@@ -89,7 +89,7 @@ Examples:
   hardhat firewall apply --yes
 
 Note:
-  If UFW is missing, apply can guide installation before baseline configuration.
+  If UFW is missing, hardhat firewall apply can guide installation before baseline configuration.
 EOF
 }
 
@@ -104,6 +104,9 @@ Uso:
 Opciones:
   -h, --help          Muestra esta ayuda
   --json              Emite salida JSON en stdout
+
+Nota:
+  En modo --json, stdout contiene solo JSON valido; mensajes operativos van por stderr.
 
 Ejemplos:
   hardhat firewall audit
@@ -121,6 +124,9 @@ Usage:
 Options:
   -h, --help          Show this help
   --json              Emit JSON output on stdout
+
+Note:
+  In --json mode, stdout contains only valid JSON; operational messages go to stderr.
 
 Examples:
   hardhat firewall audit
@@ -150,6 +156,7 @@ Notas:
   - Puede requerir privilegios elevados para modificar UFW.
   - Si UFW no existe, puede ofrecer instalacion guiada.
   - No hay reversion automatica en esta fase.
+  - En modo --json, stdout contiene solo JSON valido; mensajes operativos van por stderr.
 EOF
     return 0
   fi
@@ -174,6 +181,7 @@ Notes:
   - Elevated privileges may be required to modify UFW.
   - If UFW is missing, guided installation may be offered.
   - Automatic rollback is not available in this phase.
+  - In --json mode, stdout contains only valid JSON; operational messages go to stderr.
 EOF
 }
 
@@ -201,9 +209,19 @@ hardhat_module_firewall_validate_subcommand_args() {
       *)
         if hardhat_firewall_is_spanish; then
           hardhat_log_error "Argumento no valido para firewall ${subcommand}: ${arg}"
+          if [[ "${subcommand}" == "audit" ]]; then
+            hardhat_log_info "Argumentos permitidos para firewall audit: --json, --help."
+          else
+            hardhat_log_info "Argumentos permitidos para firewall apply: --dry-run, --yes, --json, --help."
+          fi
           hardhat_log_info "Usa 'hardhat firewall ${subcommand} --help' para ver uso."
         else
           hardhat_log_error "Invalid argument for firewall ${subcommand}: ${arg}"
+          if [[ "${subcommand}" == "audit" ]]; then
+            hardhat_log_info "Allowed arguments for firewall audit: --json, --help."
+          else
+            hardhat_log_info "Allowed arguments for firewall apply: --dry-run, --yes, --json, --help."
+          fi
           hardhat_log_info "Use 'hardhat firewall ${subcommand} --help' for usage."
         fi
         return 1

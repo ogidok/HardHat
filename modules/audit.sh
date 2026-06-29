@@ -32,6 +32,9 @@ Descripcion:
   Ejecuta validaciones de linea base de firewall, puertos, servicios, SSH y actualizaciones,
   y reporta score, severidad, hallazgos y recomendaciones.
 
+Nota:
+  En modo --json, stdout contiene solo JSON valido; mensajes operativos van por stderr.
+
 Opciones:
   -h, --help          Muestra esta ayuda
   --json              Emite salida JSON en stdout
@@ -52,6 +55,9 @@ Usage:
 Description:
   Runs baseline checks for firewall, ports, services, SSH and updates,
   then reports score, severity, findings and recommendations.
+
+Note:
+  In --json mode, stdout contains only valid JSON; operational messages go to stderr.
 
 Options:
   -h, --help          Show this help
@@ -76,9 +82,11 @@ hardhat_module_audit_validate_args() {
       *)
         if hardhat_audit_is_spanish; then
           hardhat_log_error "Argumento no valido para audit: ${arg}"
+          hardhat_log_info "Argumentos permitidos: --json, --help."
           hardhat_log_info "Usa 'hardhat audit --help' para ver uso."
         else
           hardhat_log_error "Invalid argument for audit: ${arg}"
+          hardhat_log_info "Allowed arguments: --json, --help."
           hardhat_log_info "Use 'hardhat audit --help' for usage."
         fi
         return 1

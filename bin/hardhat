@@ -61,6 +61,7 @@ Uso:
 Nota:
   Las opciones globales pueden ir antes o despues del comando.
   Ejemplos: hardhat --json audit | hardhat audit --json
+  Ayuda contextual: hardhat help <comando>
 
 Comandos:
   audit               Ejecuta auditoria de seguridad de linea base
@@ -69,7 +70,7 @@ Comandos:
   uninstall           Desinstala HardHat de forma segura
   language show       Muestra idioma actual
   language set <id>   Configura idioma (en|es)
-  menu                Abre menu interactivo
+  menu                Abre menu interactivo (requiere TTY; no compatible con --json)
   help                Muestra esta ayuda
   version             Muestra version
 
@@ -102,6 +103,7 @@ Usage:
 Note:
   Global options can be passed before or after the command.
   Examples: hardhat --json audit | hardhat audit --json
+  Contextual help: hardhat help <command>
 
 Commands:
   audit               Run baseline security audit
@@ -110,7 +112,7 @@ Commands:
   uninstall           Uninstall HardHat safely
   language show       Show current language
   language set <id>   Set language (en|es)
-  menu                Open interactive menu
+  menu                Open interactive menu (requires TTY; not compatible with --json)
   help                Show this help
   version             Show version
 
@@ -218,6 +220,7 @@ hardhat_help_for_command() {
         printf 'Notas:\n'
         printf '  - Requiere terminal TTY interactiva (stdin/stdout).\n'
         printf '  - No es compatible con --json.\n'
+        printf '  - Atajos de salida: 7, q, Q, exit.\n'
       else
         printf 'Usage:\n'
         printf '  hardhat menu\n\n'
@@ -226,6 +229,7 @@ hardhat_help_for_command() {
         printf 'Notes:\n'
         printf '  - Requires an interactive TTY terminal (stdin/stdout).\n'
         printf '  - Not compatible with --json.\n'
+        printf '  - Exit shortcuts: 7, q, Q, exit.\n'
       fi
       ;;
     version)
@@ -332,16 +336,18 @@ hardhat_run_language_command() {
 
       HARDHAT_LANG="${lang_value}"
       if [[ "${HARDHAT_LANG}" == "es" ]]; then
-        hardhat_log_success "Idioma configurado a es."
+        hardhat_log_success "Idioma de usuario actualizado: ${HARDHAT_LANG}."
       else
-        hardhat_log_success "Language set to en."
+        hardhat_log_success "User language updated: ${HARDHAT_LANG}."
       fi
       ;;
     *)
       if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
         hardhat_log_error "Subcomando de language desconocido: ${subcommand}"
+        hardhat_log_info "Usa 'hardhat language --help' para ver subcomandos validos."
       else
         hardhat_log_error "Unknown language subcommand: ${subcommand}"
+        hardhat_log_info "Use 'hardhat language --help' to see valid subcommands."
       fi
       hardhat_language_usage
       return "${HARDHAT_EXIT_USAGE}"
@@ -356,8 +362,10 @@ hardhat_menu_needs_tty() {
 
   if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
     hardhat_log_error "El menu interactivo requiere una terminal TTY (stdin/stdout interactivos)."
+    hardhat_log_info "Usa comandos directos (audit, firewall, uninstall) en entornos no interactivos."
   else
     hardhat_log_error "Interactive menu requires a TTY terminal (interactive stdin/stdout)."
+    hardhat_log_info "Use direct commands (audit, firewall, uninstall) in non-interactive environments."
   fi
   return 1
 }
@@ -367,12 +375,12 @@ hardhat_menu_print_header() {
 
   if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
     printf '\nMenu principal de HardHat\n'
-    printf 'Selecciona una opcion:\n'
+    printf 'Selecciona una opcion (7, q, Q, exit para salir):\n'
     return 0
   fi
 
   printf '\nHardHat Main Menu\n'
-  printf 'Select an option:\n'
+  printf 'Select an option (7, q, Q, exit to leave):\n'
 }
 
 hardhat_menu_clear_screen() {
@@ -408,11 +416,11 @@ hardhat_menu_print_options() {
 
 hardhat_menu_prompt_text() {
   if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
-    printf 'Opcion [1-7]: '
+    printf 'Opcion [1-7, q]: '
     return 0
   fi
 
-  printf 'Option [1-7]: '
+  printf 'Option [1-7, q]: '
 }
 
 hardhat_menu_pause() {
@@ -460,10 +468,10 @@ hardhat_run_menu_command() {
       ;;
     *)
       if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
-        hardhat_log_error "Argumento no valido para menu: ${menu_arg}"
+        hardhat_log_error "El comando menu no acepta argumentos: ${menu_arg}"
         hardhat_log_info "Usa 'hardhat menu --help' para ver uso."
       else
-        hardhat_log_error "Invalid argument for menu: ${menu_arg}"
+        hardhat_log_error "The menu command does not accept arguments: ${menu_arg}"
         hardhat_log_info "Use 'hardhat menu --help' for usage."
       fi
       return "${HARDHAT_EXIT_USAGE}"
@@ -473,8 +481,10 @@ hardhat_run_menu_command() {
   if [[ "${HARDHAT_OUTPUT_JSON:-0}" -eq 1 ]]; then
     if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
       hardhat_log_error "El menu interactivo no es compatible con --json."
+      hardhat_log_info "Usa comandos directos con --json (por ejemplo: hardhat --json audit)."
     else
       hardhat_log_error "Interactive menu is not compatible with --json."
+      hardhat_log_info "Use direct commands with --json (for example: hardhat --json audit)."
     fi
     return "${HARDHAT_EXIT_USAGE}"
   fi
@@ -526,9 +536,9 @@ hardhat_run_menu_command() {
         ;;
       *)
         if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
-          hardhat_log_warn "Opcion no valida. Elige un valor entre 1 y 7."
+          hardhat_log_warn "Opcion no valida. Elige un valor entre 1 y 7, o q para salir."
         else
-          hardhat_log_warn "Invalid option. Choose a value between 1 and 7."
+          hardhat_log_warn "Invalid option. Choose a value between 1 and 7, or q to exit."
         fi
         ;;
     esac
@@ -586,8 +596,10 @@ hardhat_parse_global_flags() {
         else
           if [[ "${HARDHAT_LANG:-en}" == "es" ]]; then
             hardhat_log_error "Opcion desconocida: ${arg}"
+            hardhat_log_info "Usa 'hardhat --help' para ver opciones globales."
           else
             hardhat_log_error "Unknown option: ${arg}"
+            hardhat_log_info "Use 'hardhat --help' to see global options."
           fi
           hardhat_usage
           exit "${HARDHAT_EXIT_USAGE}"
