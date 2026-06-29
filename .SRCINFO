@@ -11,6 +11,6 @@ pkgbase = hardhat
 	optdepends = sudo: run privileged actions when not executing as root
 	options = !debug
 	source = hardhat-1.0.8.tar.gz::https://github.com/ogidok/HardHat/archive/refs/tags/v1.0.8.tar.gz
-	sha256sums = REPLACE_WITH_TAG_TARBALL_SHA256
+	sha256sums = bb9e4af5d81266e2c622dc308b23ce3811f88e48a0a39151cf8dbdc4818698d8
 
 pkgname = hardhat
