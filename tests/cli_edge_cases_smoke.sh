@@ -89,6 +89,9 @@ assert_contains "${TMP_DIR}/help_audit.out" "hardhat audit"
 assert_exit_code 0 "${TMP_DIR}/help_uninstall.out" "${TMP_DIR}/help_uninstall.err" "${BIN}" help uninstall
 assert_contains "${TMP_DIR}/help_uninstall.out" "hardhat uninstall"
 
+assert_exit_code 0 "${TMP_DIR}/help_setup.out" "${TMP_DIR}/help_setup.err" "${BIN}" help setup
+assert_contains "${TMP_DIR}/help_setup.out" "hardhat setup"
+
 assert_exit_code 0 "${TMP_DIR}/firewall_help.out" "${TMP_DIR}/firewall_help.err" "${BIN}" firewall help
 assert_contains "${TMP_DIR}/firewall_help.out" "hardhat firewall"
 
@@ -120,6 +123,16 @@ assert_not_contains "${TMP_DIR}/fw_apply_dryrun_json.out" '\[INFO\]|\[WARN\]|\[E
 assert_exit_code 2 "${TMP_DIR}/fw_apply_invalid_json.out" "${TMP_DIR}/fw_apply_invalid_json.err" "${BIN}" --json firewall apply --bogus
 assert_json_parseable "${TMP_DIR}/fw_apply_invalid_json.out"
 assert_contains "${TMP_DIR}/fw_apply_invalid_json.out" '"result":"usage_error"'
+
+assert_exit_code 0 "${TMP_DIR}/setup_dryrun_json.out" "${TMP_DIR}/setup_dryrun_json.err" "${BIN}" --json setup --dry-run --yes
+assert_json_parseable "${TMP_DIR}/setup_dryrun_json.out"
+assert_contains "${TMP_DIR}/setup_dryrun_json.out" '"command":"setup"'
+assert_contains "${TMP_DIR}/setup_dryrun_json.out" '"result":"dry-run"'
+
+assert_exit_code 2 "${TMP_DIR}/setup_invalid_json.out" "${TMP_DIR}/setup_invalid_json.err" "${BIN}" --json setup --bogus
+assert_json_parseable "${TMP_DIR}/setup_invalid_json.out"
+assert_contains "${TMP_DIR}/setup_invalid_json.out" '"command":"setup"'
+assert_contains "${TMP_DIR}/setup_invalid_json.out" '"result":"usage_error"'
 
 # uninstall safe combinations.
 TEST_ROOT="${TMP_DIR}/opt/hardhat"

@@ -27,8 +27,14 @@ El soporte oficial actual se limita a Arch Linux con backend UFW.
 hardhat help
 hardhat help firewall
 hardhat help firewall apply
+hardhat help setup
 hardhat help menu
 hardhat version
+hardhat setup
+hardhat setup --help
+hardhat setup --dry-run
+hardhat setup --yes
+hardhat setup --json
 hardhat audit
 hardhat audit --help
 hardhat audit --json
@@ -157,6 +163,33 @@ Contrato JSON minimo:
 - `summary`
 - `notes`
 - `findings` y `recommendations` cuando aplica
+
+### `hardhat setup`
+
+Flujo simple de onboarding seguro para una instalacion inicial de Arch.
+
+Que hace:
+- valida entorno soportado;
+- reutiliza `firewall apply` para instalar UFW si falta;
+- aplica baseline segura de firewall sin exigir `audit` previo;
+- entrega un resumen final claro (humano o JSON segun modo).
+
+Diferencia frente a `hardhat firewall apply`:
+- `setup` esta orientado al primer paso en una maquina recien instalada;
+- `firewall apply` sigue siendo el comando explicito de operacion de firewall baseline.
+
+Flags soportadas:
+- `--dry-run`
+- `--yes`
+- `--json`
+
+Ejemplos:
+
+```bash
+hardhat setup --dry-run
+hardhat setup --yes
+hardhat --json setup --dry-run --yes
+```
 
 ### `hardhat firewall audit`
 

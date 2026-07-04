@@ -64,6 +64,7 @@ Nota:
   Ayuda contextual: hardhat help <comando>
 
 Comandos:
+  setup               Bootstrap inicial seguro para Arch (UFW baseline guiada)
   audit               Ejecuta auditoria de seguridad de linea base
   firewall audit      Audita estado de UFW y politica de linea base
   firewall apply      Aplica linea base de UFW (guiado; instala UFW si falta)
@@ -86,6 +87,7 @@ Opciones globales:
 Ejemplos:
   hardhat audit
   hardhat audit --json
+  hardhat setup --dry-run
   hardhat firewall audit
   hardhat firewall apply --dry-run
   hardhat uninstall --dry-run --yes
@@ -106,6 +108,7 @@ Note:
   Contextual help: hardhat help <command>
 
 Commands:
+  setup               Safe initial bootstrap for Arch (guided UFW baseline)
   audit               Run baseline security audit
   firewall audit      Audit UFW status and baseline policy
   firewall apply      Apply UFW baseline policy (guided; installs UFW if missing)
@@ -128,6 +131,7 @@ Global options:
 Examples:
   hardhat audit
   hardhat audit --json
+  hardhat setup --dry-run
   hardhat firewall audit
   hardhat firewall apply --dry-run
   hardhat uninstall --dry-run --yes
@@ -182,6 +186,9 @@ hardhat_help_for_command() {
       ;;
     audit)
       hardhat_module_audit_usage
+      ;;
+    setup)
+      hardhat_module_setup_usage
       ;;
     firewall)
       case "${subcommand}" in
@@ -634,7 +641,7 @@ hardhat_parse_command() {
 
 hardhat_command_requires_arch() {
   case "${HARDHAT_COMMAND}" in
-    audit|firewall|menu)
+    setup|audit|firewall|menu)
       return 0
       ;;
     *)
@@ -645,6 +652,9 @@ hardhat_command_requires_arch() {
 
 hardhat_run_command() {
   case "${HARDHAT_COMMAND}" in
+    setup)
+      hardhat_module_setup_run "${HARDHAT_ARGS[@]:1}"
+      ;;
     audit)
       hardhat_module_audit_run "${HARDHAT_ARGS[@]:1}"
       ;;

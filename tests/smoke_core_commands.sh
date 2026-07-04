@@ -122,6 +122,9 @@ assert_contains "${TMP_DIR}/firewall_audit_core.out" "firewall|UFW|Firewall"
 assert_success firewall_apply_dryrun_core "${BIN}" firewall apply --dry-run --yes
 assert_contains "${TMP_DIR}/firewall_apply_dryrun_core.out" "Dry-run|dry-run|Simula|simula"
 
+assert_success setup_dryrun_core "${BIN}" setup --dry-run --yes
+assert_contains "${TMP_DIR}/setup_dryrun_core.out" "setup|Setup|Dry-run|dry-run"
+
 TEST_ROOT="${TMP_DIR}/opt/hardhat"
 TEST_BIN_DIR="${TMP_DIR}/usr/local/bin"
 mkdir -p "${TEST_ROOT}/bin" "${TEST_BIN_DIR}"
@@ -153,6 +156,14 @@ if [[ -s "${TMP_DIR}/firewall_apply_json.err" ]]; then
   assert_contains "${TMP_DIR}/firewall_apply_json.err" '^\[|ERROR|WARN|INFO|OK'
 fi
 
+"${BIN}" --json setup --dry-run --yes >"${TMP_DIR}/setup_json.out" 2>"${TMP_DIR}/setup_json.err"
+assert_json_parseable "${TMP_DIR}/setup_json.out"
+assert_json_contract_minimal "${TMP_DIR}/setup_json.out"
+assert_contains "${TMP_DIR}/setup_json.out" '"command":"setup"'
+if [[ -s "${TMP_DIR}/setup_json.err" ]]; then
+  assert_contains "${TMP_DIR}/setup_json.err" '^\[|ERROR|WARN|INFO|OK'
+fi
+
 "${BIN}" --json uninstall --dry-run --yes --install-root "${TEST_ROOT}" --bin-dir "${TEST_BIN_DIR}" >"${TMP_DIR}/uninstall_json.out" 2>"${TMP_DIR}/uninstall_json.err"
 assert_json_parseable "${TMP_DIR}/uninstall_json.out"
 assert_json_contract_minimal "${TMP_DIR}/uninstall_json.out"
@@ -168,6 +179,11 @@ assert_contains "${TMP_DIR}/audit_usage.out" '"result":"usage_error"'
 assert_exit_code 2 "${TMP_DIR}/fw_usage.out" "${TMP_DIR}/fw_usage.err" "${BIN}" --json firewall nope
 assert_json_parseable "${TMP_DIR}/fw_usage.out"
 assert_contains "${TMP_DIR}/fw_usage.out" '"result":"usage_error"'
+
+assert_exit_code 2 "${TMP_DIR}/setup_usage.out" "${TMP_DIR}/setup_usage.err" "${BIN}" --json setup --bogus
+assert_json_parseable "${TMP_DIR}/setup_usage.out"
+assert_contains "${TMP_DIR}/setup_usage.out" '"command":"setup"'
+assert_contains "${TMP_DIR}/setup_usage.out" '"result":"usage_error"'
 
 assert_exit_code 30 "${TMP_DIR}/uninstall_abort.out" "${TMP_DIR}/uninstall_abort.err" sh -c "printf 'n\n' | \"${BIN}\" --json uninstall --install-root \"${TEST_ROOT}\" --bin-dir \"${TEST_BIN_DIR}\""
 assert_json_parseable "${TMP_DIR}/uninstall_abort.out"

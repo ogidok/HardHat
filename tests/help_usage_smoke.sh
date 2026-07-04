@@ -72,6 +72,9 @@ assert_contains "${TMP_DIR}/firewall_audit_help.out" "hardhat firewall audit"
 assert_success firewall_apply_help "${BIN}" firewall apply --help
 assert_contains "${TMP_DIR}/firewall_apply_help.out" "hardhat firewall apply"
 
+assert_success setup_help "${BIN}" setup --help
+assert_contains "${TMP_DIR}/setup_help.out" "hardhat setup"
+
 assert_success uninstall_help "${BIN}" uninstall --help
 assert_contains "${TMP_DIR}/uninstall_help.out" "hardhat uninstall"
 
@@ -87,6 +90,9 @@ assert_contains "${TMP_DIR}/invalid_audit_arg.out" "audit --help|for usage|para 
 
 assert_failure invalid_firewall_apply_arg "${BIN}" firewall apply --bogus
 assert_contains "${TMP_DIR}/invalid_firewall_apply_arg.out" "firewall apply --help|for usage|para ver uso"
+
+assert_failure invalid_setup_arg "${BIN}" setup --bogus
+assert_contains "${TMP_DIR}/invalid_setup_arg.out" "setup --help|for usage|para ver uso"
 
 assert_failure invalid_menu_arg "${BIN}" menu --bogus
 assert_contains "${TMP_DIR}/invalid_menu_arg.out" "menu --help|for usage|para ver uso"

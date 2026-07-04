@@ -35,6 +35,16 @@ HARDHAT_FIREWALL_APPLY_EXIT_CODE=0
 HARDHAT_FIREWALL_APPLY_NOTES=()
 HARDHAT_FIREWALL_APPLY_EXPECT_SSH_RULE=0
 HARDHAT_FIREWALL_APPLY_EXPECT_SSH_PORT="unknown"
+HARDHAT_SETUP_MODE=0
+
+hardhat_firewall_context_command() {
+  if [[ "${HARDHAT_SETUP_MODE:-0}" -eq 1 ]]; then
+    printf 'setup'
+    return 0
+  fi
+
+  printf 'firewall apply'
+}
 
 hardhat_module_firewall_usage() {
   if hardhat_firewall_is_spanish; then
@@ -183,6 +193,124 @@ Notes:
   - Automatic rollback is not available in this phase.
   - In --json mode, stdout contains only valid JSON; operational messages go to stderr.
 EOF
+}
+
+hardhat_module_setup_usage() {
+  if hardhat_firewall_is_spanish; then
+    cat <<'EOF'
+HardHat setup - Bootstrap inicial seguro
+
+Uso:
+  hardhat setup [opciones]
+
+Descripcion:
+  Comando de onboarding para una instalacion inicial de Arch.
+  Reutiliza el flujo seguro de firewall apply para instalar UFW si falta
+  y aplicar la linea base de firewall.
+
+Opciones:
+  -h, --help          Muestra esta ayuda
+  --json              Emite resumen JSON final
+  --dry-run           Simula sin aplicar cambios
+  --yes               Omite confirmaciones
+
+Ejemplos:
+  hardhat setup --dry-run
+  hardhat setup --yes
+
+Notas:
+  - No requiere ejecutar audit previamente.
+  - Puede requerir privilegios elevados para modificar UFW.
+  - En modo --json, stdout contiene solo JSON valido; mensajes operativos van por stderr.
+EOF
+    return 0
+  fi
+
+  cat <<'EOF'
+HardHat setup - Safe initial bootstrap
+
+Usage:
+  hardhat setup [options]
+
+Description:
+  Onboarding command for a fresh Arch installation.
+  Reuses the safe firewall apply flow to install UFW if missing
+  and apply the baseline firewall policy.
+
+Options:
+  -h, --help          Show this help
+  --json              Emit final JSON summary
+  --dry-run           Simulate without applying changes
+  --yes               Skip confirmations
+
+Examples:
+  hardhat setup --dry-run
+  hardhat setup --yes
+
+Notes:
+  - Does not require running audit first.
+  - Elevated privileges may be required to modify UFW.
+  - In --json mode, stdout contains only valid JSON; operational messages go to stderr.
+EOF
+}
+
+hardhat_module_setup_validate_args() {
+  local arg
+  for arg in "$@"; do
+    case "${arg}" in
+      -h|--help|help)
+        hardhat_module_setup_usage
+        return 2
+        ;;
+      --dry-run|--yes|--json)
+        ;;
+      *)
+        if hardhat_firewall_is_spanish; then
+          hardhat_log_error "Argumento no valido para setup: ${arg}"
+          hardhat_log_info "Argumentos permitidos para setup: --dry-run, --yes, --json, --help."
+          hardhat_log_info "Usa 'hardhat setup --help' para ver uso."
+        else
+          hardhat_log_error "Invalid argument for setup: ${arg}"
+          hardhat_log_info "Allowed arguments for setup: --dry-run, --yes, --json, --help."
+          hardhat_log_info "Use 'hardhat setup --help' for usage."
+        fi
+        return 1
+        ;;
+    esac
+  done
+
+  return 0
+}
+
+hardhat_module_setup_run() {
+  local validate_status=0
+  hardhat_module_setup_validate_args "$@" || validate_status=$?
+  if [[ "${validate_status}" -eq 2 ]]; then
+    return "${HARDHAT_EXIT_SUCCESS}"
+  fi
+  if [[ "${validate_status}" -ne 0 ]]; then
+    if hardhat_is_json_mode; then
+      hardhat_firewall_render_json_error "setup" "invalid setup arguments" "${HARDHAT_EXIT_USAGE}"
+    else
+      hardhat_module_setup_usage
+    fi
+    return "${HARDHAT_EXIT_USAGE}"
+  fi
+
+  if [[ "${HARDHAT_OUTPUT_JSON:-0}" -ne 1 ]]; then
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_info "setup: iniciando flujo de onboarding seguro para baseline de firewall en Arch."
+    else
+      hardhat_log_info "setup: starting safe onboarding flow for firewall baseline on Arch."
+    fi
+  fi
+
+  local previous_setup_mode="${HARDHAT_SETUP_MODE:-0}"
+  HARDHAT_SETUP_MODE=1
+  hardhat_module_firewall_apply
+  local rc=$?
+  HARDHAT_SETUP_MODE="${previous_setup_mode}"
+  return "${rc}"
 }
 
 hardhat_module_firewall_validate_subcommand_args() {
@@ -562,12 +690,14 @@ hardhat_firewall_generated_at_utc() {
 
 hardhat_firewall_apply_render_json() {
   local generated_at
+  local context_command
   generated_at="$(hardhat_firewall_generated_at_utc)"
+  context_command="$(hardhat_firewall_context_command)"
 
   printf '{'
-  hardhat_json_print_metadata "firewall apply" "${generated_at}"
+  hardhat_json_print_metadata "${context_command}" "${generated_at}"
   printf ','
-  printf '"command":"firewall apply",'
+  printf '"command":"%s",' "$(hardhat_json_escape "${context_command}")"
   hardhat_json_print_status "${HARDHAT_FIREWALL_APPLY_STATUS}" "${HARDHAT_FIREWALL_APPLY_EXIT_CODE}" "${HARDHAT_FIREWALL_APPLY_MESSAGE}"
   printf ','
 
@@ -653,7 +783,11 @@ hardhat_firewall_render_json_error() {
 hardhat_firewall_write_log() {
   local event="$1"
   local line
-  line="$(hardhat_firewall_generated_at_utc) firewall.apply ${event}"
+  local log_context="firewall.apply"
+  if [[ "${HARDHAT_SETUP_MODE:-0}" -eq 1 ]]; then
+    log_context="setup"
+  fi
+  line="$(hardhat_firewall_generated_at_utc) ${log_context} ${event}"
   if ! printf '%s\n' "${line}" | hardhat_sudo_run tee -a "${HARDHAT_FIREWALL_LOG_FILE}" >/dev/null; then
     hardhat_log_warn "Could not write audit log to ${HARDHAT_FIREWALL_LOG_FILE}."
   fi
@@ -1585,6 +1719,14 @@ hardhat_module_firewall_apply() {
   hardhat_module_firewall_collect_audit
   HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_BEFORE="${HARDHAT_UFW_INSTALLED}"
 
+  if [[ "${HARDHAT_SETUP_MODE:-0}" -eq 1 ]] && [[ "${HARDHAT_UFW_INSTALLED}" -eq 1 ]] && [[ "${HARDHAT_OUTPUT_JSON:-0}" -ne 1 ]]; then
+    if hardhat_firewall_is_spanish; then
+      hardhat_log_warn "setup detecto configuracion previa de UFW. Se aplicara baseline con prudencia, sin ocultar cambios."
+    else
+      hardhat_log_warn "setup detected existing UFW state. Baseline will be applied cautiously, without hiding changes."
+    fi
+  fi
+
   if [[ "${HARDHAT_UFW_INSTALLED}" -ne 1 ]]; then
     requires_ufw_install=1
     HARDHAT_FIREWALL_APPLY_UFW_INSTALL_ATTEMPTED=1
@@ -1615,7 +1757,11 @@ hardhat_module_firewall_apply() {
     fi
     HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
     hardhat_firewall_apply_add_note "Dry-run completed; no changes were applied."
-    hardhat_firewall_apply_finish "dry-run" "dry-run completed" 0
+    if [[ "${HARDHAT_SETUP_MODE:-0}" -eq 1 ]]; then
+      hardhat_firewall_apply_finish "dry-run" "setup dry-run completed" 0
+    else
+      hardhat_firewall_apply_finish "dry-run" "dry-run completed" 0
+    fi
     return $?
   fi
 
@@ -1729,7 +1875,11 @@ hardhat_module_firewall_apply() {
     fi
     HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
     hardhat_firewall_apply_add_note "Apply and validation completed successfully."
-    hardhat_firewall_apply_finish "success" "firewall apply completed successfully" "${HARDHAT_EXIT_SUCCESS}"
+    if [[ "${HARDHAT_SETUP_MODE:-0}" -eq 1 ]]; then
+      hardhat_firewall_apply_finish "success" "setup completed successfully" "${HARDHAT_EXIT_SUCCESS}"
+    else
+      hardhat_firewall_apply_finish "success" "firewall apply completed successfully" "${HARDHAT_EXIT_SUCCESS}"
+    fi
     return $?
   fi
   validate_rc=$?
@@ -1747,12 +1897,20 @@ hardhat_module_firewall_apply() {
   HARDHAT_FIREWALL_APPLY_UFW_INSTALLED_AFTER="${HARDHAT_UFW_INSTALLED}"
   if [[ "${validate_rc}" -eq 2 ]]; then
     hardhat_firewall_apply_add_note "Apply completed but post-apply validation found missing baseline conditions."
-    hardhat_firewall_apply_finish "failed" "firewall apply completed but baseline validation failed" "${HARDHAT_EXIT_OPERATIONAL}"
+    if [[ "${HARDHAT_SETUP_MODE:-0}" -eq 1 ]]; then
+      hardhat_firewall_apply_finish "failed" "setup completed but baseline validation failed" "${HARDHAT_EXIT_OPERATIONAL}"
+    else
+      hardhat_firewall_apply_finish "failed" "firewall apply completed but baseline validation failed" "${HARDHAT_EXIT_OPERATIONAL}"
+    fi
     return $?
   fi
 
   hardhat_firewall_apply_add_note "Apply completed but post-apply validation reported warnings."
-  hardhat_firewall_apply_finish "warning" "firewall apply completed with validation warnings" "${HARDHAT_EXIT_WARNING}"
+  if [[ "${HARDHAT_SETUP_MODE:-0}" -eq 1 ]]; then
+    hardhat_firewall_apply_finish "warning" "setup completed with validation warnings" "${HARDHAT_EXIT_WARNING}"
+  else
+    hardhat_firewall_apply_finish "warning" "firewall apply completed with validation warnings" "${HARDHAT_EXIT_WARNING}"
+  fi
   return $?
 }
 
